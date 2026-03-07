@@ -8,12 +8,12 @@ const API_BASE = process.env.NEXT_PUBLIC_APP_URL || '';
 
 export default function PortalVerifyPage() {
   const router = useRouter();
-  const [pins, setPins] = useState(['', '', '', '']);
+  const [pins, setPins] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [resending, setResending] = useState(false);
   const [resent, setResent] = useState(false);
-  const refs = [useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null)];
+  const refs = [useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null)];
 
   const phone = typeof window !== 'undefined' ? sessionStorage.getItem('portal_phone') || '' : '';
   const channel = typeof window !== 'undefined' ? sessionStorage.getItem('portal_channel') || 'whatsapp' : 'whatsapp';
@@ -28,7 +28,7 @@ export default function PortalVerifyPage() {
     const next = [...pins];
     next[i] = digit;
     setPins(next);
-    if (digit && i < 3) refs[i + 1].current?.focus();
+    if (digit && i < 5) refs[i + 1].current?.focus();
     if (next.every(d => d !== '')) submitPin(next.join(''));
   }
 
@@ -50,7 +50,7 @@ export default function PortalVerifyPage() {
       const data = await res.json();
       if (!res.ok) {
         setError(data.error || 'Code incorrect');
-        setPins(['', '', '', '']);
+        setPins(['', '', '', '', '', '']);
         refs[0].current?.focus();
         return;
       }
@@ -140,7 +140,7 @@ const s: Record<string, React.CSSProperties> = {
   heading: { fontFamily: "'Cormorant Garamond', serif", fontSize: 32, fontWeight: 300, color: '#1a1410', margin: '0 0 8px', lineHeight: 1 },
   sub: { fontSize: 13, color: '#8a7a6e', fontWeight: 300, margin: '0 0 32px', lineHeight: 1.6 },
   pinRow: { display: 'flex', gap: 12, justifyContent: 'center', marginBottom: 24 },
-  pinBox: { width: 60, height: 68, border: '1.5px solid rgba(0,0,0,0.12)', borderRadius: 14, textAlign: 'center', fontSize: 28, fontWeight: 600, color: '#1a1410', background: '#faf7f2', outline: 'none', fontFamily: "'DM Sans', sans-serif", transition: 'border-color 0.15s' },
+  pinBox: { width: 48, height: 58, border: '1.5px solid rgba(0,0,0,0.12)', borderRadius: 12, textAlign: 'center', fontSize: 24, fontWeight: 600, color: '#1a1410', background: '#faf7f2', outline: 'none', fontFamily: "'DM Sans', sans-serif", transition: 'border-color 0.15s' },
   pinBoxFilled: { border: '1.5px solid #7b5ea7', background: '#f0ebff' },
   error: { background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.2)', color: '#dc2626', borderRadius: 10, padding: '10px 14px', fontSize: 13, marginBottom: 14 },
   loading: { color: '#7b5ea7', fontSize: 13, marginBottom: 14 },
