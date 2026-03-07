@@ -264,3 +264,6 @@ footer { border-top: 1px solid rgba(0,0,0,0.06); padding: 36px 56px; display: fl
   .pricing-cards { grid-template-columns: 1fr; }
   .team-grid { grid-template-columns: 1fr; }
 }
+
+.nav-ghost { border: 1.5px solid rgba(26,20,16,0.2) !important; color: var(--dark) !important; padding: 9px 22px; border-radius: 100px; font-size: 13px; font-weight: 400 !important; text-decoration: none; transition: border-color 0.2s !important; }
+.nav-ghost:hover { border-color: var(--dark) !important; }

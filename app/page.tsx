@@ -119,6 +119,7 @@ export default function LandingPage() {
           <li><a href="#managed">Notre approche</a></li>
           <li><a href="#pricing">Tarifs</a></li>
           <li><a href="#team">Équipe</a></li>
+          <li><a href="/login" className="nav-ghost">Se connecter</a></li>
           <li><a href="#contact" className="nav-cta" onClick={(e) => { e.preventDefault(); openModal(null); }}>Demander une démo</a></li>
         </ul>
       </nav>

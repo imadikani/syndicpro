@@ -2,6 +2,7 @@
 
 import './dashboard.css';
 import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 
 const API_BASE = process.env.NEXT_PUBLIC_APP_URL || '';
 
@@ -90,19 +91,21 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const tokenRef = useRef<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
+    const token =
+      localStorage.getItem('syndic_token') ||
+      sessionStorage.getItem('syndic_token');
+
+    if (!token) {
+      router.push('/login');
+      return;
+    }
+    tokenRef.current = token;
+
     async function loadData() {
       try {
-        const loginRes = await fetch(`${API_BASE}/api/auth/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: 'imad@syndicpro.ma', password: 'syndicpro2026' }),
-        });
-        if (!loginRes.ok) throw new Error('Échec de connexion');
-        const { token } = await loginRes.json();
-        tokenRef.current = token;
-
         const headers = { Authorization: `Bearer ${token}` };
 
         const [buildingsRes, paymentsRes, expensesRes, remindersRes] = await Promise.all([
@@ -147,6 +150,19 @@ export default function Dashboard() {
   function sendReminder(id: string) {
     setReminderSent(prev => [...prev, id]);
   }
+
+  function logout() {
+    localStorage.removeItem('syndic_token');
+    localStorage.removeItem('syndic_user');
+    sessionStorage.removeItem('syndic_token');
+    sessionStorage.removeItem('syndic_user');
+    router.push('/login');
+  }
+
+  const storedUser = typeof window !== 'undefined'
+    ? localStorage.getItem('syndic_user') || sessionStorage.getItem('syndic_user')
+    : null;
+  const userName = storedUser ? JSON.parse(storedUser).name : 'Imad Ikani';
 
   if (loading) {
     return (
@@ -194,12 +210,13 @@ export default function Dashboard() {
 
         <div style={styles.sidebarFooter}>
           <div style={styles.userBadge}>
-            <div style={styles.userAvatar}>I</div>
+            <div style={styles.userAvatar}>{userName[0]}</div>
             <div>
-              <div style={styles.userName}>Imad Ikani</div>
+              <div style={styles.userName}>{userName}</div>
               <div style={styles.userRole}>Administrateur</div>
             </div>
           </div>
+          <button style={styles.logoutBtn} onClick={logout}>Déconnexion</button>
         </div>
       </aside>
 
@@ -631,7 +648,8 @@ const styles: Record<string, React.CSSProperties> = {
   navItemActive: { background: 'rgba(200,184,232,0.1)', color: 'rgba(255,255,255,0.95)' },
   navIcon: { fontSize: 14, opacity: 0.7 },
   sidebarFooter: { padding: '16px 16px 24px', borderTop: '1px solid rgba(200,184,232,0.07)', marginTop: 'auto' },
-  userBadge: { display: 'flex', alignItems: 'center', gap: 10 },
+  userBadge: { display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 },
+  logoutBtn: { width: '100%', background: 'none', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, color: 'rgba(255,255,255,0.3)', fontSize: 11, padding: '7px 0', cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", letterSpacing: 0.5 },
   userAvatar: { width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg,#7b5ea7,#9b6bc0)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Cormorant Garamond', serif", fontSize: 16, fontWeight: 600, color: 'white' },
   userName: { fontSize: 13, color: 'rgba(255,255,255,0.8)', fontWeight: 500 },
   userRole: { fontSize: 10, color: 'rgba(255,255,255,0.35)', letterSpacing: 0.5, textTransform: 'uppercase' },

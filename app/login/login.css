@@ -1,0 +1,16 @@
+body:has(.login-shell) {
+  background: #0f0b08 !important;
+}
+
+body:has(.login-shell)::before {
+  display: none !important;
+}
+
+body:has(.login-shell) nav {
+  display: none !important;
+}
+
+.login-shell {
+  background: #0f0b08;
+  min-height: 100vh;
+}
