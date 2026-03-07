@@ -1,60 +1,60 @@
 'use client';
 
 import './dashboard.css';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
-// ─── MOCK DATA ────────────────────────────────────────────────────────────────
+const API_BASE = process.env.NEXT_PUBLIC_APP_URL || '';
 
-const BUILDINGS = [
-  { id: 'b1', name: 'Résidence Al Andalous', address: '12 Rue Ibn Battouta, Maarif', city: 'Casablanca', totalUnits: 18, monthlyFee: 350, color: '#7b5ea7', collected: 14, total: 18 },
-  { id: 'b2', name: 'Résidence Safae', address: '45 Bd Anfa', city: 'Casablanca', totalUnits: 12, monthlyFee: 450, color: '#e8906a', collected: 10, total: 12 },
-  { id: 'b3', name: 'Immeuble Atlas', address: '8 Rue Moulay Youssef, Gauthier', city: 'Casablanca', totalUnits: 24, monthlyFee: 280, color: '#34d399', collected: 18, total: 24 },
-];
+// ─── TYPES ────────────────────────────────────────────────────────────────────
 
-const RESIDENTS: Record<string, { id: string; name: string; unit: string; phone: string; isOwner: boolean; status: 'PAID' | 'PENDING' | 'LATE'; amount: number; paidAt?: string }[]> = {
-  b1: [
-    { id: 'r1', name: 'Karim Benali', unit: 'A3', phone: '+212 6 61 23 45 67', isOwner: true, status: 'PAID', amount: 350, paidAt: '03/03/2026' },
-    { id: 'r2', name: 'Fatima Idrissi', unit: 'B1', phone: '+212 6 62 34 56 78', isOwner: false, status: 'PENDING', amount: 350 },
-    { id: 'r3', name: 'Omar Tazi', unit: 'C2', phone: '+212 6 63 45 67 89', isOwner: true, status: 'PAID', amount: 350, paidAt: '01/03/2026' },
-    { id: 'r4', name: 'Nadia Cherkaoui', unit: 'A1', phone: '+212 6 64 56 78 90', isOwner: false, status: 'LATE', amount: 350 },
-    { id: 'r5', name: 'Hassan Moussaoui', unit: 'D4', phone: '+212 6 65 67 89 01', isOwner: true, status: 'PAID', amount: 350, paidAt: '02/03/2026' },
-    { id: 'r6', name: 'Leila Bensouda', unit: 'B3', phone: '+212 6 66 78 90 12', isOwner: true, status: 'PENDING', amount: 350 },
-  ],
-  b2: [
-    { id: 'r7', name: 'Youssef Alami', unit: '101', phone: '+212 6 67 89 01 23', isOwner: true, status: 'PAID', amount: 450, paidAt: '04/03/2026' },
-    { id: 'r8', name: 'Sara Rhalmi', unit: '202', phone: '+212 6 68 90 12 34', isOwner: false, status: 'PENDING', amount: 450 },
-    { id: 'r9', name: 'Mehdi Chraibi', unit: '301', phone: '+212 6 69 01 23 45', isOwner: true, status: 'PAID', amount: 450, paidAt: '02/03/2026' },
-    { id: 'r10', name: 'Amina Tahiri', unit: '102', phone: '+212 6 70 12 34 56', isOwner: false, status: 'LATE', amount: 450 },
-  ],
-  b3: [
-    { id: 'r11', name: 'Rachid Berrada', unit: 'E1', phone: '+212 6 71 23 45 67', isOwner: true, status: 'PAID', amount: 280, paidAt: '01/03/2026' },
-    { id: 'r12', name: 'Zineb Fassi', unit: 'F2', phone: '+212 6 72 34 56 78', isOwner: true, status: 'PENDING', amount: 280 },
-    { id: 'r13', name: 'Amine Kettani', unit: 'G3', phone: '+212 6 73 45 67 89', isOwner: false, status: 'PAID', amount: 280, paidAt: '03/03/2026' },
-    { id: 'r14', name: 'Houda Lahlou', unit: 'H4', phone: '+212 6 74 56 78 90', isOwner: true, status: 'LATE', amount: 280 },
-    { id: 'r15', name: 'Tariq Benjelloun', unit: 'E3', phone: '+212 6 75 67 89 01', isOwner: false, status: 'PAID', amount: 280, paidAt: '05/03/2026' },
-    { id: 'r16', name: 'Meryem Squalli', unit: 'F4', phone: '+212 6 76 78 90 12', isOwner: true, status: 'PENDING', amount: 280 },
-  ],
+type Building = {
+  id: string;
+  name: string;
+  address: string;
+  city: string;
+  totalUnits: number;
+  monthlyFee: number;
+  color: string;
+  stats: { totalCollected: number; totalExpected: number; collectionRate: number };
 };
 
-const EXPENSES = [
-  { id: 'e1', buildingId: 'b1', buildingName: 'Al Andalous', label: 'Entretien ascenseur', category: 'ENTRETIEN', amount: 1200, date: '28/02/2026' },
-  { id: 'e2', buildingId: 'b1', buildingName: 'Al Andalous', label: 'Facture électricité parties communes', category: 'ELECTRICITE', amount: 780, date: '01/03/2026' },
-  { id: 'e3', buildingId: 'b2', buildingName: 'Résid. Safae', label: 'Gardien — Mars', category: 'SECURITE', amount: 2500, date: '01/03/2026' },
-  { id: 'e4', buildingId: 'b3', buildingName: 'Imm. Atlas', label: 'Réparation toiture', category: 'REPARATION', amount: 4500, date: '25/02/2026' },
-  { id: 'e5', buildingId: 'b2', buildingName: 'Résid. Safae', label: 'Assurance immeuble', category: 'ASSURANCE', amount: 3200, date: '15/02/2026' },
-  { id: 'e6', buildingId: 'b3', buildingName: 'Imm. Atlas', label: 'Eau parties communes', category: 'EAU', amount: 430, date: '05/03/2026' },
-];
+type Payment = {
+  id: string;
+  month: number;
+  year: number;
+  amount: number;
+  status: 'PAID' | 'PENDING' | 'LATE' | 'WAIVED';
+  paidAt: string | null;
+  unit: {
+    number: string;
+    buildingId: string;
+    building?: { id: string; name: string } | null;
+    resident?: { name: string; phone: string; isOwner: boolean } | null;
+  };
+};
 
-const REMINDERS = [
-  { id: 'rem1', resident: 'Fatima Idrissi', unit: 'B1', building: 'Al Andalous', phone: '+212 6 62 34 56 78', status: 'SENT', sentAt: '06/03/2026 09:00', message: 'Rappel J+5' },
-  { id: 'rem2', resident: 'Nadia Cherkaoui', unit: 'A1', building: 'Al Andalous', phone: '+212 6 64 56 78 90', status: 'DELIVERED', sentAt: '06/03/2026 09:01', message: 'Rappel J+10' },
-  { id: 'rem3', resident: 'Sara Rhalmi', unit: '202', building: 'Résid. Safae', phone: '+212 6 68 90 12 34', status: 'SENT', sentAt: '06/03/2026 09:02', message: 'Rappel J+5' },
-  { id: 'rem4', resident: 'Amina Tahiri', unit: '102', building: 'Résid. Safae', phone: '+212 6 70 12 34 56', status: 'FAILED', sentAt: '05/03/2026 14:00', message: 'Rappel J+15' },
-  { id: 'rem5', resident: 'Zineb Fassi', unit: 'F2', building: 'Imm. Atlas', phone: '+212 6 72 34 56 78', status: 'DELIVERED', sentAt: '06/03/2026 09:03', message: 'Rappel J+5' },
-  { id: 'rem6', resident: 'Houda Lahlou', unit: 'H4', building: 'Imm. Atlas', phone: '+212 6 74 56 78 90', status: 'SENT', sentAt: '06/03/2026 09:04', message: 'Rappel J+15' },
-  { id: 'rem7', resident: 'Meryem Squalli', unit: 'F4', building: 'Imm. Atlas', phone: '+212 6 76 78 90 12', status: 'DELIVERED', sentAt: '06/03/2026 09:05', message: 'Rappel J+5' },
-  { id: 'rem8', resident: 'Leila Bensouda', unit: 'B3', building: 'Al Andalous', phone: '+212 6 66 78 90 12', status: 'SENT', sentAt: '06/03/2026 09:06', message: 'Rappel J+5' },
-];
+type Expense = {
+  id: string;
+  label: string;
+  amount: number;
+  category: string;
+  date: string;
+  buildingId: string;
+  building?: { name: string } | null;
+};
+
+type Reminder = {
+  id: string;
+  channel: string;
+  status: string;
+  message: string;
+  sentAt: string;
+  resident: {
+    name: string;
+    phone: string;
+    unit?: { number: string; building?: { name: string } | null } | null;
+  };
+};
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 
@@ -67,6 +67,12 @@ const CAT_COLORS: Record<string, string> = {
   ELECTRICITE: '#fbbf24', EAU: '#60a5fa', ASSURANCE: '#e8906a', AUTRE: '#9ca3af',
 };
 
+function fmtDate(iso: string | null | undefined): string {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
 type Tab = 'overview' | 'buildings' | 'residents' | 'expenses' | 'reminders';
 
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
@@ -77,19 +83,85 @@ export default function Dashboard() {
   const [addExpenseOpen, setAddExpenseOpen] = useState(false);
   const [reminderSent, setReminderSent] = useState<string[]>([]);
 
-  // Global KPIs
-  const totalCollected = BUILDINGS.reduce((s, b) => s + b.collected * b.monthlyFee, 0);
-  const totalDue = BUILDINGS.reduce((s, b) => s + b.total * b.monthlyFee, 0);
-  const totalUnpaid = BUILDINGS.reduce((s, b) => s + (b.total - b.collected) * b.monthlyFee, 0);
-  const totalExpenses = EXPENSES.reduce((s, e) => s + e.amount, 0);
-  const allResidents = Object.values(RESIDENTS).flat();
-  const pendingCount = allResidents.filter(r => r.status !== 'PAID').length;
-  const collectionRate = Math.round((totalCollected / totalDue) * 100);
+  const [buildings, setBuildings] = useState<Building[]>([]);
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [reminders, setReminders] = useState<Reminder[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const tokenRef = useRef<string | null>(null);
 
-  const buildingResidents = selectedBuilding ? RESIDENTS[selectedBuilding] || [] : [];
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const loginRes = await fetch(`${API_BASE}/api/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: 'imad@syndicpro.ma', password: 'syndicpro2026' }),
+        });
+        if (!loginRes.ok) throw new Error('Échec de connexion');
+        const { token } = await loginRes.json();
+        tokenRef.current = token;
+
+        const headers = { Authorization: `Bearer ${token}` };
+
+        const [buildingsRes, paymentsRes, expensesRes, remindersRes] = await Promise.all([
+          fetch(`${API_BASE}/api/buildings`, { headers }),
+          fetch(`${API_BASE}/api/payments?month=3&year=2026`, { headers }),
+          fetch(`${API_BASE}/api/expenses`, { headers }),
+          fetch(`${API_BASE}/api/reminders`, { headers }),
+        ]);
+
+        const [buildingsData, paymentsData, expensesData, remindersData] = await Promise.all([
+          buildingsRes.ok ? buildingsRes.json() : [],
+          paymentsRes.ok ? paymentsRes.json() : [],
+          expensesRes.ok ? expensesRes.json() : [],
+          remindersRes.ok ? remindersRes.json() : [],
+        ]);
+
+        setBuildings(Array.isArray(buildingsData) ? buildingsData : []);
+        setPayments(Array.isArray(paymentsData) ? paymentsData : []);
+        setExpenses(Array.isArray(expensesData) ? expensesData : []);
+        setReminders(Array.isArray(remindersData) ? remindersData : []);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Erreur de chargement');
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, []);
+
+  // Global KPIs
+  const totalCollected = buildings.reduce((s, b) => s + (b.stats?.totalCollected || 0), 0);
+  const totalDue = buildings.reduce((s, b) => s + (b.stats?.totalExpected || 0), 0);
+  const totalUnpaid = totalDue - totalCollected;
+  const totalExpenses = expenses.reduce((s, e) => s + e.amount, 0);
+  const pendingCount = payments.filter(p => p.status !== 'PAID').length;
+  const collectionRate = totalDue > 0 ? Math.round((totalCollected / totalDue) * 100) : 0;
+
+  const buildingResidents = selectedBuilding
+    ? payments.filter(p => p.unit?.building?.id === selectedBuilding || p.unit?.buildingId === selectedBuilding)
+    : [];
 
   function sendReminder(id: string) {
     setReminderSent(prev => [...prev, id]);
+  }
+
+  if (loading) {
+    return (
+      <div className="dashboard-shell" style={{ ...styles.shell, alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ color: 'rgba(200,184,232,0.6)', fontSize: 13, letterSpacing: 2, textTransform: 'uppercase' }}>Chargement...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="dashboard-shell" style={{ ...styles.shell, alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ color: '#f87171', fontSize: 14 }}>{error}</div>
+      </div>
+    );
   }
 
   return (
@@ -139,7 +211,7 @@ export default function Dashboard() {
             <div style={styles.headerEyebrow}>Mars 2026</div>
             <h1 style={styles.headerTitle}>
               {activeTab === 'overview' && 'Vue d\'ensemble'}
-              {activeTab === 'buildings' && (selectedBuilding ? BUILDINGS.find(b => b.id === selectedBuilding)?.name : 'Immeubles')}
+              {activeTab === 'buildings' && (selectedBuilding ? buildings.find(b => b.id === selectedBuilding)?.name : 'Immeubles')}
               {activeTab === 'residents' && 'Résidents & Paiements'}
               {activeTab === 'expenses' && 'Dépenses'}
               {activeTab === 'reminders' && 'Rappels WhatsApp'}
@@ -161,8 +233,8 @@ export default function Dashboard() {
                 {[
                   { label: 'Collecté ce mois', value: `${totalCollected.toLocaleString()} MAD`, sub: `sur ${totalDue.toLocaleString()} MAD dus`, color: '#34d399' },
                   { label: 'Impayés', value: `${totalUnpaid.toLocaleString()} MAD`, sub: `${pendingCount} résidents en retard`, color: '#f87171' },
-                  { label: 'Immeubles gérés', value: BUILDINGS.length.toString(), sub: `${BUILDINGS.reduce((s, b) => s + b.totalUnits, 0)} unités au total`, color: '#c8b8e8' },
-                  { label: 'Dépenses du mois', value: `${totalExpenses.toLocaleString()} MAD`, sub: `${EXPENSES.length} entrées`, color: '#fbbf24' },
+                  { label: 'Immeubles gérés', value: buildings.length.toString(), sub: `${buildings.reduce((s, b) => s + b.totalUnits, 0)} unités au total`, color: '#c8b8e8' },
+                  { label: 'Dépenses du mois', value: `${totalExpenses.toLocaleString()} MAD`, sub: `${expenses.length} entrées`, color: '#fbbf24' },
                 ].map(kpi => (
                   <div key={kpi.label} style={styles.kpiCard}>
                     <div style={styles.kpiLabel}>{kpi.label}</div>
@@ -187,8 +259,8 @@ export default function Dashboard() {
               {/* BUILDINGS OVERVIEW */}
               <div style={styles.cardTitle2}>Statut par immeuble</div>
               <div style={styles.buildingRows}>
-                {BUILDINGS.map(b => {
-                  const rate = Math.round((b.collected / b.total) * 100);
+                {buildings.map(b => {
+                  const rate = b.stats?.collectionRate || 0;
                   return (
                     <div key={b.id} style={styles.buildingRow} onClick={() => { setActiveTab('buildings'); setSelectedBuilding(b.id); }}>
                       <div style={{ ...styles.buildingDot, background: b.color }} />
@@ -209,17 +281,22 @@ export default function Dashboard() {
               {/* RECENT ACTIVITY */}
               <div style={styles.cardTitle2}>Activité récente</div>
               <div style={styles.card}>
-                {[
-                  { icon: '✓', color: '#34d399', text: 'Karim Benali — 350 MAD reçu (Al Andalous A3)', time: 'Il y a 2h' },
-                  { icon: '💬', color: '#7b5ea7', text: 'Rappel J+5 envoyé à 6 résidents', time: 'Il y a 4h' },
-                  { icon: '✓', color: '#34d399', text: 'Omar Tazi — 350 MAD reçu (Al Andalous C2)', time: 'Il y a 6h' },
-                  { icon: '⚠', color: '#fbbf24', text: 'Nadia Cherkaoui — impayé depuis J+10', time: 'Il y a 1j' },
-                  { icon: '📋', color: '#60a5fa', text: 'Dépense enregistrée — Entretien ascenseur 1 200 MAD', time: 'Il y a 2j' },
-                ].map((item, i) => (
-                  <div key={i} style={{ ...styles.activityRow, borderBottom: i < 4 ? '1px solid rgba(200,184,232,0.1)' : 'none' }}>
-                    <div style={{ ...styles.activityIcon, color: item.color }}>{item.icon}</div>
-                    <div style={{ flex: 1, fontSize: 13, color: 'rgba(255,255,255,0.75)' }}>{item.text}</div>
-                    <div style={styles.activityTime}>{item.time}</div>
+                {payments.filter(p => p.status === 'PAID').slice(0, 3).map((p, i) => (
+                  <div key={p.id} style={{ ...styles.activityRow, borderBottom: '1px solid rgba(200,184,232,0.1)' }}>
+                    <div style={{ ...styles.activityIcon, color: '#34d399' }}>✓</div>
+                    <div style={{ flex: 1, fontSize: 13, color: 'rgba(255,255,255,0.75)' }}>
+                      {p.unit?.resident?.name || 'Résident'} — {p.amount} MAD reçu ({p.unit?.building?.name || ''} {p.unit?.number || ''})
+                    </div>
+                    <div style={styles.activityTime}>{fmtDate(p.paidAt)}</div>
+                  </div>
+                ))}
+                {reminders.slice(0, 2).map((r, i) => (
+                  <div key={r.id} style={{ ...styles.activityRow, borderBottom: i < 1 ? '1px solid rgba(200,184,232,0.1)' : 'none' }}>
+                    <div style={{ ...styles.activityIcon, color: '#7b5ea7' }}>💬</div>
+                    <div style={{ flex: 1, fontSize: 13, color: 'rgba(255,255,255,0.75)' }}>
+                      {r.message} envoyé à {r.resident?.name || 'résident'}
+                    </div>
+                    <div style={styles.activityTime}>{fmtDate(r.sentAt)}</div>
                   </div>
                 ))}
               </div>
@@ -229,9 +306,9 @@ export default function Dashboard() {
           {/* ── BUILDINGS ── */}
           {activeTab === 'buildings' && !selectedBuilding && (
             <div style={styles.buildingGrid}>
-              {BUILDINGS.map(b => {
-                const rate = Math.round((b.collected / b.total) * 100);
-                const collectedAmt = b.collected * b.monthlyFee;
+              {buildings.map(b => {
+                const rate = b.stats?.collectionRate || 0;
+                const collectedAmt = b.stats?.totalCollected || 0;
                 return (
                   <div key={b.id} style={styles.buildingCard} onClick={() => setSelectedBuilding(b.id)}>
                     <div style={{ ...styles.buildingCardAccent, background: b.color }} />
@@ -268,9 +345,9 @@ export default function Dashboard() {
 
           {/* ── BUILDING DETAIL ── */}
           {activeTab === 'buildings' && selectedBuilding && (() => {
-            const b = BUILDINGS.find(x => x.id === selectedBuilding)!;
-            const residents = RESIDENTS[selectedBuilding] || [];
-            const rate = Math.round((b.collected / b.total) * 100);
+            const b = buildings.find(x => x.id === selectedBuilding)!;
+            if (!b) return null;
+            const rate = b.stats?.collectionRate || 0;
             return (
               <div>
                 <button style={styles.backBtn} onClick={() => setSelectedBuilding(null)}>← Retour aux immeubles</button>
@@ -294,26 +371,26 @@ export default function Dashboard() {
                     <span style={{ flex: 1 }}>Statut</span>
                     <span style={{ flex: 1 }}>Date paiement</span>
                   </div>
-                  {residents.map(r => (
-                    <div key={r.id} style={styles.tableRow}>
+                  {buildingResidents.map(p => (
+                    <div key={p.id} style={styles.tableRow}>
                       <span style={{ flex: 2, display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <div style={{ ...styles.residentAv, background: r.status === 'PAID' ? '#34d399' : r.status === 'LATE' ? '#f87171' : '#fbbf24' }}>
-                          {r.name[0]}
+                        <div style={{ ...styles.residentAv, background: p.status === 'PAID' ? '#34d399' : p.status === 'LATE' ? '#f87171' : '#fbbf24' }}>
+                          {(p.unit?.resident?.name || '?')[0]}
                         </div>
                         <div>
-                          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.9)', fontWeight: 500 }}>{r.name}</div>
-                          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>{r.isOwner ? 'Propriétaire' : 'Locataire'}</div>
+                          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.9)', fontWeight: 500 }}>{p.unit?.resident?.name || 'Inconnu'}</div>
+                          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>{p.unit?.resident?.isOwner ? 'Propriétaire' : 'Locataire'}</div>
                         </div>
                       </span>
-                      <span style={{ flex: 1, fontSize: 13, color: 'rgba(255,255,255,0.6)' }}>{r.unit}</span>
-                      <span style={{ flex: 1, fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{r.phone}</span>
-                      <span style={{ flex: 1, fontSize: 13, color: 'rgba(255,255,255,0.8)', fontWeight: 500 }}>{r.amount} MAD</span>
+                      <span style={{ flex: 1, fontSize: 13, color: 'rgba(255,255,255,0.6)' }}>{p.unit?.number || '—'}</span>
+                      <span style={{ flex: 1, fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{p.unit?.resident?.phone || '—'}</span>
+                      <span style={{ flex: 1, fontSize: 13, color: 'rgba(255,255,255,0.8)', fontWeight: 500 }}>{p.amount} MAD</span>
                       <span style={{ flex: 1 }}>
-                        <span style={{ ...styles.statusBadge, ...getStatusStyle(r.status) }}>
-                          {r.status === 'PAID' ? '✓ Payé' : r.status === 'LATE' ? '⚠ En retard' : '○ En attente'}
+                        <span style={{ ...styles.statusBadge, ...getStatusStyle(p.status) }}>
+                          {p.status === 'PAID' ? '✓ Payé' : p.status === 'LATE' ? '⚠ En retard' : '○ En attente'}
                         </span>
                       </span>
-                      <span style={{ flex: 1, fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{r.paidAt || '—'}</span>
+                      <span style={{ flex: 1, fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{fmtDate(p.paidAt)}</span>
                     </div>
                   ))}
                 </div>
@@ -325,7 +402,7 @@ export default function Dashboard() {
           {activeTab === 'residents' && (
             <div>
               <div style={styles.filterRow}>
-                {['Tous', 'Al Andalous', 'Résid. Safae', 'Imm. Atlas'].map(f => (
+                {['Tous', ...buildings.map(b => b.name.split(' ').slice(-1)[0])].map(f => (
                   <button key={f} style={styles.filterBtn}>{f}</button>
                 ))}
                 <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
@@ -343,37 +420,34 @@ export default function Dashboard() {
                   <span style={{ flex: 1 }}>Statut</span>
                   <span style={{ flex: 1 }}>Action</span>
                 </div>
-                {allResidents.map(r => {
-                  const building = BUILDINGS.find(b => Object.keys(RESIDENTS).find(k => RESIDENTS[k].some(x => x.id === r.id)) === b.id);
-                  return (
-                    <div key={r.id} style={styles.tableRow}>
-                      <span style={{ flex: 2, display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <div style={{ ...styles.residentAv, background: r.status === 'PAID' ? '#34d399' : r.status === 'LATE' ? '#f87171' : '#fbbf24' }}>
-                          {r.name[0]}
-                        </div>
-                        <div>
-                          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.9)', fontWeight: 500 }}>{r.name}</div>
-                          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>{r.isOwner ? 'Propriétaire' : 'Locataire'}</div>
-                        </div>
+                {payments.map(p => (
+                  <div key={p.id} style={styles.tableRow}>
+                    <span style={{ flex: 2, display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div style={{ ...styles.residentAv, background: p.status === 'PAID' ? '#34d399' : p.status === 'LATE' ? '#f87171' : '#fbbf24' }}>
+                        {(p.unit?.resident?.name || '?')[0]}
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.9)', fontWeight: 500 }}>{p.unit?.resident?.name || 'Inconnu'}</div>
+                        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>{p.unit?.resident?.isOwner ? 'Propriétaire' : 'Locataire'}</div>
+                      </div>
+                    </span>
+                    <span style={{ flex: 1, fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>
+                      {p.unit?.building?.name?.split(' ').slice(-1)[0] || '—'} · {p.unit?.number || '—'}
+                    </span>
+                    <span style={{ flex: 1, fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{p.unit?.resident?.phone || '—'}</span>
+                    <span style={{ flex: 1, fontSize: 13, color: 'rgba(255,255,255,0.8)', fontWeight: 500 }}>{p.amount} MAD</span>
+                    <span style={{ flex: 1 }}>
+                      <span style={{ ...styles.statusBadge, ...getStatusStyle(p.status) }}>
+                        {p.status === 'PAID' ? '✓ Payé' : p.status === 'LATE' ? '⚠ Retard' : '○ Attente'}
                       </span>
-                      <span style={{ flex: 1, fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>
-                        {building ? building.name.split(' ').slice(-1)[0] : '—'} · {r.unit}
-                      </span>
-                      <span style={{ flex: 1, fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{r.phone}</span>
-                      <span style={{ flex: 1, fontSize: 13, color: 'rgba(255,255,255,0.8)', fontWeight: 500 }}>{r.amount} MAD</span>
-                      <span style={{ flex: 1 }}>
-                        <span style={{ ...styles.statusBadge, ...getStatusStyle(r.status) }}>
-                          {r.status === 'PAID' ? '✓ Payé' : r.status === 'LATE' ? '⚠ Retard' : '○ Attente'}
-                        </span>
-                      </span>
-                      <span style={{ flex: 1 }}>
-                        {r.status !== 'PAID' && (
-                          <button style={styles.reminderBtn}>💬 Rappel</button>
-                        )}
-                      </span>
-                    </div>
-                  );
-                })}
+                    </span>
+                    <span style={{ flex: 1 }}>
+                      {p.status !== 'PAID' && (
+                        <button style={styles.reminderBtn}>💬 Rappel</button>
+                      )}
+                    </span>
+                  </div>
+                ))}
               </div>
             </div>
           )}
@@ -385,8 +459,8 @@ export default function Dashboard() {
                 <div style={styles.kpiGrid}>
                   {[
                     { label: 'Total dépenses', value: `${totalExpenses.toLocaleString()} MAD`, color: '#f87171' },
-                    { label: 'Ce mois', value: `${EXPENSES.filter(e => e.date.includes('/03/')).reduce((s, e) => s + e.amount, 0).toLocaleString()} MAD`, color: '#fbbf24' },
-                    { label: 'Entrées', value: EXPENSES.length.toString(), color: '#c8b8e8' },
+                    { label: 'Ce mois', value: `${expenses.filter(e => { try { return new Date(e.date).getMonth() === 2; } catch { return true; } }).reduce((s, e) => s + e.amount, 0).toLocaleString()} MAD`, color: '#fbbf24' },
+                    { label: 'Entrées', value: expenses.length.toString(), color: '#c8b8e8' },
                   ].map(k => (
                     <div key={k.label} style={styles.kpiCard}>
                       <div style={styles.kpiLabel}>{k.label}</div>
@@ -405,17 +479,17 @@ export default function Dashboard() {
                   <span style={{ flex: 1 }}>Montant</span>
                   <span style={{ flex: 1 }}>Date</span>
                 </div>
-                {EXPENSES.map(e => (
+                {expenses.map(e => (
                   <div key={e.id} style={styles.tableRow}>
                     <span style={{ flex: 2, fontSize: 13, color: 'rgba(255,255,255,0.85)', fontWeight: 500 }}>{e.label}</span>
-                    <span style={{ flex: 1, fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{e.buildingName}</span>
+                    <span style={{ flex: 1, fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{e.building?.name || '—'}</span>
                     <span style={{ flex: 1 }}>
-                      <span style={{ ...styles.catBadge, background: CAT_COLORS[e.category] + '22', color: CAT_COLORS[e.category] }}>
-                        {CAT_LABELS[e.category]}
+                      <span style={{ ...styles.catBadge, background: (CAT_COLORS[e.category] || '#9ca3af') + '22', color: CAT_COLORS[e.category] || '#9ca3af' }}>
+                        {CAT_LABELS[e.category] || e.category}
                       </span>
                     </span>
                     <span style={{ flex: 1, fontSize: 13, color: '#f87171', fontWeight: 600 }}>{e.amount.toLocaleString()} MAD</span>
-                    <span style={{ flex: 1, fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{e.date}</span>
+                    <span style={{ flex: 1, fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{fmtDate(e.date)}</span>
                   </div>
                 ))}
               </div>
@@ -440,7 +514,7 @@ export default function Dashboard() {
                     <div style={{ marginBottom: 16 }}>
                       <label style={styles.formLabel}>Immeuble</label>
                       <select style={styles.formInput}>
-                        {BUILDINGS.map(b => <option key={b.id}>{b.name}</option>)}
+                        {buildings.map(b => <option key={b.id}>{b.name}</option>)}
                       </select>
                     </div>
                     <div style={{ marginBottom: 24 }}>
@@ -461,10 +535,10 @@ export default function Dashboard() {
             <div>
               <div style={styles.kpiGrid}>
                 {[
-                  { label: 'Envoyés ce mois', value: REMINDERS.length.toString(), color: '#c8b8e8' },
-                  { label: 'Délivrés', value: REMINDERS.filter(r => r.status === 'DELIVERED').length.toString(), color: '#34d399' },
-                  { label: 'En attente', value: REMINDERS.filter(r => r.status === 'SENT').length.toString(), color: '#fbbf24' },
-                  { label: 'Échecs', value: REMINDERS.filter(r => r.status === 'FAILED').length.toString(), color: '#f87171' },
+                  { label: 'Envoyés ce mois', value: reminders.length.toString(), color: '#c8b8e8' },
+                  { label: 'Délivrés', value: reminders.filter(r => r.status === 'DELIVERED').length.toString(), color: '#34d399' },
+                  { label: 'En attente', value: reminders.filter(r => r.status === 'SENT').length.toString(), color: '#fbbf24' },
+                  { label: 'Échecs', value: reminders.filter(r => r.status === 'FAILED').length.toString(), color: '#f87171' },
                 ].map(k => (
                   <div key={k.label} style={styles.kpiCard}>
                     <div style={styles.kpiLabel}>{k.label}</div>
@@ -488,20 +562,22 @@ export default function Dashboard() {
                   <span style={{ flex: 1 }}>Statut</span>
                   <span style={{ flex: 1 }}>Action</span>
                 </div>
-                {REMINDERS.map(r => (
+                {reminders.map(r => (
                   <div key={r.id} style={styles.tableRow}>
                     <span style={{ flex: 2, display: 'flex', alignItems: 'center', gap: 10 }}>
                       <div style={{ ...styles.residentAv, background: '#7b5ea7', fontSize: 11 }}>
-                        {r.resident.split(' ').map(w => w[0]).join('')}
+                        {(r.resident?.name || '?').split(' ').map((w: string) => w[0]).join('')}
                       </div>
-                      <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)' }}>{r.resident}</span>
+                      <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)' }}>{r.resident?.name || '—'}</span>
                     </span>
-                    <span style={{ flex: 1, fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{r.building} · {r.unit}</span>
-                    <span style={{ flex: 1, fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{r.phone}</span>
+                    <span style={{ flex: 1, fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>
+                      {r.resident?.unit?.building?.name || '—'} · {r.resident?.unit?.number || '—'}
+                    </span>
+                    <span style={{ flex: 1, fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{r.resident?.phone || '—'}</span>
                     <span style={{ flex: 1 }}>
                       <span style={{ fontSize: 11, background: 'rgba(123,94,167,0.2)', color: '#c8b8e8', padding: '3px 10px', borderRadius: 100 }}>{r.message}</span>
                     </span>
-                    <span style={{ flex: 1, fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>{r.sentAt}</span>
+                    <span style={{ flex: 1, fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>{fmtDate(r.sentAt)}</span>
                     <span style={{ flex: 1 }}>
                       <span style={{ ...styles.statusBadge, ...getReminderStatusStyle(r.status) }}>
                         {r.status === 'DELIVERED' ? '✓ Délivré' : r.status === 'SENT' ? '○ Envoyé' : '✗ Échec'}
