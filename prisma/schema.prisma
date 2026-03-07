@@ -185,8 +185,7 @@ enum ReminderStatus {
   FAILED
 }
 
-// Add this model to your existing prisma/schema.prisma
-// Place it after the existing models
+// ─── DEMO REQUESTS ────────────────────────────────────────────────────────────
 
 model DemoRequest {
   id        String   @id @default(cuid())
