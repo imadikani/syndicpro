@@ -14,10 +14,15 @@ export async function POST(req: NextRequest) {
 
     const normalized = normalizePhone(phone);
 
-    // Check resident exists — always return success to prevent phone enumeration
-    const resident = await prisma.resident.findFirst({
-      where: { phone: { contains: normalized.slice(-9) } },
+    // Check resident exists — match by last 8 digits, stripping spaces from both sides
+    const last8 = normalized.replace(/\s/g, "").slice(-8);
+    const candidates = await prisma.resident.findMany({
+      select: { id: true, phone: true },
     });
+    const matched = candidates.find(r => r.phone.replace(/\s/g, "").endsWith(last8));
+    const resident = matched
+      ? await prisma.resident.findUnique({ where: { id: matched.id } })
+      : null;
 
     if (!resident) {
       return NextResponse.json({ success: true });

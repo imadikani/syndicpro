@@ -39,14 +39,18 @@ export async function POST(req: NextRequest) {
       data: { used: true },
     });
 
-    // Find resident by phone
-    const resident = await prisma.resident.findFirst({
-      where: { phone: { contains: normalized.slice(-9) } },
-      include: {
-        unit: {
-          include: { building: true },
-        },
-      },
+    // Find resident by phone — strip spaces from both sides for matching
+    const last8 = normalized.replace(/\s/g, "").slice(-8);
+    const candidates = await prisma.resident.findMany({ select: { id: true, phone: true } });
+    const matched = candidates.find(r => r.phone.replace(/\s/g, "").endsWith(last8));
+
+    if (!matched) {
+      return NextResponse.json({ error: "Résident introuvable" }, { status: 404 });
+    }
+
+    const resident = await prisma.resident.findUnique({
+      where: { id: matched.id },
+      include: { unit: { include: { building: true } } },
     });
 
     if (!resident) {
