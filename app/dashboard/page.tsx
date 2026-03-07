@@ -567,14 +567,14 @@ const styles: Record<string, React.CSSProperties> = {
   headerTitle: { fontFamily: "'Cormorant Garamond', serif", fontSize: 32, fontWeight: 300, color: 'white', margin: 0, lineHeight: 1 },
   headerRate: { textAlign: 'right' },
   rateLabel: { fontSize: 10, color: 'rgba(200,184,232,0.5)', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 4 },
-  rateValue: { fontFamily: "'Cormorant Garamond', serif", fontSize: 42, fontWeight: 300, color: 'white', lineHeight: 1 },
+  rateValue: { fontFamily: "'DM Sans', sans-serif", fontSize: 42, fontWeight: 300, color: 'white', lineHeight: 1 },
   content: { padding: '28px 36px', flex: 1 },
 
   // KPI
   kpiGrid: { display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 24 },
   kpiCard: { background: '#1a1410', border: '1px solid rgba(200,184,232,0.08)', borderRadius: 16, padding: '20px 22px' },
   kpiLabel: { fontSize: 10, color: 'rgba(255,255,255,0.4)', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 10 },
-  kpiValue: { fontFamily: "'Cormorant Garamond', serif", fontSize: 32, fontWeight: 300, lineHeight: 1, marginBottom: 6 },
+  kpiValue: { fontFamily: "'DM Sans', sans-serif", fontSize: 32, fontWeight: 300, lineHeight: 1, marginBottom: 6 },
   kpiSub: { fontSize: 11, color: 'rgba(255,255,255,0.35)' },
 
   // CARDS
@@ -594,7 +594,7 @@ const styles: Record<string, React.CSSProperties> = {
   buildingRowSub: { fontSize: 11, color: 'rgba(255,255,255,0.35)' },
   buildingRowBar: { width: 120, height: 4, background: 'rgba(255,255,255,0.06)', borderRadius: 100, overflow: 'hidden' },
   buildingRowFill: { height: '100%', borderRadius: 100 },
-  buildingRateBadge: { fontSize: 15, fontFamily: "'Cormorant Garamond', serif", fontWeight: 600, minWidth: 40, textAlign: 'right' },
+  buildingRateBadge: { fontSize: 15, fontFamily: "'DM Sans', sans-serif", fontWeight: 300, minWidth: 40, textAlign: 'right' },
   arrowIcon: { fontSize: 14, color: 'rgba(255,255,255,0.2)' },
 
   // ACTIVITY
@@ -608,12 +608,12 @@ const styles: Record<string, React.CSSProperties> = {
   buildingCardAccent: { height: 4 },
   buildingCardHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '18px 20px 10px' },
   buildingCardIcon: { width: 36, height: 36, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 },
-  buildingCardRate: { fontFamily: "'Cormorant Garamond', serif", fontSize: 28, fontWeight: 300 },
+  buildingCardRate: { fontFamily: "'DM Sans', sans-serif", fontSize: 28, fontWeight: 300 },
   buildingCardName: { fontFamily: "'Cormorant Garamond', serif", fontSize: 20, fontWeight: 600, color: 'white', padding: '0 20px', marginBottom: 4 },
   buildingCardAddress: { fontSize: 12, color: 'rgba(255,255,255,0.4)', padding: '0 20px', lineHeight: 1.6 },
   buildingCardStats: { display: 'flex', gap: 0, margin: '18px 20px 16px', background: 'rgba(255,255,255,0.03)', borderRadius: 12 },
   bStat: { flex: 1, padding: '12px 0', textAlign: 'center', borderRight: '1px solid rgba(255,255,255,0.05)' },
-  bStatVal: { fontFamily: "'Cormorant Garamond', serif", fontSize: 22, fontWeight: 300, color: 'white', lineHeight: 1 },
+  bStatVal: { fontFamily: "'DM Sans', sans-serif", fontSize: 22, fontWeight: 300, color: 'white', lineHeight: 1 },
   bStatLabel: { fontSize: 9, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 4 },
   buildingCardBar: { height: 3, background: 'rgba(255,255,255,0.05)', margin: '0 20px 16px' },
   buildingCardFill: { height: '100%', borderRadius: 100 },
@@ -625,7 +625,7 @@ const styles: Record<string, React.CSSProperties> = {
   buildingDetailDot: { width: 14, height: 14, borderRadius: '50%', flexShrink: 0 },
   buildingDetailName: { fontFamily: "'Cormorant Garamond', serif", fontSize: 24, fontWeight: 600, color: 'white', marginBottom: 4 },
   buildingDetailAddress: { fontSize: 13, color: 'rgba(255,255,255,0.4)' },
-  bigRate: { fontFamily: "'Cormorant Garamond', serif", fontSize: 40, fontWeight: 300, lineHeight: 1 },
+  bigRate: { fontFamily: "'DM Sans', sans-serif", fontSize: 40, fontWeight: 300, lineHeight: 1 },
 
   // TABLE
   residentTable: { background: '#1a1410', border: '1px solid rgba(200,184,232,0.08)', borderRadius: 16, overflow: 'hidden' },
