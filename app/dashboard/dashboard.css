@@ -6,6 +6,14 @@ body:has(.dashboard-shell)::before {
   display: none !important;
 }
 
+body:has(.dashboard-shell) nav {
+  position: static !important;
+  background: none !important;
+  backdrop-filter: none !important;
+  border-bottom: none !important;
+  padding: 0 !important;
+}
+
 .dashboard-shell {
   background: #0f0b08;
   min-height: 100vh;
