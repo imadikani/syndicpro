@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
         unit: {
           include: {
             resident: true,
-            building: { select: { name: true, color: true } },
+            building: { select: { id: true, name: true, color: true } },
           },
         },
       },

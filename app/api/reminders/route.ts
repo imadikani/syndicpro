@@ -3,6 +3,44 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 
+// GET /api/reminders — list all reminders for this syndic's residents
+export async function GET(req: NextRequest) {
+  try {
+    const user = await getCurrentUser(req);
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const reminders = await prisma.reminder.findMany({
+      where: {
+        resident: {
+          unit: {
+            building: { userId: user.id },
+          },
+        },
+      },
+      include: {
+        resident: {
+          select: {
+            name: true,
+            phone: true,
+            unit: {
+              select: {
+                number: true,
+                building: { select: { name: true } },
+              },
+            },
+          },
+        },
+      },
+      orderBy: { sentAt: "desc" },
+    });
+
+    return NextResponse.json(reminders);
+  } catch (err) {
+    console.error(err);
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
+  }
+}
+
 // POST /api/reminders — send WhatsApp reminders to unpaid residents
 export async function POST(req: NextRequest) {
   try {
