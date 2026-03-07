@@ -156,6 +156,17 @@ export default function Dashboard() {
     ? payments.filter(p => p.unit?.building?.id === selectedBuilding || p.unit?.buildingId === selectedBuilding)
     : [];
 
+  async function handleDeleteExpense(id: string) {
+    if (!confirm('Supprimer cette dépense ?')) return;
+    try {
+      const res = await fetch(`${API_BASE}/api/expenses/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${tokenRef.current}` },
+      });
+      if (res.ok) setExpenses(prev => prev.filter(e => e.id !== id));
+    } catch { /* silent */ }
+  }
+
   async function handleAddExpense() {
     setAddExpenseError('');
     if (!newExpense.label || !newExpense.amount || !newExpense.date || !newExpense.buildingId) {
@@ -610,6 +621,7 @@ export default function Dashboard() {
                   <span style={{ flex: 1 }}>Catégorie</span>
                   <span style={{ flex: 1 }}>Montant</span>
                   <span style={{ flex: 1 }}>Date</span>
+                  <span style={{ flex: '0 0 48px' }}></span>
                 </div>
                 {expenses.map(e => (
                   <div key={e.id} style={styles.tableRow}>
@@ -622,6 +634,9 @@ export default function Dashboard() {
                     </span>
                     <span style={{ flex: 1, fontSize: 13, color: '#f87171', fontWeight: 600 }}>{e.amount.toLocaleString()} MAD</span>
                     <span style={{ flex: 1, fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{fmtDate(e.date)}</span>
+                    <span style={{ flex: '0 0 48px' }}>
+                      <button onClick={() => handleDeleteExpense(e.id)} style={{ background: 'none', border: 'none', color: 'rgba(248,113,113,0.5)', cursor: 'pointer', fontSize: 16, padding: '2px 6px', borderRadius: 6, lineHeight: 1 }} title="Supprimer">×</button>
+                    </span>
                   </div>
                 ))}
               </div>
