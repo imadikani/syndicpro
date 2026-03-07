@@ -2,6 +2,10 @@ body:has(.dashboard-shell) {
   background: #0f0b08 !important;
 }
 
+body:has(.dashboard-shell)::before {
+  display: none !important;
+}
+
 .dashboard-shell {
   background: #0f0b08;
   min-height: 100vh;
