@@ -1,0 +1,8 @@
+body:has(.dashboard-shell) {
+  background: #0f0b08 !important;
+}
+
+.dashboard-shell {
+  background: #0f0b08;
+  min-height: 100vh;
+}

@@ -1,5 +1,6 @@
 'use client';
 
+import './dashboard.css';
 import { useState } from 'react';
 
 // ─── MOCK DATA ────────────────────────────────────────────────────────────────
@@ -92,7 +93,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div style={styles.shell}>
+    <div className="dashboard-shell" style={styles.shell}>
       {/* SIDEBAR */}
       <aside style={styles.sidebar}>
         <div style={styles.sidebarBrand}>
