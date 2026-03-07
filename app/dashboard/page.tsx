@@ -82,6 +82,10 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [selectedBuilding, setSelectedBuilding] = useState<string | null>(null);
   const [addExpenseOpen, setAddExpenseOpen] = useState(false);
+  const [addResidentOpen, setAddResidentOpen] = useState(false);
+  const [newResident, setNewResident] = useState({ name: '', phone: '', buildingId: '', unitNumber: '', isOwner: false });
+  const [addResidentLoading, setAddResidentLoading] = useState(false);
+  const [addResidentError, setAddResidentError] = useState('');
   const [reminderSent, setReminderSent] = useState<string[]>([]);
 
   const [buildings, setBuildings] = useState<Building[]>([]);
@@ -149,6 +153,38 @@ export default function Dashboard() {
 
   function sendReminder(id: string) {
     setReminderSent(prev => [...prev, id]);
+  }
+
+  async function handleAddResident() {
+    setAddResidentError('');
+    if (!newResident.name || !newResident.phone || !newResident.buildingId || !newResident.unitNumber) {
+      setAddResidentError('Tous les champs sont obligatoires.');
+      return;
+    }
+    setAddResidentLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/residents`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tokenRef.current}` },
+        body: JSON.stringify(newResident),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setAddResidentError(data.error || 'Erreur lors de l\'ajout.');
+        return;
+      }
+      // Refresh payments to show new resident
+      const paymentsRes = await fetch(`${API_BASE}/api/payments?month=3&year=2026`, {
+        headers: { Authorization: `Bearer ${tokenRef.current}` },
+      });
+      if (paymentsRes.ok) setPayments(await paymentsRes.json());
+      setAddResidentOpen(false);
+      setNewResident({ name: '', phone: '', buildingId: '', unitNumber: '', isOwner: false });
+    } catch {
+      setAddResidentError('Erreur de connexion.');
+    } finally {
+      setAddResidentLoading(false);
+    }
   }
 
   function logout() {
@@ -418,15 +454,18 @@ export default function Dashboard() {
           {/* ── RESIDENTS ── */}
           {activeTab === 'residents' && (
             <div>
-              <div style={styles.filterRow}>
-                {['Tous', ...buildings.map(b => b.name.split(' ').slice(-1)[0])].map(f => (
-                  <button key={f} style={styles.filterBtn}>{f}</button>
-                ))}
-                <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
-                  {['Tous', 'Payé', 'En attente', 'En retard'].map(f => (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                <div style={styles.filterRow}>
+                  {['Tous', ...buildings.map(b => b.name.split(' ').slice(-1)[0])].map(f => (
                     <button key={f} style={styles.filterBtn}>{f}</button>
                   ))}
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    {['Tous', 'Payé', 'En attente', 'En retard'].map(f => (
+                      <button key={f} style={styles.filterBtn}>{f}</button>
+                    ))}
+                  </div>
                 </div>
+                <button style={styles.addBtn} onClick={() => { setAddResidentError(''); setAddResidentOpen(true); }}>+ Nouveau résident</button>
               </div>
               <div style={styles.residentTable}>
                 <div style={styles.tableHeader}>
@@ -466,6 +505,43 @@ export default function Dashboard() {
                   </div>
                 ))}
               </div>
+
+              {addResidentOpen && (
+                <div style={styles.modalBackdrop} onClick={() => setAddResidentOpen(false)}>
+                  <div style={styles.modalBox} onClick={e => e.stopPropagation()}>
+                    <button style={styles.modalClose} onClick={() => setAddResidentOpen(false)}>×</button>
+                    <div style={{ fontSize: 11, color: '#c8b8e8', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>Nouveau résident</div>
+                    <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 28, fontWeight: 300, color: 'white', marginBottom: 24 }}>Ajouter un résident</div>
+                    <div style={{ marginBottom: 16 }}>
+                      <label style={styles.formLabel}>Nom complet</label>
+                      <input type="text" placeholder="Ex. Karim Benali" style={styles.formInput} value={newResident.name} onChange={e => setNewResident(p => ({ ...p, name: e.target.value }))} />
+                    </div>
+                    <div style={{ marginBottom: 16 }}>
+                      <label style={styles.formLabel}>Téléphone</label>
+                      <input type="tel" placeholder="+212 6 XX XX XX XX" style={styles.formInput} value={newResident.phone} onChange={e => setNewResident(p => ({ ...p, phone: e.target.value }))} />
+                    </div>
+                    <div style={{ marginBottom: 16 }}>
+                      <label style={styles.formLabel}>Immeuble</label>
+                      <select style={styles.formInput} value={newResident.buildingId} onChange={e => setNewResident(p => ({ ...p, buildingId: e.target.value }))}>
+                        <option value="">— Choisir un immeuble —</option>
+                        {buildings.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                      </select>
+                    </div>
+                    <div style={{ marginBottom: 16 }}>
+                      <label style={styles.formLabel}>Numéro d&apos;unité</label>
+                      <input type="text" placeholder="Ex. A3, 101, E1" style={styles.formInput} value={newResident.unitNumber} onChange={e => setNewResident(p => ({ ...p, unitNumber: e.target.value }))} />
+                    </div>
+                    <div style={{ marginBottom: 24, display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <input type="checkbox" id="isOwner" checked={newResident.isOwner} onChange={e => setNewResident(p => ({ ...p, isOwner: e.target.checked }))} />
+                      <label htmlFor="isOwner" style={{ ...styles.formLabel, marginBottom: 0, cursor: 'pointer' }}>Propriétaire (décocher si locataire)</label>
+                    </div>
+                    {addResidentError && <div style={{ color: '#f87171', fontSize: 13, marginBottom: 12 }}>{addResidentError}</div>}
+                    <button style={styles.submitBtn} onClick={handleAddResident} disabled={addResidentLoading}>
+                      {addResidentLoading ? 'Ajout...' : 'Ajouter le résident'}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

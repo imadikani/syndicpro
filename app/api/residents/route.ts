@@ -45,34 +45,56 @@ export async function GET(req: NextRequest) {
 }
 
 // POST /api/residents — add a resident to a unit
+// Accepts { name, phone, isOwner, buildingId, unitNumber }
 export async function POST(req: NextRequest) {
   try {
     const user = await getCurrentUser(req);
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const { name, phone, email, isOwner, unitId } = await req.json();
+    const { name, phone, isOwner, buildingId, unitNumber } = await req.json();
 
-    if (!name || !phone || !unitId) {
+    if (!name || !phone || !buildingId || !unitNumber) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // Verify unit belongs to user's building
-    const unit = await prisma.unit.findFirst({
-      where: { id: unitId, building: { userId: user.id } },
+    // Verify building belongs to this user
+    const building = await prisma.building.findFirst({
+      where: { id: buildingId, userId: user.id },
     });
-
-    if (!unit) {
-      return NextResponse.json({ error: "Unit not found" }, { status: 404 });
+    if (!building) {
+      return NextResponse.json({ error: "Building not found" }, { status: 404 });
     }
 
+    // Find or create the unit
+    const unit = await prisma.unit.upsert({
+      where: { buildingId_number: { buildingId, number: unitNumber } },
+      update: {},
+      create: { buildingId, number: unitNumber },
+    });
+
+    // Create resident (one per unit)
     const resident = await prisma.resident.create({
-      data: { name, phone, email, isOwner: isOwner || false, unitId },
+      data: { name, phone, isOwner: isOwner ?? false, unitId: unit.id },
+    });
+
+    // Create a PENDING payment for the current month
+    const now = new Date();
+    await prisma.payment.upsert({
+      where: { unitId_month_year: { unitId: unit.id, month: now.getMonth() + 1, year: now.getFullYear() } },
+      update: {},
+      create: {
+        unitId: unit.id,
+        month: now.getMonth() + 1,
+        year: now.getFullYear(),
+        amount: building.monthlyFee,
+        status: "PENDING",
+      },
     });
 
     return NextResponse.json(resident, { status: 201 });
   } catch (err: any) {
     if (err.code === "P2002") {
-      return NextResponse.json({ error: "Unit already has a resident" }, { status: 409 });
+      return NextResponse.json({ error: "Cette unité a déjà un résident" }, { status: 409 });
     }
     console.error(err);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
