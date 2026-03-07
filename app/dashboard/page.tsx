@@ -82,6 +82,11 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [selectedBuilding, setSelectedBuilding] = useState<string | null>(null);
   const [addExpenseOpen, setAddExpenseOpen] = useState(false);
+  const [newExpense, setNewExpense] = useState({ label: '', amount: '', date: '', buildingId: '', category: 'ENTRETIEN' });
+  const [addExpenseLoading, setAddExpenseLoading] = useState(false);
+  const [addExpenseError, setAddExpenseError] = useState('');
+  const [residentBuildingFilter, setResidentBuildingFilter] = useState('Tous');
+  const [residentStatusFilter, setResidentStatusFilter] = useState('Tous');
   const [addResidentOpen, setAddResidentOpen] = useState(false);
   const [newResident, setNewResident] = useState({ name: '', phone: '', buildingId: '', unitNumber: '', isOwner: false });
   const [addResidentLoading, setAddResidentLoading] = useState(false);
@@ -150,6 +155,31 @@ export default function Dashboard() {
   const buildingResidents = selectedBuilding
     ? payments.filter(p => p.unit?.building?.id === selectedBuilding || p.unit?.buildingId === selectedBuilding)
     : [];
+
+  async function handleAddExpense() {
+    setAddExpenseError('');
+    if (!newExpense.label || !newExpense.amount || !newExpense.date || !newExpense.buildingId) {
+      setAddExpenseError('Tous les champs sont obligatoires.');
+      return;
+    }
+    setAddExpenseLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/expenses`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tokenRef.current}` },
+        body: JSON.stringify({ ...newExpense, amount: parseFloat(newExpense.amount) }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setAddExpenseError(data.error || 'Erreur lors de l\'ajout.'); return; }
+      setExpenses(prev => [data, ...prev]);
+      setAddExpenseOpen(false);
+      setNewExpense({ label: '', amount: '', date: '', buildingId: '', category: 'ENTRETIEN' });
+    } catch {
+      setAddExpenseError('Erreur de connexion.');
+    } finally {
+      setAddExpenseLoading(false);
+    }
+  }
 
   function sendReminder(id: string) {
     setReminderSent(prev => [...prev, id]);
@@ -457,11 +487,11 @@ export default function Dashboard() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                 <div style={styles.filterRow}>
                   {['Tous', ...buildings.map(b => b.name.split(' ').slice(-1)[0])].map(f => (
-                    <button key={f} style={styles.filterBtn}>{f}</button>
+                    <button key={f} style={{ ...styles.filterBtn, ...(residentBuildingFilter === f ? styles.filterBtnActive : {}) }} onClick={() => setResidentBuildingFilter(f)}>{f}</button>
                   ))}
                   <div style={{ display: 'flex', gap: 8 }}>
                     {['Tous', 'Payé', 'En attente', 'En retard'].map(f => (
-                      <button key={f} style={styles.filterBtn}>{f}</button>
+                      <button key={f} style={{ ...styles.filterBtn, ...(residentStatusFilter === f ? styles.filterBtnActive : {}) }} onClick={() => setResidentStatusFilter(f)}>{f}</button>
                     ))}
                   </div>
                 </div>
@@ -476,7 +506,16 @@ export default function Dashboard() {
                   <span style={{ flex: 1 }}>Statut</span>
                   <span style={{ flex: 1 }}>Action</span>
                 </div>
-                {payments.map(p => (
+                {payments.filter(p => {
+                  if (residentBuildingFilter !== 'Tous') {
+                    const bName = p.unit?.building?.name || '';
+                    if (!bName.split(' ').slice(-1)[0].includes(residentBuildingFilter)) return false;
+                  }
+                  if (residentStatusFilter === 'Payé' && p.status !== 'PAID') return false;
+                  if (residentStatusFilter === 'En attente' && p.status !== 'PENDING') return false;
+                  if (residentStatusFilter === 'En retard' && p.status !== 'LATE') return false;
+                  return true;
+                }).map(p => (
                   <div key={p.id} style={styles.tableRow}>
                     <span style={{ flex: 2, display: 'flex', alignItems: 'center', gap: 10 }}>
                       <div style={{ ...styles.residentAv, background: p.status === 'PAID' ? '#34d399' : p.status === 'LATE' ? '#f87171' : '#fbbf24' }}>
@@ -594,29 +633,35 @@ export default function Dashboard() {
                     <button style={styles.modalClose} onClick={() => setAddExpenseOpen(false)}>×</button>
                     <div style={{ fontSize: 11, color: '#c8b8e8', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>Nouvelle dépense</div>
                     <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 28, fontWeight: 300, color: 'white', marginBottom: 24 }}>Enregistrer une dépense</div>
-                    {[
-                      { label: 'Libellé', placeholder: 'Ex. Entretien ascenseur', type: 'text' },
-                      { label: 'Montant (MAD)', placeholder: '0', type: 'number' },
-                      { label: 'Date', placeholder: '', type: 'date' },
-                    ].map(f => (
-                      <div key={f.label} style={{ marginBottom: 16 }}>
-                        <label style={styles.formLabel}>{f.label}</label>
-                        <input type={f.type} placeholder={f.placeholder} style={styles.formInput} />
-                      </div>
-                    ))}
+                    <div style={{ marginBottom: 16 }}>
+                      <label style={styles.formLabel}>Libellé</label>
+                      <input type="text" placeholder="Ex. Entretien ascenseur" style={styles.formInput} value={newExpense.label} onChange={e => setNewExpense(p => ({ ...p, label: e.target.value }))} />
+                    </div>
+                    <div style={{ marginBottom: 16 }}>
+                      <label style={styles.formLabel}>Montant (MAD)</label>
+                      <input type="number" placeholder="0" style={styles.formInput} value={newExpense.amount} onChange={e => setNewExpense(p => ({ ...p, amount: e.target.value }))} />
+                    </div>
+                    <div style={{ marginBottom: 16 }}>
+                      <label style={styles.formLabel}>Date</label>
+                      <input type="date" style={styles.formInput} value={newExpense.date} onChange={e => setNewExpense(p => ({ ...p, date: e.target.value }))} />
+                    </div>
                     <div style={{ marginBottom: 16 }}>
                       <label style={styles.formLabel}>Immeuble</label>
-                      <select style={styles.formInput}>
-                        {buildings.map(b => <option key={b.id}>{b.name}</option>)}
+                      <select style={styles.formInput} value={newExpense.buildingId} onChange={e => setNewExpense(p => ({ ...p, buildingId: e.target.value }))}>
+                        <option value="">— Choisir un immeuble —</option>
+                        {buildings.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                       </select>
                     </div>
                     <div style={{ marginBottom: 24 }}>
                       <label style={styles.formLabel}>Catégorie</label>
-                      <select style={styles.formInput}>
-                        {Object.entries(CAT_LABELS).map(([k, v]) => <option key={k}>{v}</option>)}
+                      <select style={styles.formInput} value={newExpense.category} onChange={e => setNewExpense(p => ({ ...p, category: e.target.value }))}>
+                        {Object.entries(CAT_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                       </select>
                     </div>
-                    <button style={styles.submitBtn} onClick={() => setAddExpenseOpen(false)}>Enregistrer la dépense</button>
+                    {addExpenseError && <div style={{ color: '#f87171', fontSize: 13, marginBottom: 12 }}>{addExpenseError}</div>}
+                    <button style={styles.submitBtn} onClick={handleAddExpense} disabled={addExpenseLoading}>
+                      {addExpenseLoading ? 'Enregistrement...' : 'Enregistrer la dépense'}
+                    </button>
                   </div>
                 </div>
               )}
@@ -810,6 +855,7 @@ const styles: Record<string, React.CSSProperties> = {
   smallMuted: { fontSize: 12, color: 'rgba(255,255,255,0.35)' },
   filterRow: { display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' },
   filterBtn: { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.55)', borderRadius: 100, padding: '6px 14px', fontSize: 12, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" },
+  filterBtnActive: { background: 'rgba(123,94,167,0.2)', border: '1px solid rgba(123,94,167,0.5)', color: '#c8b8e8' },
   addBtn: { background: 'rgba(123,94,167,0.25)', border: '1px solid rgba(123,94,167,0.4)', color: '#c8b8e8', borderRadius: 10, padding: '10px 20px', fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", whiteSpace: 'nowrap' },
 
   // MODAL
