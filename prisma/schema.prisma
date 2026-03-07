@@ -184,3 +184,19 @@ enum ReminderStatus {
   DELIVERED
   FAILED
 }
+
+// Add this model to your existing prisma/schema.prisma
+// Place it after the existing models
+
+model DemoRequest {
+  id        String   @id @default(cuid())
+  name      String?
+  email     String   @unique
+  phone     String?
+  buildings Int?
+  plan      String?
+  message   String?
+  createdAt DateTime @default(now())
+  contacted Boolean  @default(false)
+}
+
