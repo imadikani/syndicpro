@@ -1,146 +1,169 @@
-// prisma/seed.ts
-// Run with: npx prisma db seed
-
-import { PrismaClient } from "@prisma/client";
-import bcrypt from "bcryptjs";
+import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("🌱 Seeding SyndicPro database...");
+  console.log('🌱 Seeding SyndicPro database...');
 
-  // Create admin syndic user
-  const hashedPassword = await bcrypt.hash("syndic123", 12);
+  // ── USER ──────────────────────────────────────────────────────────────────
+  const hashed = await bcrypt.hash('syndicpro2026', 10);
   const user = await prisma.user.upsert({
-    where: { email: "admin@syndicpro.ma" },
+    where: { email: 'imad@syndicpro.ma' },
     update: {},
     create: {
-      email: "admin@syndicpro.ma",
-      name: "Mohammed Alami",
-      phone: "+212 6 12 34 56 78",
-      password: hashedPassword,
-      role: "SYNDIC",
+      email: 'imad@syndicpro.ma',
+      name: 'Imad Ikani',
+      phone: '+212 6 00 00 00 00',
+      password: hashed,
+      role: 'ADMIN',
     },
   });
-  console.log("✅ User created:", user.email);
+  console.log('✓ User:', user.email);
 
-  // Building 1
-  const building1 = await prisma.building.upsert({
-    where: { id: "building-1" },
+  // ── BUILDINGS ─────────────────────────────────────────────────────────────
+  const b1 = await prisma.building.upsert({
+    where: { id: 'seed-b1' },
     update: {},
     create: {
-      id: "building-1",
-      name: "Résidence Al Andalous",
-      address: "Bd Zerktouni",
-      city: "Casablanca",
-      totalUnits: 4,
+      id: 'seed-b1',
+      name: 'Résidence Al Andalous',
+      address: '12 Rue Ibn Battouta, Maarif',
+      city: 'Casablanca',
+      totalUnits: 18,
       monthlyFee: 350,
-      color: "#4F8EF7",
+      color: '#7b5ea7',
       userId: user.id,
     },
   });
 
-  // Building 2
-  const building2 = await prisma.building.upsert({
-    where: { id: "building-2" },
+  const b2 = await prisma.building.upsert({
+    where: { id: 'seed-b2' },
     update: {},
     create: {
-      id: "building-2",
-      name: "Immeuble Safae",
-      address: "Hay Riad",
-      city: "Rabat",
-      totalUnits: 3,
-      monthlyFee: 250,
-      color: "#34D399",
+      id: 'seed-b2',
+      name: 'Résidence Safae',
+      address: '45 Bd Anfa',
+      city: 'Casablanca',
+      totalUnits: 12,
+      monthlyFee: 450,
+      color: '#e8906a',
       userId: user.id,
     },
   });
 
-  console.log("✅ Buildings created");
-
-  // Units + Residents for Building 1
-  const b1residents = [
-    { unit: "A1", name: "Karim Benali", phone: "+212 6 11 22 33 44", email: "k.benali@gmail.com" },
-    { unit: "A2", name: "Fatima Zahra Idrissi", phone: "+212 6 55 66 77 88", email: "fz.idrissi@gmail.com" },
-    { unit: "B1", name: "Omar Tazi", phone: "+212 6 99 00 11 22", email: "omar.tazi@hotmail.com" },
-    { unit: "B2", name: "Nadia Cherkaoui", phone: "+212 6 33 44 55 66", email: "n.cherkaoui@gmail.com" },
-  ];
-
-  for (const r of b1residents) {
-    const unit = await prisma.unit.upsert({
-      where: { buildingId_number: { buildingId: building1.id, number: r.unit } },
-      update: {},
-      create: { buildingId: building1.id, number: r.unit, monthlyFee: 350 },
-    });
-    await prisma.resident.upsert({
-      where: { unitId: unit.id },
-      update: {},
-      create: { unitId: unit.id, name: r.name, phone: r.phone, email: r.email },
-    });
-  }
-
-  // Units + Residents for Building 2
-  const b2residents = [
-    { unit: "1A", name: "Youssef Alami", phone: "+212 6 77 88 99 00", email: "y.alami@gmail.com" },
-    { unit: "2B", name: "Samira Fassi", phone: "+212 6 22 33 44 55", email: "s.fassi@outlook.com" },
-    { unit: "3C", name: "Hassan Belkadi", phone: "+212 6 66 77 88 99", email: "h.belkadi@gmail.com" },
-  ];
-
-  for (const r of b2residents) {
-    const unit = await prisma.unit.upsert({
-      where: { buildingId_number: { buildingId: building2.id, number: r.unit } },
-      update: {},
-      create: { buildingId: building2.id, number: r.unit, monthlyFee: 250 },
-    });
-    await prisma.resident.upsert({
-      where: { unitId: unit.id },
-      update: {},
-      create: { unitId: unit.id, name: r.name, phone: r.phone, email: r.email },
-    });
-  }
-
-  console.log("✅ Units and residents created");
-
-  // Generate payments for Jan, Feb, Mar 2026
-  const allUnits = await prisma.unit.findMany({
-    where: { buildingId: { in: [building1.id, building2.id] } },
+  const b3 = await prisma.building.upsert({
+    where: { id: 'seed-b3' },
+    update: {},
+    create: {
+      id: 'seed-b3',
+      name: 'Immeuble Atlas',
+      address: '8 Rue Moulay Youssef, Gauthier',
+      city: 'Casablanca',
+      totalUnits: 24,
+      monthlyFee: 280,
+      color: '#34d399',
+      userId: user.id,
+    },
   });
+  console.log('✓ Buildings: Al Andalous, Safae, Atlas');
 
-  for (const unit of allUnits) {
-    for (const month of [1, 2, 3]) {
-      const paid = Math.random() > 0.3;
-      await prisma.payment.upsert({
-        where: { unitId_month_year: { unitId: unit.id, month, year: 2026 } },
-        update: {},
-        create: {
-          unitId: unit.id,
-          month,
-          year: 2026,
-          amount: unit.monthlyFee || 300,
-          status: paid ? "PAID" : "PENDING",
-          method: paid ? (Math.random() > 0.5 ? "VIREMENT" : "CMI") : null,
-          paidAt: paid ? new Date(2026, month - 1, Math.floor(Math.random() * 15) + 1) : null,
-        },
-      });
+  // ── UNITS & RESIDENTS ─────────────────────────────────────────────────────
+  const residentsData = [
+    // Al Andalous
+    { buildingId: b1.id, unit: 'A3', name: 'Karim Benali',     phone: '+212 6 61 23 45 67', isOwner: true,  status: 'PAID',    paidAt: new Date('2026-03-03') },
+    { buildingId: b1.id, unit: 'B1', name: 'Fatima Idrissi',   phone: '+212 6 62 34 56 78', isOwner: false, status: 'PENDING', paidAt: null },
+    { buildingId: b1.id, unit: 'C2', name: 'Omar Tazi',        phone: '+212 6 63 45 67 89', isOwner: true,  status: 'PAID',    paidAt: new Date('2026-03-01') },
+    { buildingId: b1.id, unit: 'A1', name: 'Nadia Cherkaoui',  phone: '+212 6 64 56 78 90', isOwner: false, status: 'LATE',    paidAt: null },
+    { buildingId: b1.id, unit: 'D4', name: 'Hassan Moussaoui', phone: '+212 6 65 67 89 01', isOwner: true,  status: 'PAID',    paidAt: new Date('2026-03-02') },
+    { buildingId: b1.id, unit: 'B3', name: 'Leila Bensouda',   phone: '+212 6 66 78 90 12', isOwner: true,  status: 'PENDING', paidAt: null },
+    // Résidence Safae
+    { buildingId: b2.id, unit: '101', name: 'Youssef Alami',   phone: '+212 6 67 89 01 23', isOwner: true,  status: 'PAID',    paidAt: new Date('2026-03-04') },
+    { buildingId: b2.id, unit: '202', name: 'Sara Rhalmi',     phone: '+212 6 68 90 12 34', isOwner: false, status: 'PENDING', paidAt: null },
+    { buildingId: b2.id, unit: '301', name: 'Mehdi Chraibi',   phone: '+212 6 69 01 23 45', isOwner: true,  status: 'PAID',    paidAt: new Date('2026-03-02') },
+    { buildingId: b2.id, unit: '102', name: 'Amina Tahiri',    phone: '+212 6 70 12 34 56', isOwner: false, status: 'LATE',    paidAt: null },
+    // Immeuble Atlas
+    { buildingId: b3.id, unit: 'E1', name: 'Rachid Berrada',   phone: '+212 6 71 23 45 67', isOwner: true,  status: 'PAID',    paidAt: new Date('2026-03-01') },
+    { buildingId: b3.id, unit: 'F2', name: 'Zineb Fassi',      phone: '+212 6 72 34 56 78', isOwner: true,  status: 'PENDING', paidAt: null },
+    { buildingId: b3.id, unit: 'G3', name: 'Amine Kettani',    phone: '+212 6 73 45 67 89', isOwner: false, status: 'PAID',    paidAt: new Date('2026-03-03') },
+    { buildingId: b3.id, unit: 'H4', name: 'Houda Lahlou',     phone: '+212 6 74 56 78 90', isOwner: true,  status: 'LATE',    paidAt: null },
+    { buildingId: b3.id, unit: 'E3', name: 'Tariq Benjelloun', phone: '+212 6 75 67 89 01', isOwner: false, status: 'PAID',    paidAt: new Date('2026-03-05') },
+    { buildingId: b3.id, unit: 'F4', name: 'Meryem Squalli',   phone: '+212 6 76 78 90 12', isOwner: true,  status: 'PENDING', paidAt: null },
+  ];
+
+  const buildings = { [b1.id]: b1, [b2.id]: b2, [b3.id]: b3 };
+
+  for (const r of residentsData) {
+    const building = buildings[r.buildingId];
+    const unit = await prisma.unit.upsert({
+      where: { buildingId_number: { buildingId: r.buildingId, number: r.unit } },
+      update: {},
+      create: { number: r.unit, buildingId: r.buildingId },
+    });
+
+    const resident = await prisma.resident.upsert({
+      where: { unitId: unit.id },
+      update: {},
+      create: {
+        name: r.name,
+        phone: r.phone,
+        isOwner: r.isOwner,
+        unitId: unit.id,
+      },
+    });
+
+    // Payment for March 2026
+    await prisma.payment.upsert({
+      where: { unitId_month_year: { unitId: unit.id, month: 3, year: 2026 } },
+      update: {},
+      create: {
+        unitId: unit.id,
+        month: 3,
+        year: 2026,
+        amount: building.monthlyFee,
+        status: r.status as any,
+        method: r.status === 'PAID' || r.status === 'LATE' ? 'CASH' : null,
+        paidAt: r.paidAt,
+      },
+    });
+
+    // Reminder for unpaid residents
+    if (r.status !== 'PAID') {
+      const existing = await prisma.reminder.findFirst({ where: { residentId: resident.id } });
+      if (!existing) {
+        await prisma.reminder.create({
+          data: {
+            residentId: resident.id,
+            channel: 'WHATSAPP',
+            status: r.status === 'LATE' ? 'DELIVERED' : 'SENT',
+            message: r.status === 'LATE'
+              ? `Rappel J+10 : Votre charge de ${building.monthlyFee} MAD pour Mars 2026 est en retard.`
+              : `Rappel J+5 : Votre charge de ${building.monthlyFee} MAD pour Mars 2026 est due.`,
+          },
+        });
+      }
     }
   }
+  console.log('✓ Units, Residents, Payments, Reminders seeded');
 
-  console.log("✅ Payments seeded");
+  // ── EXPENSES ──────────────────────────────────────────────────────────────
+  const expenses = [
+    { buildingId: b1.id, label: 'Entretien ascenseur',              category: 'ENTRETIEN',   amount: 1200, date: new Date('2026-02-28') },
+    { buildingId: b1.id, label: 'Facture électricité parties comm.', category: 'ELECTRICITE', amount: 780,  date: new Date('2026-03-01') },
+    { buildingId: b2.id, label: 'Gardien — Mars',                   category: 'SECURITE',    amount: 2500, date: new Date('2026-03-01') },
+    { buildingId: b3.id, label: 'Réparation toiture',               category: 'REPARATION',  amount: 4500, date: new Date('2026-02-25') },
+    { buildingId: b2.id, label: 'Assurance immeuble',               category: 'ASSURANCE',   amount: 3200, date: new Date('2026-02-15') },
+    { buildingId: b3.id, label: 'Eau parties communes',             category: 'EAU',         amount: 430,  date: new Date('2026-03-05') },
+  ];
 
-  // Sample expenses
-  await prisma.expense.createMany({
-    skipDuplicates: true,
-    data: [
-      { buildingId: building1.id, label: "Nettoyage escaliers", amount: 1200, category: "ENTRETIEN", date: new Date("2026-03-05") },
-      { buildingId: building1.id, label: "Réparation ascenseur", amount: 3500, category: "REPARATION", date: new Date("2026-02-12") },
-      { buildingId: building2.id, label: "Gardien février", amount: 2000, category: "SECURITE", date: new Date("2026-02-01") },
-    ],
-  });
+  for (const e of expenses) {
+    await prisma.expense.create({ data: { ...e, category: e.category as any } });
+  }
+  console.log('✓ Expenses seeded');
 
-  console.log("✅ Expenses seeded");
-  console.log("\n🎉 Seed complete! Login: admin@syndicpro.ma / syndic123");
+  console.log('\n✅ Seed complete! Database is ready.');
 }
 
 main()
-  .catch(console.error)
+  .catch(e => { console.error(e); process.exit(1); })
   .finally(() => prisma.$disconnect());
