@@ -107,6 +107,9 @@ export default function Dashboard() {
   const [addResidentLoading, setAddResidentLoading] = useState(false);
   const [addResidentError, setAddResidentError] = useState('');
   const [reminderSent, setReminderSent] = useState<string[]>([]);
+  const [reminderLoading, setReminderLoading] = useState<string | null>(null);
+  const [sendAllLoading, setSendAllLoading] = useState(false);
+  const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
 
   const [buildings, setBuildings] = useState<Building[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -244,8 +247,55 @@ export default function Dashboard() {
     }
   }
 
-  function sendReminder(id: string) {
-    setReminderSent(prev => [...prev, id]);
+  function showToast(msg: string, ok: boolean) {
+    setToast({ msg, ok });
+    setTimeout(() => setToast(null), 3500);
+  }
+
+  async function refreshReminders() {
+    const res = await fetch(`${API_BASE}/api/reminders`, {
+      headers: { Authorization: `Bearer ${tokenRef.current}` },
+    });
+    if (res.ok) setReminders(await res.json());
+  }
+
+  async function handleSendReminder(residentId: string, paymentId: string) {
+    setReminderLoading(paymentId);
+    try {
+      const res = await fetch(`${API_BASE}/api/reminders/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tokenRef.current}` },
+        body: JSON.stringify({ residentId }),
+      });
+      const data = await res.json();
+      if (!res.ok) { showToast(data.error || 'Erreur envoi', false); return; }
+      setReminderSent(prev => [...prev, paymentId]);
+      showToast(`✓ Rappel envoyé`, true);
+      await refreshReminders();
+    } catch {
+      showToast('Erreur de connexion', false);
+    } finally {
+      setReminderLoading(null);
+    }
+  }
+
+  async function handleSendAll() {
+    setSendAllLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/reminders/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tokenRef.current}` },
+        body: JSON.stringify({ all: true }),
+      });
+      const data = await res.json();
+      if (!res.ok) { showToast(data.error || 'Erreur envoi', false); return; }
+      showToast(`✓ ${data.sent} rappel(s) envoyé(s)${data.failed ? `, ${data.failed} échoué(s)` : ''}`, data.sent > 0);
+      await refreshReminders();
+    } catch {
+      showToast('Erreur de connexion', false);
+    } finally {
+      setSendAllLoading(false);
+    }
   }
 
   async function handleAddResident() {
@@ -311,6 +361,20 @@ export default function Dashboard() {
 
   return (
     <div className="dashboard-shell" style={styles.shell}>
+      {/* TOAST */}
+      {toast && (
+        <div style={{
+          position: 'fixed', bottom: 28, right: 28, zIndex: 9999,
+          background: toast.ok ? '#1a2e1a' : '#2e1a1a',
+          border: `1px solid ${toast.ok ? '#34d399' : '#f87171'}`,
+          color: toast.ok ? '#34d399' : '#f87171',
+          borderRadius: 12, padding: '12px 20px', fontSize: 13,
+          fontFamily: "'DM Sans', sans-serif", boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+        }}>
+          {toast.msg}
+        </div>
+      )}
+
       {/* SIDEBAR */}
       <aside style={styles.sidebar}>
         <div style={styles.sidebarBrand}>
@@ -604,8 +668,14 @@ export default function Dashboard() {
                       </span>
                     </span>
                     <span style={{ flex: 1 }}>
-                      {p.status !== 'PAID' && (
-                        <button style={styles.reminderBtn}>{t('dash_send_reminder')}</button>
+                      {p.status !== 'PAID' && p.unit?.resident?.id && (
+                        <button
+                          style={{ ...styles.reminderBtn, opacity: reminderSent.includes(p.id) ? 0.5 : 1 }}
+                          disabled={reminderLoading === p.id || reminderSent.includes(p.id)}
+                          onClick={() => handleSendReminder(p.unit.resident!.id, p.id)}
+                        >
+                          {reminderLoading === p.id ? '...' : reminderSent.includes(p.id) ? '✓' : t('dash_send_reminder')}
+                        </button>
                       )}
                     </span>
                   </div>
@@ -874,7 +944,16 @@ export default function Dashboard() {
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '28px 0 16px' }}>
                 <div style={styles.cardTitle2}>{t('rem_history')}</div>
-                <button style={styles.addBtn} onClick={() => { setCustomReminderError(''); setCustomReminderOpen(true); }}>{t('rem_custom_btn')}</button>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <button
+                    style={{ ...styles.addBtn, background: 'rgba(123,94,167,0.15)', opacity: sendAllLoading ? 0.6 : 1 }}
+                    disabled={sendAllLoading}
+                    onClick={handleSendAll}
+                  >
+                    {sendAllLoading ? '...' : '📲 Envoyer à tous'}
+                  </button>
+                  <button style={styles.addBtn} onClick={() => { setCustomReminderError(''); setCustomReminderOpen(true); }}>{t('rem_custom_btn')}</button>
+                </div>
               </div>
 
               <div style={styles.residentTable}>
