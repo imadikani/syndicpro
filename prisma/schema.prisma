@@ -140,8 +140,10 @@ model Expense {
   amount     Float
   category   ExpenseCategory
   date       DateTime
+  dueDate    DateTime? // when bill must be paid
+  isPaid     Boolean         @default(true)
   notes      String?
-  receiptUrl String? // uploaded receipt (future S3)
+  receiptUrl String?
   createdAt  DateTime        @default(now())
 
   building   Building @relation(fields: [buildingId], references: [id], onDelete: Cascade)

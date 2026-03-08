@@ -40,6 +40,8 @@ type Expense = {
   amount: number;
   category: string;
   date: string;
+  dueDate: string | null;
+  isPaid: boolean;
   buildingId: string;
   building?: { name: string } | null;
 };
@@ -87,7 +89,7 @@ export default function Dashboard() {
   const [customReminderMsg, setCustomReminderMsg] = useState('');
   const [customReminderLoading, setCustomReminderLoading] = useState(false);
   const [customReminderError, setCustomReminderError] = useState('');
-  const [newExpense, setNewExpense] = useState({ label: '', amount: '', date: '', buildingId: '', category: 'ENTRETIEN' });
+  const [newExpense, setNewExpense] = useState({ label: '', amount: '', date: '', dueDate: '', buildingId: '', category: 'ENTRETIEN', isPaid: true });
   const [addExpenseLoading, setAddExpenseLoading] = useState(false);
   const [addExpenseError, setAddExpenseError] = useState('');
   const [residentBuildingFilter, setResidentBuildingFilter] = useState('Tous');
@@ -161,6 +163,17 @@ export default function Dashboard() {
     ? payments.filter(p => p.unit?.building?.id === selectedBuilding || p.unit?.buildingId === selectedBuilding)
     : [];
 
+  async function handleMarkExpensePaid(id: string, isPaid: boolean) {
+    try {
+      const res = await fetch(`${API_BASE}/api/expenses/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tokenRef.current}` },
+        body: JSON.stringify({ isPaid }),
+      });
+      if (res.ok) setExpenses(prev => prev.map(e => e.id === id ? { ...e, isPaid } : e));
+    } catch { /* silent */ }
+  }
+
   async function handleDeleteExpense(id: string) {
     if (!confirm('Supprimer cette dépense ?')) return;
     try {
@@ -189,7 +202,7 @@ export default function Dashboard() {
       if (!res.ok) { setAddExpenseError(data.error || 'Erreur lors de l\'ajout.'); return; }
       setExpenses(prev => [data, ...prev]);
       setAddExpenseOpen(false);
-      setNewExpense({ label: '', amount: '', date: '', buildingId: '', category: 'ENTRETIEN' });
+      setNewExpense({ label: '', amount: '', date: '', dueDate: '', buildingId: '', category: 'ENTRETIEN', isPaid: true });
     } catch {
       setAddExpenseError('Erreur de connexion.');
     } finally {
@@ -626,93 +639,198 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* ── EXPENSES ── */}
-          {activeTab === 'expenses' && (
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-                <div style={styles.kpiGrid}>
-                  {[
-                    { label: 'Total dépenses', value: `${totalExpenses.toLocaleString()} MAD`, color: '#f87171' },
-                    { label: 'Ce mois', value: `${expenses.filter(e => { try { return new Date(e.date).getMonth() === 2; } catch { return true; } }).reduce((s, e) => s + e.amount, 0).toLocaleString()} MAD`, color: '#fbbf24' },
-                    { label: 'Entrées', value: expenses.length.toString(), color: '#c8b8e8' },
-                  ].map(k => (
-                    <div key={k.label} style={styles.kpiCard}>
-                      <div style={styles.kpiLabel}>{k.label}</div>
-                      <div style={{ ...styles.kpiValue, color: k.color, fontSize: 28 }}>{k.value}</div>
-                    </div>
-                  ))}
-                </div>
-                <button style={styles.addBtn} onClick={() => setAddExpenseOpen(true)}>+ Nouvelle dépense</button>
-              </div>
+          {/* ── EXPENSES / ACCOUNTING ── */}
+          {activeTab === 'expenses' && (() => {
+            const today = new Date();
+            // Build month keys from both revenues and expenses
+            const monthKeys = Array.from(new Set([
+              ...payments.filter(p => p.status === 'PAID' && p.paidAt).map(p => { const d = new Date(p.paidAt!); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; }),
+              ...expenses.map(e => { const d = new Date(e.date); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; }),
+            ])).sort((a,b) => b.localeCompare(a)).slice(0, 6);
 
-              <div style={styles.residentTable}>
-                <div style={styles.tableHeader}>
-                  <span style={{ flex: 2 }}>Libellé</span>
-                  <span style={{ flex: 1 }}>Immeuble</span>
-                  <span style={{ flex: 1 }}>Catégorie</span>
-                  <span style={{ flex: 1 }}>Montant</span>
-                  <span style={{ flex: 1 }}>Date</span>
-                  <span style={{ flex: '0 0 48px' }}></span>
+            const cashflow = monthKeys.map(key => {
+              const [y, m] = key.split('-').map(Number);
+              const rev = payments.filter(p => p.status === 'PAID' && p.paidAt && new Date(p.paidAt).getFullYear() === y && new Date(p.paidAt).getMonth()+1 === m).reduce((s,p) => s + p.amount, 0);
+              const exp = expenses.filter(e => { const d = new Date(e.date); return d.getFullYear() === y && d.getMonth()+1 === m; }).reduce((s,e) => s + e.amount, 0);
+              const label = new Date(y, m-1).toLocaleString('fr-FR', { month: 'short', year: '2-digit' });
+              return { key, label, rev, exp, net: rev - exp };
+            });
+
+            const totalRev = cashflow.reduce((s,c) => s + c.rev, 0);
+            const totalExp = cashflow.reduce((s,c) => s + c.exp, 0);
+            const expensesByMonth = monthKeys.map(key => {
+              const [y, m] = key.split('-').map(Number);
+              const label = new Date(y, m-1).toLocaleString('fr-FR', { month: 'long', year: 'numeric' });
+              const rows = expenses.filter(e => { const d = new Date(e.date); return d.getFullYear() === y && d.getMonth()+1 === m; });
+              return { key, label, rows };
+            }).filter(g => g.rows.length > 0);
+
+            return (
+              <div>
+                {/* ── Cashflow KPIs ── */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
+                  <div style={styles.kpiGrid}>
+                    {[
+                      { label: 'Revenus (encaissés)', value: `${totalRev.toLocaleString()} MAD`, color: '#34d399' },
+                      { label: 'Dépenses (total)', value: `${totalExp.toLocaleString()} MAD`, color: '#f87171' },
+                      { label: 'Solde net', value: `${(totalRev - totalExp) >= 0 ? '+' : ''}${(totalRev - totalExp).toLocaleString()} MAD`, color: (totalRev - totalExp) >= 0 ? '#34d399' : '#f87171' },
+                    ].map(k => (
+                      <div key={k.label} style={styles.kpiCard}>
+                        <div style={styles.kpiLabel}>{k.label}</div>
+                        <div style={{ ...styles.kpiValue, color: k.color, fontSize: 26 }}>{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <button style={styles.addBtn} onClick={() => { setAddExpenseError(''); setAddExpenseOpen(true); }}>+ Nouvelle dépense</button>
                 </div>
-                {expenses.map(e => (
-                  <div key={e.id} style={styles.tableRow}>
-                    <span style={{ flex: 2, fontSize: 13, color: 'rgba(255,255,255,0.85)', fontWeight: 500 }}>{e.label}</span>
-                    <span style={{ flex: 1, fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{e.building?.name || '—'}</span>
-                    <span style={{ flex: 1 }}>
-                      <span style={{ ...styles.catBadge, background: (CAT_COLORS[e.category] || '#9ca3af') + '22', color: CAT_COLORS[e.category] || '#9ca3af' }}>
-                        {CAT_LABELS[e.category] || e.category}
-                      </span>
-                    </span>
-                    <span style={{ flex: 1, fontSize: 13, color: '#f87171', fontWeight: 600 }}>{e.amount.toLocaleString()} MAD</span>
-                    <span style={{ flex: 1, fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{fmtDate(e.date)}</span>
-                    <span style={{ flex: '0 0 48px' }}>
-                      <button onClick={() => handleDeleteExpense(e.id)} style={{ background: 'none', border: 'none', color: 'rgba(248,113,113,0.5)', cursor: 'pointer', fontSize: 16, padding: '2px 6px', borderRadius: 6, lineHeight: 1 }} title="Supprimer">×</button>
-                    </span>
+
+                {/* ── Monthly cashflow table ── */}
+                <div style={{ marginBottom: 32 }}>
+                  <div style={styles.cardTitle2}>Trésorerie mensuelle</div>
+                  <div style={{ ...styles.residentTable, marginTop: 12 }}>
+                    <div style={{ ...styles.tableHeader, background: 'rgba(52,211,153,0.05)' }}>
+                      <span style={{ flex: 1 }}>Mois</span>
+                      <span style={{ flex: 1 }}>Revenus</span>
+                      <span style={{ flex: 1 }}>Dépenses</span>
+                      <span style={{ flex: 1 }}>Solde</span>
+                      <span style={{ flex: 2 }}>Visuel</span>
+                    </div>
+                    {cashflow.map(c => {
+                      const maxVal = Math.max(...cashflow.map(x => Math.max(x.rev, x.exp)), 1);
+                      return (
+                        <div key={c.key} style={styles.tableRow}>
+                          <span style={{ flex: 1, fontSize: 12, color: 'rgba(255,255,255,0.7)', fontWeight: 500, textTransform: 'capitalize' }}>{c.label}</span>
+                          <span style={{ flex: 1, fontSize: 13, color: '#34d399', fontWeight: 600 }}>{c.rev.toLocaleString()} MAD</span>
+                          <span style={{ flex: 1, fontSize: 13, color: '#f87171', fontWeight: 600 }}>{c.exp.toLocaleString()} MAD</span>
+                          <span style={{ flex: 1, fontSize: 13, fontWeight: 700, color: c.net >= 0 ? '#34d399' : '#f87171' }}>{c.net >= 0 ? '+' : ''}{c.net.toLocaleString()} MAD</span>
+                          <span style={{ flex: 2, display: 'flex', flexDirection: 'column', gap: 3, justifyContent: 'center' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <span style={{ fontSize: 9, color: '#34d399', width: 14 }}>▲</span>
+                              <div style={{ height: 6, borderRadius: 3, background: '#34d399', width: `${Math.round((c.rev / maxVal) * 100)}%`, minWidth: 4 }} />
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <span style={{ fontSize: 9, color: '#f87171', width: 14 }}>▼</span>
+                              <div style={{ height: 6, borderRadius: 3, background: '#f87171', width: `${Math.round((c.exp / maxVal) * 100)}%`, minWidth: c.exp > 0 ? 4 : 0 }} />
+                            </div>
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* ── Expenses grouped by month ── */}
+                {expensesByMonth.map(group => (
+                  <div key={group.key} style={{ marginBottom: 24 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+                      <div style={{ ...styles.cardTitle2, textTransform: 'capitalize', margin: 0 }}>{group.label}</div>
+                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', background: 'rgba(255,255,255,0.05)', padding: '2px 10px', borderRadius: 100 }}>
+                        {group.rows.length} entrée{group.rows.length > 1 ? 's' : ''} · {group.rows.reduce((s,e) => s + e.amount, 0).toLocaleString()} MAD
+                      </div>
+                    </div>
+                    <div style={styles.residentTable}>
+                      <div style={styles.tableHeader}>
+                        <span style={{ flex: '0 0 32px' }}></span>
+                        <span style={{ flex: 2 }}>Libellé</span>
+                        <span style={{ flex: 1 }}>Immeuble</span>
+                        <span style={{ flex: 1 }}>Catégorie</span>
+                        <span style={{ flex: 1 }}>Montant</span>
+                        <span style={{ flex: 1 }}>Échéance</span>
+                        <span style={{ flex: 1 }}>Statut</span>
+                        <span style={{ flex: '0 0 48px' }}></span>
+                      </div>
+                      {group.rows.map(e => {
+                        const isOverdue = !e.isPaid && e.dueDate && new Date(e.dueDate) < today;
+                        const isDueSoon = !e.isPaid && e.dueDate && new Date(e.dueDate) >= today;
+                        return (
+                          <div key={e.id} style={{ ...styles.tableRow, ...(isOverdue ? { background: 'rgba(248,113,113,0.04)', borderLeft: '2px solid rgba(248,113,113,0.3)' } : {}) }}>
+                            <span style={{ flex: '0 0 32px', fontSize: 16, textAlign: 'center' }}>
+                              {e.isPaid ? '🧾' : isOverdue ? '⚠️' : '🕐'}
+                            </span>
+                            <span style={{ flex: 2, fontSize: 13, color: 'rgba(255,255,255,0.85)', fontWeight: 500 }}>{e.label}</span>
+                            <span style={{ flex: 1, fontSize: 12, color: 'rgba(255,255,255,0.45)' }}>{e.building?.name?.split(' ').slice(-1)[0] || '—'}</span>
+                            <span style={{ flex: 1 }}>
+                              <span style={{ ...styles.catBadge, background: (CAT_COLORS[e.category] || '#9ca3af') + '22', color: CAT_COLORS[e.category] || '#9ca3af' }}>
+                                {CAT_LABELS[e.category] || e.category}
+                              </span>
+                            </span>
+                            <span style={{ flex: 1, fontSize: 13, color: '#f87171', fontWeight: 600 }}>{e.amount.toLocaleString()} MAD</span>
+                            <span style={{ flex: 1, fontSize: 11, color: isOverdue ? '#f87171' : isDueSoon ? '#fbbf24' : 'rgba(255,255,255,0.35)' }}>
+                              {e.dueDate ? fmtDate(e.dueDate) : '—'}
+                            </span>
+                            <span style={{ flex: 1 }}>
+                              {e.isPaid ? (
+                                <span style={{ fontSize: 11, color: '#34d399', background: 'rgba(52,211,153,0.12)', padding: '3px 10px', borderRadius: 100 }}>✓ Réglé</span>
+                              ) : isOverdue ? (
+                                <button onClick={() => handleMarkExpensePaid(e.id, true)} style={{ fontSize: 11, color: '#f87171', background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.3)', padding: '3px 10px', borderRadius: 100, cursor: 'pointer' }}>⚠ En retard</button>
+                              ) : (
+                                <button onClick={() => handleMarkExpensePaid(e.id, true)} style={{ fontSize: 11, color: '#fbbf24', background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)', padding: '3px 10px', borderRadius: 100, cursor: 'pointer' }}>Marquer réglé</button>
+                              )}
+                            </span>
+                            <span style={{ flex: '0 0 48px' }}>
+                              <button onClick={() => handleDeleteExpense(e.id)} style={{ background: 'none', border: 'none', color: 'rgba(248,113,113,0.4)', cursor: 'pointer', fontSize: 16, padding: '2px 6px', borderRadius: 6, lineHeight: 1 }} title="Supprimer">×</button>
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 ))}
-              </div>
 
-              {/* Add expense modal */}
-              {addExpenseOpen && (
-                <div style={styles.modalBackdrop} onClick={() => setAddExpenseOpen(false)}>
-                  <div style={styles.modalBox} onClick={e => e.stopPropagation()}>
-                    <button style={styles.modalClose} onClick={() => setAddExpenseOpen(false)}>×</button>
-                    <div style={{ fontSize: 11, color: '#c8b8e8', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>Nouvelle dépense</div>
-                    <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 28, fontWeight: 300, color: 'white', marginBottom: 24 }}>Enregistrer une dépense</div>
-                    <div style={{ marginBottom: 16 }}>
-                      <label style={styles.formLabel}>Libellé</label>
-                      <input type="text" placeholder="Ex. Entretien ascenseur" style={styles.formInput} value={newExpense.label} onChange={e => setNewExpense(p => ({ ...p, label: e.target.value }))} />
+                {/* ── Add expense modal ── */}
+                {addExpenseOpen && (
+                  <div style={styles.modalBackdrop} onClick={() => setAddExpenseOpen(false)}>
+                    <div style={styles.modalBox} onClick={e => e.stopPropagation()}>
+                      <button style={styles.modalClose} onClick={() => setAddExpenseOpen(false)}>×</button>
+                      <div style={{ fontSize: 11, color: '#c8b8e8', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>Comptabilité</div>
+                      <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 28, fontWeight: 300, color: 'white', marginBottom: 24 }}>Nouvelle dépense</div>
+                      <div style={{ marginBottom: 16 }}>
+                        <label style={styles.formLabel}>Libellé</label>
+                        <input type="text" placeholder="Ex. Entretien ascenseur" style={styles.formInput} value={newExpense.label} onChange={ev => setNewExpense(p => ({ ...p, label: ev.target.value }))} />
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+                        <div>
+                          <label style={styles.formLabel}>Montant (MAD)</label>
+                          <input type="number" placeholder="0" style={styles.formInput} value={newExpense.amount} onChange={ev => setNewExpense(p => ({ ...p, amount: ev.target.value }))} />
+                        </div>
+                        <div>
+                          <label style={styles.formLabel}>Date de dépense</label>
+                          <input type="date" style={styles.formInput} value={newExpense.date} onChange={ev => setNewExpense(p => ({ ...p, date: ev.target.value }))} />
+                        </div>
+                      </div>
+                      <div style={{ marginBottom: 16 }}>
+                        <label style={styles.formLabel}>Date d&apos;échéance (optionnel)</label>
+                        <input type="date" style={styles.formInput} value={newExpense.dueDate} onChange={ev => setNewExpense(p => ({ ...p, dueDate: ev.target.value }))} />
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+                        <div>
+                          <label style={styles.formLabel}>Immeuble</label>
+                          <select style={styles.formInput} value={newExpense.buildingId} onChange={ev => setNewExpense(p => ({ ...p, buildingId: ev.target.value }))}>
+                            <option value="">— Choisir —</option>
+                            {buildings.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label style={styles.formLabel}>Catégorie</label>
+                          <select style={styles.formInput} value={newExpense.category} onChange={ev => setNewExpense(p => ({ ...p, category: ev.target.value }))}>
+                            {Object.entries(CAT_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                          </select>
+                        </div>
+                      </div>
+                      <div style={{ marginBottom: 24, display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <input type="checkbox" id="expIsPaid" checked={newExpense.isPaid} onChange={ev => setNewExpense(p => ({ ...p, isPaid: ev.target.checked }))} />
+                        <label htmlFor="expIsPaid" style={{ ...styles.formLabel, marginBottom: 0, cursor: 'pointer' }}>Déjà réglée</label>
+                      </div>
+                      {addExpenseError && <div style={{ color: '#f87171', fontSize: 13, marginBottom: 12 }}>{addExpenseError}</div>}
+                      <button style={styles.submitBtn} onClick={handleAddExpense} disabled={addExpenseLoading}>
+                        {addExpenseLoading ? 'Enregistrement...' : 'Enregistrer la dépense'}
+                      </button>
                     </div>
-                    <div style={{ marginBottom: 16 }}>
-                      <label style={styles.formLabel}>Montant (MAD)</label>
-                      <input type="number" placeholder="0" style={styles.formInput} value={newExpense.amount} onChange={e => setNewExpense(p => ({ ...p, amount: e.target.value }))} />
-                    </div>
-                    <div style={{ marginBottom: 16 }}>
-                      <label style={styles.formLabel}>Date</label>
-                      <input type="date" style={styles.formInput} value={newExpense.date} onChange={e => setNewExpense(p => ({ ...p, date: e.target.value }))} />
-                    </div>
-                    <div style={{ marginBottom: 16 }}>
-                      <label style={styles.formLabel}>Immeuble</label>
-                      <select style={styles.formInput} value={newExpense.buildingId} onChange={e => setNewExpense(p => ({ ...p, buildingId: e.target.value }))}>
-                        <option value="">— Choisir un immeuble —</option>
-                        {buildings.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-                      </select>
-                    </div>
-                    <div style={{ marginBottom: 24 }}>
-                      <label style={styles.formLabel}>Catégorie</label>
-                      <select style={styles.formInput} value={newExpense.category} onChange={e => setNewExpense(p => ({ ...p, category: e.target.value }))}>
-                        {Object.entries(CAT_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-                      </select>
-                    </div>
-                    {addExpenseError && <div style={{ color: '#f87171', fontSize: 13, marginBottom: 12 }}>{addExpenseError}</div>}
-                    <button style={styles.submitBtn} onClick={handleAddExpense} disabled={addExpenseLoading}>
-                      {addExpenseLoading ? 'Enregistrement...' : 'Enregistrer la dépense'}
-                    </button>
                   </div>
-                </div>
-              )}
-            </div>
-          )}
+                )}
+              </div>
+            );
+          })()}
 
           {/* ── REMINDERS ── */}
           {activeTab === 'reminders' && (

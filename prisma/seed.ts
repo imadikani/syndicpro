@@ -148,12 +148,14 @@ async function main() {
 
   // ── EXPENSES ──────────────────────────────────────────────────────────────
   const expenses = [
-    { buildingId: b1.id, label: 'Entretien ascenseur',              category: 'ENTRETIEN',   amount: 1200, date: new Date('2026-02-28') },
-    { buildingId: b1.id, label: 'Facture électricité parties comm.', category: 'ELECTRICITE', amount: 780,  date: new Date('2026-03-01') },
-    { buildingId: b2.id, label: 'Gardien — Mars',                   category: 'SECURITE',    amount: 2500, date: new Date('2026-03-01') },
-    { buildingId: b3.id, label: 'Réparation toiture',               category: 'REPARATION',  amount: 4500, date: new Date('2026-02-25') },
-    { buildingId: b2.id, label: 'Assurance immeuble',               category: 'ASSURANCE',   amount: 3200, date: new Date('2026-02-15') },
-    { buildingId: b3.id, label: 'Eau parties communes',             category: 'EAU',         amount: 430,  date: new Date('2026-03-05') },
+    { buildingId: b1.id, label: 'Entretien ascenseur',              category: 'ENTRETIEN',   amount: 1200, date: new Date('2026-02-28'), dueDate: new Date('2026-03-05'), isPaid: true  },
+    { buildingId: b1.id, label: 'Facture électricité parties comm.', category: 'ELECTRICITE', amount: 780,  date: new Date('2026-03-01'), dueDate: new Date('2026-03-10'), isPaid: true  },
+    { buildingId: b2.id, label: 'Gardien — Mars',                   category: 'SECURITE',    amount: 2500, date: new Date('2026-03-01'), dueDate: new Date('2026-03-01'), isPaid: true  },
+    { buildingId: b3.id, label: 'Réparation toiture',               category: 'REPARATION',  amount: 4500, date: new Date('2026-02-25'), dueDate: new Date('2026-03-01'), isPaid: true  },
+    { buildingId: b2.id, label: 'Assurance immeuble',               category: 'ASSURANCE',   amount: 3200, date: new Date('2026-02-15'), dueDate: new Date('2026-02-28'), isPaid: true  },
+    { buildingId: b3.id, label: 'Eau parties communes',             category: 'EAU',         amount: 430,  date: new Date('2026-03-05'), dueDate: new Date('2026-03-15'), isPaid: true  },
+    // Example overdue (past due date, not yet paid) — triggers warning icon
+    { buildingId: b1.id, label: 'Contrat nettoyage — Avril',        category: 'ENTRETIEN',   amount: 950,  date: new Date('2026-03-01'), dueDate: new Date('2026-03-05'), isPaid: false },
   ];
 
   for (const e of expenses) {

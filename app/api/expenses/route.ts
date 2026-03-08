@@ -9,12 +9,8 @@ export async function GET(req: NextRequest) {
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const expenses = await prisma.expense.findMany({
-      where: {
-        building: { userId: user.id },
-      },
-      include: {
-        building: { select: { id: true, name: true } },
-      },
+      where: { building: { userId: user.id } },
+      include: { building: { select: { id: true, name: true } } },
       orderBy: { date: "desc" },
     });
 
@@ -31,19 +27,14 @@ export async function POST(req: NextRequest) {
     const user = await getCurrentUser(req);
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const { buildingId, label, amount, category, date, notes } = await req.json();
+    const { buildingId, label, amount, category, date, dueDate, isPaid, notes } = await req.json();
 
     if (!buildingId || !label || !amount || !category || !date) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // Verify ownership
-    const building = await prisma.building.findFirst({
-      where: { id: buildingId, userId: user.id },
-    });
-    if (!building) {
-      return NextResponse.json({ error: "Building not found" }, { status: 404 });
-    }
+    const building = await prisma.building.findFirst({ where: { id: buildingId, userId: user.id } });
+    if (!building) return NextResponse.json({ error: "Building not found" }, { status: 404 });
 
     const expense = await prisma.expense.create({
       data: {
@@ -52,11 +43,11 @@ export async function POST(req: NextRequest) {
         amount: parseFloat(amount),
         category,
         date: new Date(date),
+        dueDate: dueDate ? new Date(dueDate) : null,
+        isPaid: isPaid ?? true,
         notes: notes || null,
       },
-      include: {
-        building: { select: { id: true, name: true } },
-      },
+      include: { building: { select: { id: true, name: true } } },
     });
 
     return NextResponse.json(expense, { status: 201 });
