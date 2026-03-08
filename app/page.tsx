@@ -358,7 +358,6 @@ export default function LandingPage() {
               <li>{t('tier1_f3')}</li>
               <li>{t('tier1_f4')}</li>
               <li className="na">{t('tier1_na1')}</li>
-              <li className="na">{t('tier1_na2')}</li>
               <li className="na">{t('tier1_na3')}</li>
             </ul>
             <div className="p-setup">{t('pricing_setup')} 5 000 MAD (unique)</div>
@@ -374,7 +373,6 @@ export default function LandingPage() {
             <ul className="p-features">
               <li>{t('tier2_f1')}</li>
               <li>{t('tier2_f2')}</li>
-              <li>{t('tier2_f3')}</li>
               <li>{t('tier2_f4')}</li>
               <li>{t('tier2_f5')}</li>
               <li>{t('tier2_f6')}</li>
