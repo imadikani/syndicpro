@@ -47,7 +47,21 @@ export async function POST(req: NextRequest) {
     const user = await getCurrentUser(req);
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const { buildingId, month, year, residentIds } = await req.json();
+    const { buildingId, month, year, residentIds, residentId, customMessage } = await req.json();
+
+    // ── Single custom message ──────────────────────────────────────
+    if (residentId && customMessage) {
+      const resident = await prisma.resident.findFirst({
+        where: { id: residentId, unit: { building: { userId: user.id } } },
+      });
+      if (!resident) return NextResponse.json({ error: "Résident introuvable" }, { status: 404 });
+
+      await sendWhatsApp(resident.phone, customMessage);
+      const reminder = await prisma.reminder.create({
+        data: { residentId: resident.id, message: customMessage, channel: "WHATSAPP", status: "SENT" },
+      });
+      return NextResponse.json({ sent: 1, failed: 0, total: 1, reminder });
+    }
 
     // Find all unpaid payments for this building/month
     const unpaidPayments = await prisma.payment.findMany({

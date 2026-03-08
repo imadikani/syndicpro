@@ -30,7 +30,7 @@ type Payment = {
     number: string;
     buildingId: string;
     building?: { id: string; name: string } | null;
-    resident?: { name: string; phone: string; isOwner: boolean } | null;
+    resident?: { id: string; name: string; phone: string; isOwner: boolean } | null;
   };
 };
 
@@ -82,6 +82,11 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [selectedBuilding, setSelectedBuilding] = useState<string | null>(null);
   const [addExpenseOpen, setAddExpenseOpen] = useState(false);
+  const [customReminderOpen, setCustomReminderOpen] = useState(false);
+  const [customReminderResidentId, setCustomReminderResidentId] = useState('');
+  const [customReminderMsg, setCustomReminderMsg] = useState('');
+  const [customReminderLoading, setCustomReminderLoading] = useState(false);
+  const [customReminderError, setCustomReminderError] = useState('');
   const [newExpense, setNewExpense] = useState({ label: '', amount: '', date: '', buildingId: '', category: 'ENTRETIEN' });
   const [addExpenseLoading, setAddExpenseLoading] = useState(false);
   const [addExpenseError, setAddExpenseError] = useState('');
@@ -189,6 +194,32 @@ export default function Dashboard() {
       setAddExpenseError('Erreur de connexion.');
     } finally {
       setAddExpenseLoading(false);
+    }
+  }
+
+  async function handleCustomReminder() {
+    setCustomReminderError('');
+    if (!customReminderResidentId || !customReminderMsg.trim()) {
+      setCustomReminderError('Choisissez un résident et écrivez un message.');
+      return;
+    }
+    setCustomReminderLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/reminders`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tokenRef.current}` },
+        body: JSON.stringify({ residentId: customReminderResidentId, customMessage: customReminderMsg }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setCustomReminderError(data.error || 'Erreur envoi.'); return; }
+      if (data.reminder) setReminders(prev => [{ ...data.reminder, resident: payments.find(p => p.unit?.resident && p.unit.resident)?.unit?.resident }, ...prev]);
+      setCustomReminderOpen(false);
+      setCustomReminderResidentId('');
+      setCustomReminderMsg('');
+    } catch {
+      setCustomReminderError('Erreur de connexion.');
+    } finally {
+      setCustomReminderLoading(false);
     }
   }
 
@@ -702,7 +733,7 @@ export default function Dashboard() {
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '28px 0 16px' }}>
                 <div style={styles.cardTitle2}>Historique des rappels</div>
-                <button style={styles.addBtn}>💬 Envoyer rappels groupés</button>
+                <button style={styles.addBtn} onClick={() => { setCustomReminderError(''); setCustomReminderOpen(true); }}>✏️ Message personnalisé</button>
               </div>
 
               <div style={styles.residentTable}>
@@ -710,10 +741,8 @@ export default function Dashboard() {
                   <span style={{ flex: 2 }}>Résident</span>
                   <span style={{ flex: 1 }}>Immeuble · Unité</span>
                   <span style={{ flex: 1 }}>Téléphone</span>
-                  <span style={{ flex: 1 }}>Message</span>
                   <span style={{ flex: 1 }}>Envoyé le</span>
                   <span style={{ flex: 1 }}>Statut</span>
-                  <span style={{ flex: 1 }}>Action</span>
                 </div>
                 {reminders.map(r => (
                   <div key={r.id} style={styles.tableRow}>
@@ -727,25 +756,50 @@ export default function Dashboard() {
                       {r.resident?.unit?.building?.name || '—'} · {r.resident?.unit?.number || '—'}
                     </span>
                     <span style={{ flex: 1, fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{r.resident?.phone || '—'}</span>
-                    <span style={{ flex: 1 }}>
-                      <span style={{ fontSize: 11, background: 'rgba(123,94,167,0.2)', color: '#c8b8e8', padding: '3px 10px', borderRadius: 100 }}>{r.message}</span>
-                    </span>
                     <span style={{ flex: 1, fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>{fmtDate(r.sentAt)}</span>
                     <span style={{ flex: 1 }}>
                       <span style={{ ...styles.statusBadge, ...getReminderStatusStyle(r.status) }}>
                         {r.status === 'DELIVERED' ? '✓ Délivré' : r.status === 'SENT' ? '○ Envoyé' : '✗ Échec'}
                       </span>
                     </span>
-                    <span style={{ flex: 1 }}>
-                      {reminderSent.includes(r.id) ? (
-                        <span style={{ fontSize: 11, color: '#34d399' }}>✓ Renvoyé</span>
-                      ) : (
-                        <button style={styles.reminderBtn} onClick={() => sendReminder(r.id)}>↺ Renvoyer</button>
-                      )}
-                    </span>
                   </div>
                 ))}
               </div>
+
+              {customReminderOpen && (
+                <div style={styles.modalBackdrop} onClick={() => setCustomReminderOpen(false)}>
+                  <div style={styles.modalBox} onClick={e => e.stopPropagation()}>
+                    <button style={styles.modalClose} onClick={() => setCustomReminderOpen(false)}>×</button>
+                    <div style={{ fontSize: 11, color: '#c8b8e8', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>Rappel WhatsApp</div>
+                    <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 28, fontWeight: 300, color: 'white', marginBottom: 24 }}>Message personnalisé</div>
+                    <div style={{ marginBottom: 16 }}>
+                      <label style={styles.formLabel}>Résident</label>
+                      <select style={styles.formInput} value={customReminderResidentId} onChange={e => setCustomReminderResidentId(e.target.value)}>
+                        <option value="">— Choisir un résident —</option>
+                        {Array.from(new Map(payments.filter(p => p.unit?.resident?.id).map(p => [p.unit.resident!.id, p])).values()).map(p => (
+                          <option key={p.unit.resident!.id} value={p.unit.resident!.id}>
+                            {p.unit.resident!.name} — {p.unit?.building?.name?.split(' ').slice(-1)[0]} {p.unit.number}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div style={{ marginBottom: 24 }}>
+                      <label style={styles.formLabel}>Message</label>
+                      <textarea
+                        rows={5}
+                        placeholder="Bonjour, votre charge de Mars est due..."
+                        style={{ ...styles.formInput, resize: 'vertical', lineHeight: 1.6 }}
+                        value={customReminderMsg}
+                        onChange={e => setCustomReminderMsg(e.target.value)}
+                      />
+                    </div>
+                    {customReminderError && <div style={{ color: '#f87171', fontSize: 13, marginBottom: 12 }}>{customReminderError}</div>}
+                    <button style={styles.submitBtn} onClick={handleCustomReminder} disabled={customReminderLoading}>
+                      {customReminderLoading ? 'Envoi...' : '💬 Envoyer via WhatsApp'}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
