@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { buildPeriodLabel } from "@/lib/billing";
 
 // GET /api/payments?buildingId=xxx&month=3&year=2026
 export async function GET(req: NextRequest) {
@@ -59,17 +60,26 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Building not found" }, { status: 404 });
     }
 
+    const label = buildPeriodLabel('MONTHLY', month, year);
+
     // Create payment records for all units (skip if already exists)
     const created = await Promise.allSettled(
       building.units.map((unit) =>
         prisma.payment.upsert({
-          where: { unitId_month_year: { unitId: unit.id, month, year } },
+          where: {
+            unitId_year_month_billingPeriod: {
+              unitId: unit.id, year, month, billingPeriod: 'MONTHLY',
+            },
+          },
           create: {
-            unitId: unit.id,
+            unitId:        unit.id,
             month,
             year,
-            amount: unit.monthlyFee || building.monthlyFee,
-            status: "PENDING",
+            chargeMonth:   month,
+            billingPeriod: 'MONTHLY',
+            periodLabel:   label,
+            amount:        unit.monthlyFee || building.monthlyFee,
+            status:        "PENDING",
           },
           update: {}, // don't overwrite if exists
         })

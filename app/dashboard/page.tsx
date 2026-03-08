@@ -24,6 +24,7 @@ type Payment = {
   id: string;
   month: number;
   year: number;
+  periodLabel: string | null;
   amount: number;
   status: 'PAID' | 'PENDING' | 'LATE' | 'WAIVED';
   paidAt: string | null;
@@ -595,7 +596,10 @@ export default function Dashboard() {
                       </span>
                       <span style={{ flex: 1, fontSize: 13, color: 'rgba(255,255,255,0.6)' }}>{p.unit?.number || '—'}</span>
                       <span style={{ flex: 1, fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{p.unit?.resident?.phone || '—'}</span>
-                      <span style={{ flex: 1, fontSize: 13, color: 'rgba(255,255,255,0.8)', fontWeight: 500 }}>{p.amount} MAD</span>
+                      <span style={{ flex: 1 }}>
+                        <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)', fontWeight: 500 }}>{p.amount} MAD</div>
+                        {p.periodLabel && <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>{p.periodLabel}</div>}
+                      </span>
                       <span style={{ flex: 1 }}>
                         <span style={{ ...styles.statusBadge, ...getStatusStyle(p.status) }}>
                           {p.status === 'PAID' ? t('dash_paid') : p.status === 'LATE' ? t('dash_late') : t('dash_pending')}

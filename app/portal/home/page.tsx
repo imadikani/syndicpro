@@ -11,10 +11,10 @@ type Resident = {
   id: string; name: string; phone: string; isOwner: boolean;
   unit: string; buildingId: string;
   building: { id: string; name: string; address: string; city: string; color: string };
-  currentPayment: { id: string; month: number; year: number; amount: number; status: string; paidAt: string | null } | null;
+  currentPayment: { id: string; month: number; year: number; chargeMonth: number | null; billingPeriod: string; periodLabel: string | null; amount: number; status: string; paidAt: string | null } | null;
 };
 
-type Payment = { id: string; month: number; year: number; amount: number; status: string; paidAt: string | null };
+type Payment = { id: string; month: number; year: number; periodLabel: string | null; amount: number; status: string; paidAt: string | null };
 type Post = { id: string; content: string; authorName: string; isPinned: boolean; createdAt: string };
 
 export default function PortalHome() {
@@ -140,7 +140,7 @@ export default function PortalHome() {
       {/* CURRENT PAYMENT CARD */}
       {cp && (
         <div style={s.payCard}>
-          <div style={s.payLabel}>{t('portal_charge')} — {MONTHS[cp.month - 1]} {cp.year}</div>
+          <div style={s.payLabel}>{t('portal_charge')} — {cp.periodLabel || (cp.month > 0 ? `${MONTHS[cp.month - 1]} ${cp.year}` : String(cp.year))}</div>
           <div style={{ ...s.payAmount, color: statusColor(cp.status) }}>
             {cp.amount.toLocaleString()} MAD
           </div>
@@ -222,7 +222,7 @@ export default function PortalHome() {
             ) : payments.map(p => (
               <div key={p.id} style={s.historyRow}>
                 <div>
-                  <div style={s.historyMonth}>{MONTHS[p.month - 1]} {p.year}</div>
+                  <div style={s.historyMonth}>{p.periodLabel || (p.month > 0 ? `${MONTHS[p.month - 1]} ${p.year}` : String(p.year))}</div>
                   {p.paidAt && <div style={s.historyDate}>{t('portal_paid_on')} {fmtDate(p.paidAt)}</div>}
                 </div>
                 <div style={{ textAlign: 'right' }}>

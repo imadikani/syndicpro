@@ -12,12 +12,10 @@ export async function GET(req: NextRequest) {
     const currentMonth = now.getMonth() + 1;
     const currentYear = now.getFullYear();
 
+    // Find the most recent charge for the current year, regardless of billing period
     const currentPayment = await prisma.payment.findFirst({
-      where: {
-        unitId: resident.unit.id,
-        month: currentMonth,
-        year: currentYear,
-      },
+      where: { unitId: resident.unit.id, year: currentYear },
+      orderBy: { createdAt: 'desc' },
     });
 
     return NextResponse.json({
@@ -36,12 +34,15 @@ export async function GET(req: NextRequest) {
       },
       currentPayment: currentPayment
         ? {
-            id: currentPayment.id,
-            month: currentPayment.month,
-            year: currentPayment.year,
-            amount: currentPayment.amount,
-            status: currentPayment.status,
-            paidAt: currentPayment.paidAt,
+            id:            currentPayment.id,
+            month:         currentPayment.month,
+            year:          currentPayment.year,
+            chargeMonth:   currentPayment.chargeMonth,
+            billingPeriod: currentPayment.billingPeriod,
+            periodLabel:   currentPayment.periodLabel,
+            amount:        currentPayment.amount,
+            status:        currentPayment.status,
+            paidAt:        currentPayment.paidAt,
           }
         : null,
     });

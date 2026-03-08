@@ -100,21 +100,24 @@ model Resident {
 // ─── PAYMENTS ─────────────────────────────────────────────────────────────────
 
 model Payment {
-  id        String         @id @default(cuid())
-  month     Int // 1–12
-  year      Int
-  amount    Float // in MAD
-  status    PaymentStatus  @default(PENDING)
-  method    PaymentMethod?
-  paidAt    DateTime?
-  notes     String?
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
+  id            String         @id @default(cuid())
+  month         Int            // MONTHLY: 1–12; QUARTERLY: quarter-start month; ANNUAL: 0
+  year          Int            // billing year
+  chargeMonth   Int?           // 1–12 for display; null for ANNUAL
+  billingPeriod String         @default("MONTHLY") // MONTHLY | QUARTERLY | ANNUAL
+  periodLabel   String?        // e.g. "Avril 2026", "Q2 2026", "Année 2026"
+  amount        Float          // in MAD
+  status        PaymentStatus  @default(PENDING)
+  method        PaymentMethod?
+  paidAt        DateTime?
+  notes         String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
   unit   Unit   @relation(fields: [unitId], references: [id], onDelete: Cascade)
   unitId String
 
-  @@unique([unitId, month, year])
+  @@unique([unitId, year, month, billingPeriod])
   @@map("payments")
 }
 
