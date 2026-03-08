@@ -1,0 +1,24 @@
+[build]
+builder = "NIXPACKS"
+buildCommand = "npm run db:generate && npm run build"
+
+[deploy]
+startCommand = "npm run db:push && npm start"
+healthcheckPath = "/"
+healthcheckTimeout = 30
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
+
+# ─── CRON JOBS ────────────────────────────────────────────────────────────────
+# These run as separate Railway cron services pointing at the deployed app URL.
+# Set NEXT_PUBLIC_APP_URL and CRON_SECRET as shared environment variables.
+
+[[crons]]
+name    = "generate-charges"
+schedule = "0 0 1 * *"
+command = "curl -s -o /dev/null -w '%{http_code}' -X POST -H 'Authorization: Bearer $CRON_SECRET' $NEXT_PUBLIC_APP_URL/api/cron/generate-charges"
+
+[[crons]]
+name    = "send-reminders"
+schedule = "0 9 5 * *"
+command = "curl -s -o /dev/null -w '%{http_code}' -X POST -H 'Authorization: Bearer $CRON_SECRET' $NEXT_PUBLIC_APP_URL/api/cron/reminders"

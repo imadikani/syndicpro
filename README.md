@@ -210,11 +210,12 @@ After first deploy, visit `/admin/setup` to create the super admin account. This
 | PATCH | `/api/expenses/:id` | Syndic JWT | Edit expense |
 | DELETE | `/api/expenses/:id` | Syndic JWT | Delete expense |
 
-### Reminders
+### Reminders & Cron
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
 | POST | `/api/reminders/send` | Syndic JWT | Send WhatsApp reminders (filter by residentId or buildingId, or all) |
-| POST | `/api/cron/reminders` | `CRON_SECRET` | Bulk reminders across all syndics (for cron jobs) |
+| POST | `/api/cron/reminders` | `CRON_SECRET` | Bulk reminders across all syndics — runs 5th of month 09:00 UTC |
+| POST | `/api/cron/generate-charges` | `CRON_SECRET` | Generate monthly PENDING charges for all occupied units — runs 1st of month 00:00 UTC |
 
 ### Admin
 | Method | Endpoint | Auth | Description |
