@@ -4,15 +4,16 @@ import { getCurrentUser } from "@/lib/auth";
 
 async function requireAdmin(req: NextRequest) {
   const user = await getCurrentUser(req);
-  if (!user || user.role !== "ADMIN") return null;
-  return user;
+  if (!user) return { user: null, status: 401 as const };
+  if (user.role !== "ADMIN") return { user: null, status: 403 as const };
+  return { user, status: 200 as const };
 }
 
 // DELETE /api/admin/syndics/:id
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const admin = await requireAdmin(req);
-    if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const { user: admin, status } = await requireAdmin(req);
+    if (!admin) return NextResponse.json({ error: status === 401 ? "Unauthorized" : "Forbidden" }, { status });
 
     const target = await prisma.user.findUnique({ where: { id: params.id } });
     if (!target) return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -29,8 +30,8 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
 // PATCH /api/admin/syndics/:id — update name/phone/password
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const admin = await requireAdmin(req);
-    if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const { user: admin, status } = await requireAdmin(req);
+    if (!admin) return NextResponse.json({ error: status === 401 ? "Unauthorized" : "Forbidden" }, { status });
 
     const { name, phone } = await req.json();
 

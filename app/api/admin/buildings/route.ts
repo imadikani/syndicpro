@@ -4,15 +4,16 @@ import { getCurrentUser } from "@/lib/auth";
 
 async function requireAdmin(req: NextRequest) {
   const user = await getCurrentUser(req);
-  if (!user || user.role !== "ADMIN") return null;
-  return user;
+  if (!user) return { user: null, status: 401 as const };
+  if (user.role !== "ADMIN") return { user: null, status: 403 as const };
+  return { user, status: 200 as const };
 }
 
 // GET /api/admin/buildings — list all buildings across all syndics
 export async function GET(req: NextRequest) {
   try {
-    const admin = await requireAdmin(req);
-    if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const { user: admin, status } = await requireAdmin(req);
+    if (!admin) return NextResponse.json({ error: status === 401 ? "Unauthorized" : "Forbidden" }, { status });
 
     const buildings = await prisma.building.findMany({
       include: {
@@ -32,8 +33,8 @@ export async function GET(req: NextRequest) {
 // POST /api/admin/buildings — create building for a specific syndic
 export async function POST(req: NextRequest) {
   try {
-    const admin = await requireAdmin(req);
-    if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const { user: admin, status } = await requireAdmin(req);
+    if (!admin) return NextResponse.json({ error: status === 401 ? "Unauthorized" : "Forbidden" }, { status });
 
     const { name, address, city, totalUnits, monthlyFee, color, syndicId } = await req.json();
 

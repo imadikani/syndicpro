@@ -3,18 +3,18 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 
-async function requireAdmin(req: NextRequest) {
+async function requireAdmin(req: NextRequest): Promise<{ user: Awaited<ReturnType<typeof getCurrentUser>>; status: 200 | 401 | 403 }> {
   const user = await getCurrentUser(req);
-  if (!user) return null;
-  if (user.role !== "ADMIN") return null;
-  return user;
+  if (!user) return { user: null, status: 401 };
+  if (user.role !== "ADMIN") return { user: null, status: 403 };
+  return { user, status: 200 };
 }
 
 // GET /api/admin/syndics — list all syndic accounts
 export async function GET(req: NextRequest) {
   try {
-    const admin = await requireAdmin(req);
-    if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const { user: admin, status } = await requireAdmin(req);
+    if (!admin) return NextResponse.json({ error: status === 401 ? "Unauthorized" : "Forbidden" }, { status });
 
     const syndics = await prisma.user.findMany({
       where: { role: "SYNDIC" },
@@ -40,8 +40,8 @@ export async function GET(req: NextRequest) {
 // POST /api/admin/syndics — create a new syndic account
 export async function POST(req: NextRequest) {
   try {
-    const admin = await requireAdmin(req);
-    if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const { user: admin, status } = await requireAdmin(req);
+    if (!admin) return NextResponse.json({ error: status === 401 ? "Unauthorized" : "Forbidden" }, { status });
 
     const { name, email, password, phone } = await req.json();
 
