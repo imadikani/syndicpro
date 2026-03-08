@@ -1,6 +1,5 @@
 'use client';
 
-import './admin.css';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -191,7 +190,7 @@ export default function AdminPage() {
           <div style={s.logoText}>Syndic<span style={{ color: '#c8b8e8' }}>Pro</span></div>
           <div style={s.logoSub}>Admin Panel</div>
         </div>
-        <nav style={s.nav}>
+        <div style={s.nav}>
           {([
             { id: 'syndics', icon: '👤', label: 'Syndics', count: syndics.length },
             { id: 'buildings', icon: '🏢', label: 'Buildings', count: buildings.length },
@@ -211,7 +210,7 @@ export default function AdminPage() {
               )}
             </button>
           ))}
-        </nav>
+        </div>
         <div style={s.sidebarFooter}>
           <button style={s.backBtn} onClick={() => router.push('/dashboard')}>← Dashboard</button>
         </div>
