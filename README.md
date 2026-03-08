@@ -1,52 +1,122 @@
-# SyndicPro — Backend Setup & Railway Deployment
+# SyndicPro
+
+Property management platform for Moroccan syndics (building managers). Handles residents, payments, expenses, WhatsApp reminders, and a resident self-service portal — all in one.
+
+---
+
+## What's Built
+
+### User Roles
+| Role | Access |
+|------|--------|
+| **Super Admin** | Full platform access — manage syndics, buildings, demo requests |
+| **Syndic** | Manage their own buildings, residents, payments, expenses |
+| **Resident** | Read-only portal — view payment history, community info |
+
+### Pages
+
+| Route | Description |
+|-------|-------------|
+| `/` | Public landing page |
+| `/login` | Syndic login (JWT, remember me) |
+| `/forgot-password` | Password reset flow |
+| `/dashboard` | Syndic dashboard — buildings, residents, payments, expenses, reminders |
+| `/admin` | Super admin panel — syndic accounts, buildings, demo requests |
+| `/admin/setup` | First-run setup wizard to create the initial admin account |
+| `/portal` | Resident portal login (phone + WhatsApp/SMS OTP) |
+| `/portal/verify` | OTP verification |
+| `/portal/home` | Resident home — payment history, community info |
+
+### Key Features
+- **Multi-building management** — syndics manage one or more buildings, each with auto-generated units
+- **Payment tracking** — generate monthly charges per building, mark as paid/late/waived
+- **Expense tracking** — log building expenses with categories and amounts
+- **WhatsApp reminders** — send payment reminders via Twilio to unpaid residents (per-resident, per-building, or all)
+- **Automated cron reminders** — CRON_SECRET-protected endpoint for scheduled bulk reminders
+- **Resident portal** — passwordless login via phone OTP (WhatsApp or SMS), residents view their own payments and community members
+- **Super admin panel** — create/delete syndic accounts and buildings, track demo requests
+- **i18n** — French/English toggle across all pages
+- **Remember me** — persistent (localStorage) vs session-only (sessionStorage) auth
+
+---
 
 ## Project Structure
 
 ```
 syndicpro/
 ├── app/
+│   ├── page.tsx                          # Landing page
+│   ├── globals.css
+│   ├── login/                            # Syndic login
+│   ├── forgot-password/                  # Password reset
+│   ├── dashboard/                        # Syndic dashboard
+│   ├── admin/                            # Super admin panel
+│   │   └── setup/                        # First-run admin setup
+│   ├── portal/                           # Resident portal
+│   │   ├── verify/                       # OTP verification
+│   │   └── home/                         # Resident home
 │   └── api/
 │       ├── auth/
-│       │   ├── login/route.ts       # POST /api/auth/login
-│       │   └── register/route.ts    # POST /api/auth/register
-│       ├── buildings/route.ts       # GET, POST /api/buildings
+│       │   ├── login/                    # POST — syndic login
+│       │   └── register/                 # POST — syndic register
+│       ├── buildings/                    # GET, POST
+│       ├── residents/                    # GET, POST
 │       ├── payments/
-│       │   ├── route.ts             # GET, POST /api/payments
-│       │   └── [id]/route.ts        # PATCH /api/payments/:id
-│       ├── residents/route.ts       # GET, POST /api/residents
-│       └── reminders/route.ts       # POST /api/reminders
+│       │   ├── route.ts                  # GET, POST
+│       │   └── [id]/                     # PATCH
+│       ├── expenses/
+│       │   ├── route.ts                  # GET, POST
+│       │   └── [id]/                     # PATCH, DELETE
+│       ├── reminders/
+│       │   ├── route.ts                  # POST — legacy endpoint
+│       │   └── send/                     # POST — send reminders (syndic-scoped)
+│       ├── cron/
+│       │   └── reminders/               # POST — bulk cron (CRON_SECRET protected)
+│       ├── admin/
+│       │   ├── syndics/                  # GET, POST, DELETE
+│       │   ├── buildings/                # GET, POST, DELETE
+│       │   ├── demo-requests/            # GET, PATCH
+│       │   └── bootstrap/               # POST — create first admin
+│       │       └── check/               # GET — check if admin exists
+│       ├── portal/
+│       │   ├── auth/
+│       │   │   ├── request/             # POST — send OTP
+│       │   │   └── verify/              # POST — verify OTP, return token
+│       │   ├── me/                      # GET — resident profile
+│       │   ├── payments/                # GET — resident payment history
+│       │   └── community/               # GET — building community list
+│       └── demo/                        # POST — submit demo request (public)
 ├── lib/
-│   ├── prisma.ts                    # Prisma singleton
-│   └── auth.ts                      # JWT helpers
+│   ├── auth.ts                          # JWT sign/verify for syndics
+│   ├── portal-auth.ts                   # JWT sign/verify for residents
+│   ├── prisma.ts                        # Prisma singleton
+│   ├── i18n.tsx                         # FR/EN translations + LangToggle component
+│   ├── reminders.ts                     # WhatsApp message builder + sender
+│   └── twilio.ts                        # Twilio REST client
 ├── prisma/
-│   ├── schema.prisma                # Full DB schema
-│   └── seed.ts                      # Test data seed
-├── .env.example                     # Copy to .env.local
-└── package.json
+│   ├── schema.prisma                    # Full DB schema
+│   └── seed.ts                          # Dev seed data
+└── .env.example
 ```
 
 ---
 
-## 1. Local Setup
+## Local Setup
 
 ```bash
-# Clone / init project
-git init syndicpro && cd syndicpro
-
 # Install dependencies
 npm install
 
-# Copy env file
+# Copy env file and fill in values
 cp .env.example .env.local
-# → Edit .env.local with your values
 
 # Generate Prisma client
 npm run db:generate
 
-# Push schema to your DB
+# Push schema to DB
 npm run db:push
 
-# Seed with test data
+# (Optional) Seed with test data
 npm run db:seed
 
 # Start dev server
@@ -55,106 +125,149 @@ npm run dev
 
 ---
 
-## 2. Deploy to Railway (Step by Step)
+## Environment Variables
 
-### Step 1 — Create Railway account
-Go to https://railway.app and sign up (free tier available).
+```bash
+# Database
+DATABASE_URL=postgresql://...
 
-### Step 2 — Create a new project
-- Click **New Project**
-- Select **Deploy from GitHub repo** (push your code to GitHub first)
-- Or use **Empty Project** and deploy via CLI
+# Auth
+JWT_SECRET=                        # openssl rand -base64 32
 
-### Step 3 — Add PostgreSQL database
-- Inside your Railway project, click **New**
-- Select **Database → PostgreSQL**
-- Railway auto-creates `DATABASE_URL` — copy it
+# Twilio (WhatsApp reminders)
+TWILIO_ACCOUNT_SID=
+TWILIO_AUTH_TOKEN=
+TWILIO_WHATSAPP_NUMBER=+14155238886   # Twilio sandbox number
 
-### Step 4 — Set environment variables
-In Railway → your service → **Variables**, add:
-```
-DATABASE_URL        = (auto-filled from Railway PostgreSQL)
-JWT_SECRET          = (run: openssl rand -base64 32)
-TWILIO_ACCOUNT_SID  = (from Twilio console)
-TWILIO_AUTH_TOKEN   = (from Twilio console)
-TWILIO_WHATSAPP_NUMBER = +14155238886
-NEXT_PUBLIC_APP_URL = https://your-app.up.railway.app
+# Cron (automated reminders)
+CRON_SECRET=                       # Any random secret string
+
+# App URL (used in API calls from client)
+NEXT_PUBLIC_APP_URL=https://your-app.up.railway.app
 ```
 
-### Step 5 — Add build command
-In Railway → Settings → Build:
+---
+
+## Deploy to Railway
+
+### 1. Create project
+- Railway → **New Project** → Deploy from GitHub repo
+
+### 2. Add PostgreSQL
+- Railway → **New** → **Database → PostgreSQL**
+- `DATABASE_URL` is auto-injected
+
+### 3. Set environment variables
+Add all variables from the section above in Railway → service → **Variables**
+
+### 4. Build command
 ```
 npm run db:generate && npm run build
 ```
 
-### Step 6 — Run migrations on deploy
-Add to Railway → Settings → Deploy:
+### 5. Start command
 ```
 npm run db:push && npm start
 ```
 
-### Step 7 — Deploy!
-Push to GitHub → Railway auto-deploys. Your API is live at:
-`https://your-project.up.railway.app`
+### 6. First-run admin setup
+After first deploy, visit `/admin/setup` to create the super admin account. This route is only available before any admin exists.
 
 ---
 
-## 3. API Reference
+## API Reference
 
-### Auth
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/auth/register` | Register new syndic |
-| POST | `/api/auth/login` | Login, returns JWT token |
+### Syndic Auth
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| POST | `/api/auth/login` | — | Login, returns JWT |
+| POST | `/api/auth/register` | — | Register new syndic |
 
 ### Buildings
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/buildings` | List all buildings |
-| POST | `/api/buildings` | Create building + auto-generate units |
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/buildings` | Syndic JWT | List syndic's buildings |
+| POST | `/api/buildings` | Syndic JWT | Create building + auto-generate units |
 
 ### Residents
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/residents?buildingId=xxx` | List residents |
-| POST | `/api/residents` | Add resident to unit |
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/residents?buildingId=` | Syndic JWT | List residents for a building |
+| POST | `/api/residents` | Syndic JWT | Add resident to a unit |
 
 ### Payments
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/payments?month=3&year=2026` | List payments |
-| POST | `/api/payments` | Generate monthly payments for a building |
-| PATCH | `/api/payments/:id` | Mark payment as paid |
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/payments?month=&year=&buildingId=` | Syndic JWT | List payments |
+| POST | `/api/payments` | Syndic JWT | Generate monthly payments for a building |
+| PATCH | `/api/payments/:id` | Syndic JWT | Update payment status |
+
+### Expenses
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/expenses?buildingId=` | Syndic JWT | List expenses |
+| POST | `/api/expenses` | Syndic JWT | Log an expense |
+| PATCH | `/api/expenses/:id` | Syndic JWT | Edit expense |
+| DELETE | `/api/expenses/:id` | Syndic JWT | Delete expense |
 
 ### Reminders
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/reminders` | Send WhatsApp reminders to unpaid residents |
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| POST | `/api/reminders/send` | Syndic JWT | Send WhatsApp reminders (filter by residentId or buildingId, or all) |
+| POST | `/api/cron/reminders` | `CRON_SECRET` | Bulk reminders across all syndics (for cron jobs) |
+
+### Admin
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/admin/syndics` | Admin JWT | List all syndic accounts |
+| POST | `/api/admin/syndics` | Admin JWT | Create syndic account |
+| DELETE | `/api/admin/syndics/:id` | Admin JWT | Delete syndic + all data |
+| GET | `/api/admin/buildings` | Admin JWT | List all buildings |
+| POST | `/api/admin/buildings` | Admin JWT | Create building for a syndic |
+| DELETE | `/api/admin/buildings/:id` | Admin JWT | Delete building |
+| GET | `/api/admin/demo-requests` | Admin JWT | List demo requests |
+| PATCH | `/api/admin/demo-requests` | Admin JWT | Mark as contacted |
+| POST | `/api/admin/bootstrap` | — | Create first admin (one-time) |
+| GET | `/api/admin/bootstrap/check` | — | Check if admin exists |
+
+### Resident Portal
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| POST | `/api/portal/auth/request` | — | Send OTP to phone (WhatsApp or SMS) |
+| POST | `/api/portal/auth/verify` | — | Verify OTP, return resident JWT |
+| GET | `/api/portal/me` | Resident JWT | Get resident profile |
+| GET | `/api/portal/payments` | Resident JWT | Get own payment history |
+| GET | `/api/portal/community` | Resident JWT | Get building community list |
+
+### Public
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| POST | `/api/demo` | — | Submit demo request from landing page |
 
 ---
 
-## 4. Authentication
+## Authentication
 
-All protected routes require a Bearer token in the header:
+**Syndics** authenticate via email + password → receive a 30-day JWT stored in `localStorage` (remember me) or `sessionStorage` (session only).
+
+**Residents** authenticate via phone number → receive a 6-digit OTP via WhatsApp or SMS → receive a separate resident JWT.
+
+All protected routes require:
 ```
 Authorization: Bearer <token>
 ```
 
-Token is returned on login/register and also set as an httpOnly cookie.
-
 ---
 
-## 5. Test Credentials (after seed)
-```
-Email:    admin@syndicpro.ma
-Password: syndic123
-```
+## Tech Stack
 
----
-
-## 6. Next Steps
-- [ ] Connect React frontend to these API routes
-- [ ] Add Twilio WhatsApp sandbox for testing reminders
-- [ ] Build mobile app with Expo (React Native)
-- [ ] Integrate Payzone payment gateway (Phase 2)
-- [ ] Add PDF lease/receipt generation
+| Layer | Technology |
+|-------|-----------|
+| Framework | Next.js 14 (App Router) |
+| Database | PostgreSQL (Railway) |
+| ORM | Prisma |
+| Auth | JWT (jsonwebtoken) |
+| Messaging | Twilio (WhatsApp + SMS) |
+| Styling | Inline styles + route-scoped CSS |
+| i18n | Custom FR/EN context |
+| Deployment | Railway |
