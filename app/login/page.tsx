@@ -1,7 +1,7 @@
 'use client';
 
 import './login.css';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useLanguage, LangToggle } from '@/lib/i18n';
@@ -16,6 +16,14 @@ export default function LoginPage() {
   const [remember, setRemember] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    const token = localStorage.getItem('syndic_token') || sessionStorage.getItem('syndic_token');
+    if (!token) return;
+    const raw = localStorage.getItem('syndic_user') || sessionStorage.getItem('syndic_user');
+    const user = raw ? JSON.parse(raw) : null;
+    router.replace(user?.role === 'ADMIN' ? '/admin' : '/dashboard');
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
