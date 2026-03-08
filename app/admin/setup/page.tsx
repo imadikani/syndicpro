@@ -54,12 +54,12 @@ export default function AdminSetupPage() {
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: '#0f0d0b', fontFamily: "'DM Sans', sans-serif", padding: 24 }}>
       <div style={{ background: '#1a1410', border: '1px solid rgba(200,184,232,0.1)', borderRadius: 24, padding: '48px 44px', width: '100%', maxWidth: 420, boxShadow: '0 32px 80px rgba(0,0,0,0.4)' }}>
-        <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 26, fontWeight: 600, color: 'white', marginBottom: 2 }}>
+        <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 26, fontWeight: 600, color: 'white', marginBottom: 2 }}>
           Syndic<span style={{ color: '#c8b8e8' }}>Pro</span>
         </div>
         <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 36 }}>Admin Setup</div>
 
-        <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 30, fontWeight: 300, color: 'white', margin: '0 0 8px' }}>Create admin account</h1>
+        <h1 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 30, fontWeight: 300, color: 'white', margin: '0 0 8px' }}>Create admin account</h1>
         <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', margin: '0 0 32px', lineHeight: 1.6 }}>
           This runs once. After setup, this page is disabled.
         </p>

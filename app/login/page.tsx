@@ -149,7 +149,7 @@ const s: Record<string, React.CSSProperties> = {
     boxShadow: '0 32px 80px rgba(0,0,0,0.4)',
   },
   logo: {
-    fontFamily: "'Cormorant Garamond', serif",
+    fontFamily: "'DM Sans', sans-serif",
     fontSize: 26,
     fontWeight: 600,
     color: 'white',
@@ -164,7 +164,7 @@ const s: Record<string, React.CSSProperties> = {
     marginBottom: 36,
   },
   heading: {
-    fontFamily: "'Cormorant Garamond', serif",
+    fontFamily: "'DM Sans', sans-serif",
     fontSize: 36,
     fontWeight: 300,
     color: 'white',

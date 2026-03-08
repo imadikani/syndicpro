@@ -687,7 +687,7 @@ export default function Dashboard() {
                   <div style={styles.modalBox} onClick={e => e.stopPropagation()}>
                     <button style={styles.modalClose} onClick={() => setAddResidentOpen(false)}>×</button>
                     <div style={{ fontSize: 11, color: '#c8b8e8', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>{t('res_modal_label')}</div>
-                    <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 28, fontWeight: 300, color: 'white', marginBottom: 24 }}>{t('res_modal_title')}</div>
+                    <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 28, fontWeight: 300, color: 'white', marginBottom: 24 }}>{t('res_modal_title')}</div>
                     <div style={{ marginBottom: 16 }}>
                       <label style={styles.formLabel}>{t('res_full_name')}</label>
                       <input type="text" placeholder="Ex. Karim Benali" style={styles.formInput} value={newResident.name} onChange={e => setNewResident(p => ({ ...p, name: e.target.value }))} />
@@ -876,7 +876,7 @@ export default function Dashboard() {
                     <div style={styles.modalBox} onClick={e => e.stopPropagation()}>
                       <button style={styles.modalClose} onClick={() => setAddExpenseOpen(false)}>×</button>
                       <div style={{ fontSize: 11, color: '#c8b8e8', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>{t('exp_modal_label')}</div>
-                      <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 28, fontWeight: 300, color: 'white', marginBottom: 24 }}>{t('exp_modal_title')}</div>
+                      <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 28, fontWeight: 300, color: 'white', marginBottom: 24 }}>{t('exp_modal_title')}</div>
                       <div style={{ marginBottom: 16 }}>
                         <label style={styles.formLabel}>{t('exp_libelle')}</label>
                         <input type="text" placeholder="Ex. Entretien ascenseur" style={styles.formInput} value={newExpense.label} onChange={ev => setNewExpense(p => ({ ...p, label: ev.target.value }))} />
@@ -991,7 +991,7 @@ export default function Dashboard() {
                   <div style={styles.modalBox} onClick={e => e.stopPropagation()}>
                     <button style={styles.modalClose} onClick={() => setCustomReminderOpen(false)}>×</button>
                     <div style={{ fontSize: 11, color: '#c8b8e8', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>{t('rem_modal_label')}</div>
-                    <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 28, fontWeight: 300, color: 'white', marginBottom: 24 }}>{t('rem_modal_title')}</div>
+                    <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 28, fontWeight: 300, color: 'white', marginBottom: 24 }}>{t('rem_modal_title')}</div>
                     <div style={{ marginBottom: 16 }}>
                       <label style={styles.formLabel}>{t('dash_resident_col')}</label>
                       <select style={styles.formInput} value={customReminderResidentId} onChange={e => setCustomReminderResidentId(e.target.value)}>
@@ -1051,7 +1051,7 @@ const styles: Record<string, React.CSSProperties> = {
   // SIDEBAR
   sidebar: { width: 240, background: '#1a1410', borderRight: '1px solid rgba(200,184,232,0.08)', display: 'flex', flexDirection: 'column', position: 'sticky', top: 0, height: '100vh' },
   sidebarBrand: { padding: '28px 24px 24px', borderBottom: '1px solid rgba(200,184,232,0.07)' },
-  brandLogo: { fontFamily: "'Cormorant Garamond', serif", fontSize: 22, fontWeight: 600, color: 'white', letterSpacing: 0.3 },
+  brandLogo: { fontFamily: "'DM Sans', sans-serif", fontSize: 22, fontWeight: 600, color: 'white', letterSpacing: 0.3 },
   brandSub: { fontSize: 9, color: 'rgba(255,255,255,0.3)', letterSpacing: 2, textTransform: 'uppercase', marginTop: 3 },
   sidebarNav: { padding: '16px 12px', display: 'flex', flexDirection: 'column', gap: 2 },
   navItem: { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 10, background: 'none', border: 'none', color: 'rgba(255,255,255,0.45)', fontSize: 13, cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.15s' },
@@ -1060,7 +1060,7 @@ const styles: Record<string, React.CSSProperties> = {
   sidebarFooter: { padding: '16px 16px 24px', borderTop: '1px solid rgba(200,184,232,0.07)', marginTop: 'auto' },
   userBadge: { display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 },
   logoutBtn: { width: '100%', background: 'none', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, color: 'rgba(255,255,255,0.3)', fontSize: 11, padding: '7px 0', cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", letterSpacing: 0.5 },
-  userAvatar: { width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg,#7b5ea7,#9b6bc0)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Cormorant Garamond', serif", fontSize: 16, fontWeight: 600, color: 'white' },
+  userAvatar: { width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg,#7b5ea7,#9b6bc0)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'DM Sans', sans-serif", fontSize: 16, fontWeight: 600, color: 'white' },
   userName: { fontSize: 13, color: 'rgba(255,255,255,0.8)', fontWeight: 500 },
   userRole: { fontSize: 10, color: 'rgba(255,255,255,0.35)', letterSpacing: 0.5, textTransform: 'uppercase' },
 
@@ -1068,7 +1068,7 @@ const styles: Record<string, React.CSSProperties> = {
   main: { flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 },
   header: { padding: '28px 36px 24px', borderBottom: '1px solid rgba(200,184,232,0.07)', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', background: '#1a1410' },
   headerEyebrow: { fontSize: 10, color: 'rgba(200,184,232,0.6)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 6 },
-  headerTitle: { fontFamily: "'Cormorant Garamond', serif", fontSize: 32, fontWeight: 300, color: 'white', margin: 0, lineHeight: 1 },
+  headerTitle: { fontFamily: "'DM Sans', sans-serif", fontSize: 32, fontWeight: 300, color: 'white', margin: 0, lineHeight: 1 },
   headerRate: { textAlign: 'right' },
   rateLabel: { fontSize: 10, color: 'rgba(200,184,232,0.5)', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 4 },
   rateValue: { fontFamily: "'DM Sans', sans-serif", fontSize: 42, fontWeight: 300, color: 'white', lineHeight: 1 },
@@ -1083,8 +1083,8 @@ const styles: Record<string, React.CSSProperties> = {
 
   // CARDS
   card: { background: '#1a1410', border: '1px solid rgba(200,184,232,0.08)', borderRadius: 16, padding: '20px 24px', marginBottom: 24 },
-  cardTitle: { fontFamily: "'Cormorant Garamond', serif", fontSize: 18, fontWeight: 400, color: 'rgba(255,255,255,0.7)', marginBottom: 16 },
-  cardTitle2: { fontFamily: "'Cormorant Garamond', serif", fontSize: 18, fontWeight: 400, color: 'rgba(255,255,255,0.7)', marginBottom: 14 },
+  cardTitle: { fontFamily: "'DM Sans', sans-serif", fontSize: 18, fontWeight: 400, color: 'rgba(255,255,255,0.7)', marginBottom: 16 },
+  cardTitle2: { fontFamily: "'DM Sans', sans-serif", fontSize: 18, fontWeight: 400, color: 'rgba(255,255,255,0.7)', marginBottom: 14 },
 
   // COLLECTION BAR
   collectionBar: { height: 8, background: 'rgba(255,255,255,0.06)', borderRadius: 100, overflow: 'hidden' },
@@ -1113,7 +1113,7 @@ const styles: Record<string, React.CSSProperties> = {
   buildingCardHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '18px 20px 10px' },
   buildingCardIcon: { width: 36, height: 36, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 },
   buildingCardRate: { fontFamily: "'DM Sans', sans-serif", fontSize: 28, fontWeight: 300 },
-  buildingCardName: { fontFamily: "'Cormorant Garamond', serif", fontSize: 20, fontWeight: 600, color: 'white', padding: '0 20px', marginBottom: 4 },
+  buildingCardName: { fontFamily: "'DM Sans', sans-serif", fontSize: 20, fontWeight: 600, color: 'white', padding: '0 20px', marginBottom: 4 },
   buildingCardAddress: { fontSize: 12, color: 'rgba(255,255,255,0.4)', padding: '0 20px', lineHeight: 1.6 },
   buildingCardStats: { display: 'flex', gap: 0, margin: '18px 20px 16px', background: 'rgba(255,255,255,0.03)', borderRadius: 12 },
   bStat: { flex: 1, padding: '12px 0', textAlign: 'center', borderRight: '1px solid rgba(255,255,255,0.05)' },
@@ -1127,7 +1127,7 @@ const styles: Record<string, React.CSSProperties> = {
   backBtn: { background: 'none', border: 'none', color: 'rgba(200,184,232,0.6)', fontSize: 13, cursor: 'pointer', marginBottom: 20, padding: 0 },
   buildingDetailHeader: { display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24, background: '#1a1410', border: '1px solid rgba(200,184,232,0.08)', borderRadius: 16, padding: '20px 24px' },
   buildingDetailDot: { width: 14, height: 14, borderRadius: '50%', flexShrink: 0 },
-  buildingDetailName: { fontFamily: "'Cormorant Garamond', serif", fontSize: 24, fontWeight: 600, color: 'white', marginBottom: 4 },
+  buildingDetailName: { fontFamily: "'DM Sans', sans-serif", fontSize: 24, fontWeight: 600, color: 'white', marginBottom: 4 },
   buildingDetailAddress: { fontSize: 13, color: 'rgba(255,255,255,0.4)' },
   bigRate: { fontFamily: "'DM Sans', sans-serif", fontSize: 40, fontWeight: 300, lineHeight: 1 },
 

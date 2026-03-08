@@ -305,10 +305,10 @@ const s: Record<string, React.CSSProperties> = {
   shell: { display: 'flex', flexDirection: 'column', minHeight: '100vh', maxWidth: 480, margin: '0 auto' },
   header: { padding: '32px 24px 28px', color: 'white' },
   headerTop: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
-  headerLogo: { fontFamily: "'Cormorant Garamond', serif", fontSize: 20, fontWeight: 600 },
+  headerLogo: { fontFamily: "'DM Sans', sans-serif", fontSize: 20, fontWeight: 600 },
   logoutBtn: { background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', fontSize: 11, padding: '5px 12px', borderRadius: 100, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" },
   headerBuilding: { fontSize: 11, color: 'rgba(255,255,255,0.65)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 4 },
-  headerName: { fontFamily: "'Cormorant Garamond', serif", fontSize: 28, fontWeight: 300, marginBottom: 4 },
+  headerName: { fontFamily: "'DM Sans', sans-serif", fontSize: 28, fontWeight: 300, marginBottom: 4 },
   headerUnit: { fontSize: 12, color: 'rgba(255,255,255,0.6)' },
 
   payCard: { margin: '0 16px', marginTop: -20, background: 'white', borderRadius: 18, padding: '20px 22px', boxShadow: '0 4px 24px rgba(0,0,0,0.08)', border: '1px solid rgba(0,0,0,0.05)' },
@@ -324,7 +324,7 @@ const s: Record<string, React.CSSProperties> = {
 
   content: { padding: '20px 16px 40px', flex: 1 },
 
-  sectionTitle: { fontFamily: "'Cormorant Garamond', serif", fontSize: 20, fontWeight: 400, color: '#1a1410', marginBottom: 14 },
+  sectionTitle: { fontFamily: "'DM Sans', sans-serif", fontSize: 20, fontWeight: 400, color: '#1a1410', marginBottom: 14 },
 
   infoCard: { background: 'white', borderRadius: 16, padding: '18px 20px', marginBottom: 12, border: '1px solid rgba(0,0,0,0.06)' },
   infoTitle: { fontSize: 11, color: '#8a7a6e', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 12 },

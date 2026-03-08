@@ -212,7 +212,13 @@ export default function AdminPage() {
           ))}
         </div>
         <div style={s.sidebarFooter}>
-          <button style={s.backBtn} onClick={() => router.push('/dashboard')}>← Dashboard</button>
+          <button style={s.backBtn} onClick={() => {
+            localStorage.removeItem('syndic_token');
+            localStorage.removeItem('syndic_user');
+            sessionStorage.removeItem('syndic_token');
+            sessionStorage.removeItem('syndic_user');
+            router.push('/login');
+          }}>Sign out</button>
         </div>
       </div>
 
@@ -557,7 +563,7 @@ const s: Record<string, React.CSSProperties> = {
     borderBottom: '1px solid rgba(255,255,255,0.06)',
   },
   logoText: {
-    fontFamily: "'Cormorant Garamond', serif",
+    fontFamily: "'DM Sans', sans-serif",
     fontSize: 22,
     fontWeight: 600,
     color: 'white',
@@ -638,7 +644,7 @@ const s: Record<string, React.CSSProperties> = {
     marginBottom: 28,
   },
   pageTitle: {
-    fontFamily: "'Cormorant Garamond', serif",
+    fontFamily: "'DM Sans', sans-serif",
     fontSize: 28,
     fontWeight: 300,
     color: 'white',
@@ -818,7 +824,7 @@ const s: Record<string, React.CSSProperties> = {
     borderBottom: '1px solid rgba(255,255,255,0.07)',
   },
   modalTitle: {
-    fontFamily: "'Cormorant Garamond', serif",
+    fontFamily: "'DM Sans', sans-serif",
     fontSize: 22,
     fontWeight: 300,
     color: 'white',

@@ -137,9 +137,9 @@ export default function PortalVerifyPage() {
 const s: Record<string, React.CSSProperties> = {
   shell: { display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: 24 },
   card: { background: 'white', borderRadius: 24, padding: '48px 40px', width: '100%', maxWidth: 420, boxShadow: '0 8px 40px rgba(26,20,16,0.08)', border: '1px solid rgba(0,0,0,0.06)', textAlign: 'center' },
-  logo: { fontFamily: "'Cormorant Garamond', serif", fontSize: 24, fontWeight: 600, color: '#1a1410', letterSpacing: 0.3, marginBottom: 2 },
+  logo: { fontFamily: "'DM Sans', sans-serif", fontSize: 24, fontWeight: 600, color: '#1a1410', letterSpacing: 0.3, marginBottom: 2 },
   logoSub: { fontSize: 9, color: '#8a7a6e', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 32 },
-  heading: { fontFamily: "'Cormorant Garamond', serif", fontSize: 32, fontWeight: 300, color: '#1a1410', margin: '0 0 8px', lineHeight: 1 },
+  heading: { fontFamily: "'DM Sans', sans-serif", fontSize: 32, fontWeight: 300, color: '#1a1410', margin: '0 0 8px', lineHeight: 1 },
   sub: { fontSize: 13, color: '#8a7a6e', fontWeight: 300, margin: '0 0 32px', lineHeight: 1.6 },
   pinRow: { display: 'flex', gap: 12, justifyContent: 'center', marginBottom: 24 },
   pinBox: { width: 48, height: 58, border: '1.5px solid rgba(0,0,0,0.12)', borderRadius: 12, textAlign: 'center', fontSize: 24, fontWeight: 600, color: '#1a1410', background: '#faf7f2', outline: 'none', fontFamily: "'DM Sans', sans-serif", transition: 'border-color 0.15s' },
