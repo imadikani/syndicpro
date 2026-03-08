@@ -3,7 +3,6 @@
 import './admin.css';
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { LangToggle } from '@/lib/i18n';
 
 const NAV = [
   { id: 'syndics',   icon: '◎', label: 'Syndics' },
@@ -58,7 +57,6 @@ function AdminSidebar() {
             <div style={s.userRole}>Administrator</div>
           </div>
         </div>
-        <LangToggle style={{ marginBottom: 8 }} />
         <button style={s.logoutBtn} onClick={signOut}>Sign out</button>
       </div>
     </aside>
