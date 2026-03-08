@@ -92,6 +92,7 @@ export default function Dashboard() {
   const [newExpense, setNewExpense] = useState({ label: '', amount: '', date: '', dueDate: '', buildingId: '', category: 'ENTRETIEN', isPaid: true });
   const [addExpenseLoading, setAddExpenseLoading] = useState(false);
   const [addExpenseError, setAddExpenseError] = useState('');
+  const [expenseBuildingFilter, setExpenseBuildingFilter] = useState('Tous');
   const [residentBuildingFilter, setResidentBuildingFilter] = useState('Tous');
   const [residentStatusFilter, setResidentStatusFilter] = useState('Tous');
   const [addResidentOpen, setAddResidentOpen] = useState(false);
@@ -642,16 +643,20 @@ export default function Dashboard() {
           {/* ── EXPENSES / ACCOUNTING ── */}
           {activeTab === 'expenses' && (() => {
             const today = new Date();
+            const filteredBuilding = buildings.find(b => b.name.split(' ').slice(-1)[0] === expenseBuildingFilter);
+            const filteredExpenses = expenseBuildingFilter === 'Tous' ? expenses : expenses.filter(e => e.buildingId === filteredBuilding?.id);
+            const filteredPayments = expenseBuildingFilter === 'Tous' ? payments : payments.filter(p => p.unit?.building?.id === filteredBuilding?.id);
+
             // Build month keys from both revenues and expenses
             const monthKeys = Array.from(new Set([
-              ...payments.filter(p => p.status === 'PAID' && p.paidAt).map(p => { const d = new Date(p.paidAt!); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; }),
-              ...expenses.map(e => { const d = new Date(e.date); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; }),
+              ...filteredPayments.filter(p => p.status === 'PAID' && p.paidAt).map(p => { const d = new Date(p.paidAt!); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; }),
+              ...filteredExpenses.map(e => { const d = new Date(e.date); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; }),
             ])).sort((a,b) => b.localeCompare(a)).slice(0, 6);
 
             const cashflow = monthKeys.map(key => {
               const [y, m] = key.split('-').map(Number);
-              const rev = payments.filter(p => p.status === 'PAID' && p.paidAt && new Date(p.paidAt).getFullYear() === y && new Date(p.paidAt).getMonth()+1 === m).reduce((s,p) => s + p.amount, 0);
-              const exp = expenses.filter(e => { const d = new Date(e.date); return d.getFullYear() === y && d.getMonth()+1 === m; }).reduce((s,e) => s + e.amount, 0);
+              const rev = filteredPayments.filter(p => p.status === 'PAID' && p.paidAt && new Date(p.paidAt).getFullYear() === y && new Date(p.paidAt).getMonth()+1 === m).reduce((s,p) => s + p.amount, 0);
+              const exp = filteredExpenses.filter(e => { const d = new Date(e.date); return d.getFullYear() === y && d.getMonth()+1 === m; }).reduce((s,e) => s + e.amount, 0);
               const label = new Date(y, m-1).toLocaleString('fr-FR', { month: 'short', year: '2-digit' });
               return { key, label, rev, exp, net: rev - exp };
             });
@@ -661,7 +666,7 @@ export default function Dashboard() {
             const expensesByMonth = monthKeys.map(key => {
               const [y, m] = key.split('-').map(Number);
               const label = new Date(y, m-1).toLocaleString('fr-FR', { month: 'long', year: 'numeric' });
-              const rows = expenses.filter(e => { const d = new Date(e.date); return d.getFullYear() === y && d.getMonth()+1 === m; });
+              const rows = filteredExpenses.filter(e => { const d = new Date(e.date); return d.getFullYear() === y && d.getMonth()+1 === m; });
               return { key, label, rows };
             }).filter(g => g.rows.length > 0);
 
@@ -682,6 +687,13 @@ export default function Dashboard() {
                     ))}
                   </div>
                   <button style={styles.addBtn} onClick={() => { setAddExpenseError(''); setAddExpenseOpen(true); }}>+ Nouvelle dépense</button>
+                </div>
+
+                {/* ── Building filter ── */}
+                <div style={{ ...styles.filterRow, marginBottom: 28 }}>
+                  {['Tous', ...buildings.map(b => b.name.split(' ').slice(-1)[0])].map(f => (
+                    <button key={f} style={{ ...styles.filterBtn, ...(expenseBuildingFilter === f ? styles.filterBtnActive : {}) }} onClick={() => setExpenseBuildingFilter(f)}>{f}</button>
+                  ))}
                 </div>
 
                 {/* ── Monthly cashflow table ── */}
