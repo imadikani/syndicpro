@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 const API_BASE = process.env.NEXT_PUBLIC_APP_URL || '';
 
@@ -41,9 +41,10 @@ type DemoRequest = {
 
 const COLORS = ['#7b5ea7', '#e8906a', '#34d399', '#f87171', '#60a5fa', '#fbbf24', '#a78bfa'];
 
-export default function AdminPage() {
+function AdminPageInner() {
   const router = useRouter();
-  const [tab, setTab] = useState<'syndics' | 'buildings' | 'demos'>('syndics');
+  const searchParams = useSearchParams();
+  const tab = (searchParams.get('tab') || 'syndics') as 'syndics' | 'buildings' | 'demos';
   const [token, setToken] = useState('');
   const [authChecked, setAuthChecked] = useState(false);
 
@@ -177,53 +178,13 @@ export default function AdminPage() {
   }
 
   if (!authChecked) return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: '#0f0d0b', fontFamily: "'DM Sans', sans-serif", color: 'rgba(255,255,255,0.3)', fontSize: 13 }}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, fontFamily: "'DM Sans', sans-serif", color: 'rgba(255,255,255,0.3)', fontSize: 13 }}>
       Loading admin panel...
     </div>
   );
 
   return (
-    <div style={s.shell}>
-      {/* SIDEBAR */}
-      <div style={s.sidebar}>
-        <div style={s.sidebarLogo}>
-          <div style={s.logoText}>Syndic<span style={{ color: '#c8b8e8' }}>Pro</span></div>
-          <div style={s.logoSub}>Admin Panel</div>
-        </div>
-        <div style={s.nav}>
-          {([
-            { id: 'syndics', icon: '👤', label: 'Syndics', count: syndics.length },
-            { id: 'buildings', icon: '🏢', label: 'Buildings', count: buildings.length },
-            { id: 'demos', icon: '📋', label: 'Demo Requests', count: demos.filter(d => !d.contacted).length },
-          ] as { id: typeof tab; icon: string; label: string; count: number }[]).map(item => (
-            <button
-              key={item.id}
-              style={{ ...s.navItem, ...(tab === item.id ? s.navItemActive : {}) }}
-              onClick={() => setTab(item.id)}
-            >
-              <span style={{ fontSize: 16 }}>{item.icon}</span>
-              <span style={{ flex: 1, textAlign: 'left' }}>{item.label}</span>
-              {item.count > 0 && (
-                <span style={{ ...s.badge, ...(item.id === 'demos' && item.count > 0 ? s.badgeAlert : {}) }}>
-                  {item.count}
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
-        <div style={s.sidebarFooter}>
-          <button style={s.backBtn} onClick={() => {
-            localStorage.removeItem('syndic_token');
-            localStorage.removeItem('syndic_user');
-            sessionStorage.removeItem('syndic_token');
-            sessionStorage.removeItem('syndic_user');
-            router.push('/login');
-          }}>Sign out</button>
-        </div>
-      </div>
-
-      {/* MAIN */}
-      <div style={s.main}>
+    <div style={s.main}>
         {/* ── SYNDICS TAB ── */}
         {tab === 'syndics' && (
           <div>
@@ -540,97 +501,15 @@ export default function AdminPage() {
   );
 }
 
+export default function AdminPage() {
+  return (
+    <Suspense fallback={<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, color: 'rgba(255,255,255,0.3)', fontSize: 13 }}>Loading...</div>}>
+      <AdminPageInner />
+    </Suspense>
+  );
+}
+
 const s: Record<string, React.CSSProperties> = {
-  shell: {
-    display: 'flex',
-    minHeight: '100vh',
-    background: '#0f0d0b',
-    fontFamily: "'DM Sans', sans-serif",
-    color: 'rgba(255,255,255,0.85)',
-  },
-
-  // Sidebar
-  sidebar: {
-    width: 220,
-    background: '#1a1410',
-    borderRight: '1px solid rgba(255,255,255,0.06)',
-    display: 'flex',
-    flexDirection: 'column',
-    flexShrink: 0,
-  },
-  sidebarLogo: {
-    padding: '28px 20px 24px',
-    borderBottom: '1px solid rgba(255,255,255,0.06)',
-  },
-  logoText: {
-    fontFamily: "'DM Sans', sans-serif",
-    fontSize: 22,
-    fontWeight: 600,
-    color: 'white',
-    letterSpacing: 0.3,
-  },
-  logoSub: {
-    fontSize: 9,
-    color: 'rgba(255,255,255,0.3)',
-    letterSpacing: 2,
-    textTransform: 'uppercase',
-    marginTop: 2,
-  },
-  nav: {
-    padding: '16px 12px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 4,
-    flex: 1,
-  },
-  navItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 10,
-    padding: '10px 12px',
-    borderRadius: 10,
-    background: 'transparent',
-    border: 'none',
-    color: 'rgba(255,255,255,0.5)',
-    fontSize: 13,
-    cursor: 'pointer',
-    fontFamily: "'DM Sans', sans-serif",
-    transition: 'all 0.15s',
-    textAlign: 'left',
-  },
-  navItemActive: {
-    background: 'rgba(123,94,167,0.2)',
-    color: '#c8b8e8',
-    border: '1px solid rgba(123,94,167,0.3)',
-  },
-  badge: {
-    background: 'rgba(255,255,255,0.1)',
-    color: 'rgba(255,255,255,0.5)',
-    fontSize: 10,
-    borderRadius: 100,
-    padding: '1px 7px',
-    fontWeight: 600,
-  },
-  badgeAlert: {
-    background: 'rgba(248,113,113,0.2)',
-    color: '#f87171',
-  },
-  sidebarFooter: {
-    padding: '16px 12px',
-    borderTop: '1px solid rgba(255,255,255,0.06)',
-  },
-  backBtn: {
-    width: '100%',
-    padding: '9px 12px',
-    background: 'transparent',
-    border: '1px solid rgba(255,255,255,0.1)',
-    borderRadius: 8,
-    color: 'rgba(255,255,255,0.4)',
-    fontSize: 12,
-    cursor: 'pointer',
-    fontFamily: "'DM Sans', sans-serif",
-  },
-
   // Main content
   main: {
     flex: 1,
