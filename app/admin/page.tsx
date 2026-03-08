@@ -184,7 +184,7 @@ function AdminPageInner() {
   );
 
   return (
-    <div style={s.main}>
+    <><div style={s.main}>
         {/* ── SYNDICS TAB ── */}
         {tab === 'syndics' && (
           <div>
@@ -361,6 +361,8 @@ function AdminPageInner() {
         )}
       </div>
 
+      </div>
+
       {/* ── NEW SYNDIC MODAL ── */}
       {syndicOpen && (
         <div style={s.backdrop} onClick={e => { if (e.target === e.currentTarget) setSyndicOpen(false); }}>
@@ -497,7 +499,7 @@ function AdminPageInner() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
 
