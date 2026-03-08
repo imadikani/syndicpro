@@ -176,10 +176,11 @@ export default function AdminPage() {
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: '#0f0d0b', fontFamily: "'DM Sans', sans-serif", gap: 16 }}>
       <div style={{ color: '#f87171', fontSize: 15, fontWeight: 500 }}>Access denied — your account does not have ADMIN role.</div>
       <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, textAlign: 'center', maxWidth: 480, lineHeight: 1.7 }}>
-        Run this in your browser console while logged in to elevate your account:
+        Run this in your browser console to create the admin account:
         <pre style={{ marginTop: 12, background: 'rgba(255,255,255,0.05)', padding: '12px 16px', borderRadius: 8, fontSize: 11, color: '#c8b8e8', textAlign: 'left', overflowX: 'auto' }}>{`fetch('/api/admin/bootstrap', {
   method: 'POST',
-  headers: { Authorization: 'Bearer ' + (localStorage.getItem('syndic_token') || sessionStorage.getItem('syndic_token')) }
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ name: 'Admin', email: 'admin@syndicpro.ma', password: 'changeme123' })
 }).then(r => r.json()).then(console.log)`}</pre>
         Then refresh this page.
       </div>
