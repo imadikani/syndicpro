@@ -32,9 +32,17 @@ export default function LoginPage() {
         setError(t('login_error'));
         return;
       }
-      const storage = remember ? localStorage : sessionStorage;
-      storage.setItem('syndic_token', data.token);
-      storage.setItem('syndic_user', JSON.stringify(data.user));
+      if (remember) {
+        localStorage.setItem('syndic_token', data.token);
+        localStorage.setItem('syndic_user', JSON.stringify(data.user));
+        sessionStorage.removeItem('syndic_token');
+        sessionStorage.removeItem('syndic_user');
+      } else {
+        sessionStorage.setItem('syndic_token', data.token);
+        sessionStorage.setItem('syndic_user', JSON.stringify(data.user));
+        localStorage.removeItem('syndic_token');
+        localStorage.removeItem('syndic_user');
+      }
       router.push(data.user?.role === 'ADMIN' ? '/admin' : '/dashboard');
     } catch {
       setError(t('login_error'));
