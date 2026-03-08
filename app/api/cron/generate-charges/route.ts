@@ -19,8 +19,8 @@ export async function POST(req: NextRequest) {
 
   try {
     const now = new Date();
-    const month = now.getMonth() + 1; // 1–12
-    const year = now.getFullYear();
+    const month = parseInt(req.nextUrl.searchParams.get('month') ?? '') || now.getMonth() + 1;
+    const year = parseInt(req.nextUrl.searchParams.get('year') ?? '') || now.getFullYear();
 
     // Fetch all buildings with their occupied units and per-unit fee overrides
     const buildings = await prisma.building.findMany({
