@@ -1,0 +1,10 @@
+/* Reset global landing page styles for admin routes */
+body {
+  background: #0f0d0b !important;
+}
+body::before {
+  display: none !important;
+}
+nav {
+  display: none !important;
+}

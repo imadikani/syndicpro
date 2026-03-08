@@ -35,7 +35,7 @@ export default function LoginPage() {
       const storage = remember ? localStorage : sessionStorage;
       storage.setItem('syndic_token', data.token);
       storage.setItem('syndic_user', JSON.stringify(data.user));
-      router.push('/dashboard');
+      router.push(data.user?.role === 'ADMIN' ? '/admin' : '/dashboard');
     } catch {
       setError(t('login_error'));
     } finally {
