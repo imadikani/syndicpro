@@ -497,14 +497,14 @@ export default function LandingPage() {
             {modalSuccess ? (
               <div style={{ textAlign: 'center', padding: '20px 0' }}>
                 <div style={{ fontSize: 52, marginBottom: 16 }}>✓</div>
-                <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 30, fontWeight: 300, color: '#1a1410', marginBottom: 10 }}>{t('modal_success_h3')}</h3>
+                <h3 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 30, fontWeight: 300, color: '#1a1410', marginBottom: 10 }}>{t('modal_success_h3')}</h3>
                 <p style={{ fontSize: 14, color: '#8a7a6e', lineHeight: 1.7, fontWeight: 300 }}>{t('modal_success_p')}</p>
                 <button onClick={closeModal} style={{ marginTop: 24, padding: '12px 32px', background: '#1a1410', color: 'white', border: 'none', borderRadius: 100, fontSize: 14, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}>{t('close')}</button>
               </div>
             ) : (
               <>
                 <p style={{ fontSize: 11, color: '#7b5ea7', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12, fontWeight: 500 }}>{t('modal_label')}</p>
-                <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 32, fontWeight: 300, color: '#1a1410', marginBottom: 6, lineHeight: 1.1 }}>
+                <h3 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 32, fontWeight: 300, color: '#1a1410', marginBottom: 6, lineHeight: 1.1 }}>
                   {modal.plan ? `${t('modal_plan_prefix')} ${planDisplayName(modal.plan)}` : t('modal_h3_start')}
                 </h3>
                 <p style={{ fontSize: 13, color: '#8a7a6e', marginBottom: 28, fontWeight: 300 }}>
