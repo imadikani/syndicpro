@@ -46,7 +46,6 @@ export default function AdminPage() {
   const [tab, setTab] = useState<'syndics' | 'buildings' | 'demos'>('syndics');
   const [token, setToken] = useState('');
   const [authChecked, setAuthChecked] = useState(false);
-  const [accessDenied, setAccessDenied] = useState(false);
 
   // Data
   const [syndics, setSyndics] = useState<Syndic[]>([]);
@@ -76,9 +75,14 @@ export default function AdminPage() {
     // Verify admin role via API (don't rely on potentially stale localStorage)
     fetch(`${API_BASE}/api/admin/syndics`, {
       headers: { Authorization: `Bearer ${t}` },
-    }).then(res => {
+    }).then(async res => {
       if (res.status === 401) { router.push('/login'); return; }
-      if (res.status === 403) { setAccessDenied(true); return; }
+      if (res.status === 403) {
+        // Check if any admin exists — if not, go to setup; if yes, go to login with admin account
+        const check = await fetch(`${API_BASE}/api/admin/bootstrap/check`).then(r => r.json()).catch(() => ({ adminExists: true }));
+        router.push(check.adminExists ? '/login' : '/admin/setup');
+        return;
+      }
       if (!res.ok) { router.push('/dashboard'); return; }
       setAuthChecked(true);
     }).catch(() => router.push('/login'));
@@ -171,22 +175,6 @@ export default function AdminPage() {
   function fmtDate(iso: string) {
     return new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
   }
-
-  if (accessDenied) return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: '#0f0d0b', fontFamily: "'DM Sans', sans-serif", gap: 16 }}>
-      <div style={{ color: '#f87171', fontSize: 15, fontWeight: 500 }}>Access denied — your account does not have ADMIN role.</div>
-      <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, textAlign: 'center', maxWidth: 480, lineHeight: 1.7 }}>
-        Run this in your browser console to create the admin account:
-        <pre style={{ marginTop: 12, background: 'rgba(255,255,255,0.05)', padding: '12px 16px', borderRadius: 8, fontSize: 11, color: '#c8b8e8', textAlign: 'left', overflowX: 'auto' }}>{`fetch('/api/admin/bootstrap', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ name: 'Admin', email: 'admin@syndicpro.ma', password: 'changeme123' })
-}).then(r => r.json()).then(console.log)`}</pre>
-        Then refresh this page.
-      </div>
-      <button onClick={() => window.location.reload()} style={{ marginTop: 8, padding: '10px 24px', background: '#7b5ea7', border: 'none', borderRadius: 8, color: 'white', fontSize: 13, cursor: 'pointer' }}>Refresh</button>
-    </div>
-  );
 
   if (!authChecked) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: '#0f0d0b', fontFamily: "'DM Sans', sans-serif", color: 'rgba(255,255,255,0.3)', fontSize: 13 }}>
