@@ -361,8 +361,6 @@ function AdminPageInner() {
         )}
       </div>
 
-      </div>
-
       {/* ── NEW SYNDIC MODAL ── */}
       {syndicOpen && (
         <div style={s.backdrop} onClick={e => { if (e.target === e.currentTarget) setSyndicOpen(false); }}>
