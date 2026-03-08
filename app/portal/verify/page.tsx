@@ -3,11 +3,13 @@
 import '../portal.css';
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useLanguage } from '@/lib/i18n';
 
 const API_BASE = process.env.NEXT_PUBLIC_APP_URL || '';
 
 export default function PortalVerifyPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [pins, setPins] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -58,7 +60,7 @@ export default function PortalVerifyPage() {
       localStorage.setItem('portal_resident', JSON.stringify(data.resident));
       router.push('/portal/home');
     } catch {
-      setError('Erreur de connexion. Réessayez.');
+      setError(t('portal_error'));
     } finally {
       setLoading(false);
     }
@@ -87,11 +89,11 @@ export default function PortalVerifyPage() {
     <div className="portal-shell" style={s.shell}>
       <div style={s.card}>
         <div style={s.logo}>Syndic<span style={{ color: '#7b5ea7' }}>Pro</span></div>
-        <div style={s.logoSub}>Portail Résident</div>
+        <div style={s.logoSub}>{t('portal_title')}</div>
 
-        <h1 style={s.heading}>Entrez votre code</h1>
+        <h1 style={s.heading}>{t('verify_h1')}</h1>
         <p style={s.sub}>
-          Code envoyé par {channel === 'whatsapp' ? 'WhatsApp' : 'SMS'} au{' '}
+          {channel === 'whatsapp' ? t('verify_sub_wa') : t('verify_sub_sms')}{' '}
           <strong style={{ color: '#1a1410' }}>{maskedPhone}</strong>
         </p>
 
@@ -113,18 +115,18 @@ export default function PortalVerifyPage() {
         </div>
 
         {error && <div style={s.error}>{error}</div>}
-        {loading && <div style={s.loading}>Vérification...</div>}
+        {loading && <div style={s.loading}>{t('verify_checking')}</div>}
 
         <div style={s.resendRow}>
           {resent ? (
-            <span style={{ color: '#7b5ea7', fontSize: 13 }}>✓ Code renvoyé !</span>
+            <span style={{ color: '#7b5ea7', fontSize: 13 }}>{t('verify_resent')}</span>
           ) : (
             <button style={s.resendBtn} onClick={resendCode} disabled={resending}>
-              {resending ? 'Envoi...' : 'Renvoyer le code'}
+              {resending ? t('verify_resending') : t('verify_resend')}
             </button>
           )}
           <button style={s.backBtn} onClick={() => router.push('/portal')}>
-            Changer de numéro
+            {t('verify_change')}
           </button>
         </div>
       </div>

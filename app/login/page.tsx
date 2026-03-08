@@ -4,11 +4,13 @@ import './login.css';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useLanguage, LangToggle } from '@/lib/i18n';
 
 const API_BASE = process.env.NEXT_PUBLIC_APP_URL || '';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(true);
@@ -27,7 +29,7 @@ export default function LoginPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError('Email ou mot de passe incorrect');
+        setError(t('login_error'));
         return;
       }
       const storage = remember ? localStorage : sessionStorage;
@@ -35,7 +37,7 @@ export default function LoginPage() {
       storage.setItem('syndic_user', JSON.stringify(data.user));
       router.push('/dashboard');
     } catch {
-      setError('Email ou mot de passe incorrect');
+      setError(t('login_error'));
     } finally {
       setLoading(false);
     }
@@ -44,18 +46,21 @@ export default function LoginPage() {
   return (
     <div className="login-shell" style={s.shell}>
       <div style={s.card}>
-        {/* Logo */}
-        <div style={s.logo}>Syndic<span style={{ color: '#c8b8e8' }}>Pro</span></div>
+        {/* Logo + lang toggle */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 2 }}>
+          <div style={s.logo}>Syndic<span style={{ color: '#c8b8e8' }}>Pro</span></div>
+          <LangToggle style={{ marginTop: 4 }} />
+        </div>
         <div style={s.logoSub}>by Mizane AI</div>
 
         {/* Heading */}
-        <h1 style={s.heading}>Bon retour</h1>
-        <p style={s.sub}>Gérez vos immeubles. Récupérez vos charges.</p>
+        <h1 style={s.heading}>{t('login_title')}</h1>
+        <p style={s.sub}>{t('login_sub')}</p>
 
         {/* Form */}
         <form onSubmit={handleSubmit} style={s.form}>
           <div style={s.field}>
-            <label style={s.label}>Email</label>
+            <label style={s.label}>{t('login_email')}</label>
             <input
               type="email"
               value={email}
@@ -69,8 +74,8 @@ export default function LoginPage() {
 
           <div style={s.field}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-              <label style={s.label}>Mot de passe</label>
-              <Link href="/forgot-password" style={s.forgotLink}>Mot de passe oublié ?</Link>
+              <label style={s.label}>{t('login_password')}</label>
+              <Link href="/forgot-password" style={s.forgotLink}>{t('login_forgot')}</Link>
             </div>
             <input
               type="password"
@@ -90,19 +95,19 @@ export default function LoginPage() {
               onChange={e => setRemember(e.target.checked)}
               style={s.checkbox}
             />
-            <span style={s.checkboxLabel}>Se souvenir de moi</span>
+            <span style={s.checkboxLabel}>{t('login_remember')}</span>
           </label>
 
           {error && <div style={s.error}>{error}</div>}
 
           <button type="submit" disabled={loading} style={s.btn}>
-            {loading ? 'Connexion...' : 'Se connecter'}
+            {loading ? t('login_loading') : t('login_submit')}
           </button>
         </form>
 
         <div style={s.footer}>
-          Pas encore de compte ?{' '}
-          <a href="#" style={s.footerLink} onClick={e => { e.preventDefault(); }}>Contactez-nous</a>
+          {t('login_no_account')}{' '}
+          <a href="#" style={s.footerLink} onClick={e => { e.preventDefault(); }}>{t('login_contact')}</a>
         </div>
       </div>
     </div>

@@ -3,6 +3,7 @@
 import './dashboard.css';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { useLanguage, LangToggle } from '@/lib/i18n';
 
 const API_BASE = process.env.NEXT_PUBLIC_APP_URL || '';
 
@@ -61,9 +62,13 @@ type Reminder = {
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 
-const CAT_LABELS: Record<string, string> = {
+const CAT_LABELS_FR: Record<string, string> = {
   ENTRETIEN: 'Entretien', REPARATION: 'Réparation', SECURITE: 'Sécurité',
   ELECTRICITE: 'Électricité', EAU: 'Eau', ASSURANCE: 'Assurance', AUTRE: 'Autre',
+};
+const CAT_LABELS_EN: Record<string, string> = {
+  ENTRETIEN: 'Maintenance', REPARATION: 'Repair', SECURITE: 'Security',
+  ELECTRICITE: 'Electricity', EAU: 'Water', ASSURANCE: 'Insurance', AUTRE: 'Other',
 };
 const CAT_COLORS: Record<string, string> = {
   ENTRETIEN: '#7b5ea7', REPARATION: '#f87171', SECURITE: '#34d399',
@@ -81,6 +86,8 @@ type Tab = 'overview' | 'buildings' | 'residents' | 'expenses' | 'reminders';
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
 
 export default function Dashboard() {
+  const { t, lang } = useLanguage();
+  const CAT_LABELS = lang === 'en' ? CAT_LABELS_EN : CAT_LABELS_FR;
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [selectedBuilding, setSelectedBuilding] = useState<string | null>(null);
   const [addExpenseOpen, setAddExpenseOpen] = useState(false);
@@ -92,9 +99,9 @@ export default function Dashboard() {
   const [newExpense, setNewExpense] = useState({ label: '', amount: '', date: '', dueDate: '', buildingId: '', category: 'ENTRETIEN', isPaid: true });
   const [addExpenseLoading, setAddExpenseLoading] = useState(false);
   const [addExpenseError, setAddExpenseError] = useState('');
-  const [expenseBuildingFilter, setExpenseBuildingFilter] = useState('Tous');
-  const [residentBuildingFilter, setResidentBuildingFilter] = useState('Tous');
-  const [residentStatusFilter, setResidentStatusFilter] = useState('Tous');
+  const [expenseBuildingFilter, setExpenseBuildingFilter] = useState('All');
+  const [residentBuildingFilter, setResidentBuildingFilter] = useState('All');
+  const [residentStatusFilter, setResidentStatusFilter] = useState<'All' | 'PAID' | 'PENDING' | 'LATE'>('All');
   const [addResidentOpen, setAddResidentOpen] = useState(false);
   const [newResident, setNewResident] = useState({ name: '', phone: '', buildingId: '', unitNumber: '', isOwner: false });
   const [addResidentLoading, setAddResidentLoading] = useState(false);
@@ -144,7 +151,7 @@ export default function Dashboard() {
         setExpenses(Array.isArray(expensesData) ? expensesData : []);
         setReminders(Array.isArray(remindersData) ? remindersData : []);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Erreur de chargement');
+        setError(err instanceof Error ? err.message : t('dash_error_loading'));
       } finally {
         setLoading(false);
       }
@@ -176,7 +183,7 @@ export default function Dashboard() {
   }
 
   async function handleDeleteExpense(id: string) {
-    if (!confirm('Supprimer cette dépense ?')) return;
+    if (!confirm(t('dash_delete_expense_confirm'))) return;
     try {
       const res = await fetch(`${API_BASE}/api/expenses/${id}`, {
         method: 'DELETE',
@@ -189,7 +196,7 @@ export default function Dashboard() {
   async function handleAddExpense() {
     setAddExpenseError('');
     if (!newExpense.label || !newExpense.amount || !newExpense.date || !newExpense.buildingId) {
-      setAddExpenseError('Tous les champs sont obligatoires.');
+      setAddExpenseError(t('dash_required_fields'));
       return;
     }
     setAddExpenseLoading(true);
@@ -200,12 +207,12 @@ export default function Dashboard() {
         body: JSON.stringify({ ...newExpense, amount: parseFloat(newExpense.amount) }),
       });
       const data = await res.json();
-      if (!res.ok) { setAddExpenseError(data.error || 'Erreur lors de l\'ajout.'); return; }
+      if (!res.ok) { setAddExpenseError(data.error || t('dash_error_add')); return; }
       setExpenses(prev => [data, ...prev]);
       setAddExpenseOpen(false);
       setNewExpense({ label: '', amount: '', date: '', dueDate: '', buildingId: '', category: 'ENTRETIEN', isPaid: true });
     } catch {
-      setAddExpenseError('Erreur de connexion.');
+      setAddExpenseError(t('dash_error_connection'));
     } finally {
       setAddExpenseLoading(false);
     }
@@ -214,7 +221,7 @@ export default function Dashboard() {
   async function handleCustomReminder() {
     setCustomReminderError('');
     if (!customReminderResidentId || !customReminderMsg.trim()) {
-      setCustomReminderError('Choisissez un résident et écrivez un message.');
+      setCustomReminderError(t('dash_reminder_required'));
       return;
     }
     setCustomReminderLoading(true);
@@ -225,13 +232,13 @@ export default function Dashboard() {
         body: JSON.stringify({ residentId: customReminderResidentId, customMessage: customReminderMsg }),
       });
       const data = await res.json();
-      if (!res.ok) { setCustomReminderError(data.error || 'Erreur envoi.'); return; }
+      if (!res.ok) { setCustomReminderError(data.error || t('dash_error_send')); return; }
       if (data.reminder) setReminders(prev => [{ ...data.reminder, resident: payments.find(p => p.unit?.resident && p.unit.resident)?.unit?.resident }, ...prev]);
       setCustomReminderOpen(false);
       setCustomReminderResidentId('');
       setCustomReminderMsg('');
     } catch {
-      setCustomReminderError('Erreur de connexion.');
+      setCustomReminderError(t('dash_error_connection'));
     } finally {
       setCustomReminderLoading(false);
     }
@@ -244,7 +251,7 @@ export default function Dashboard() {
   async function handleAddResident() {
     setAddResidentError('');
     if (!newResident.name || !newResident.phone || !newResident.buildingId || !newResident.unitNumber) {
-      setAddResidentError('Tous les champs sont obligatoires.');
+      setAddResidentError(t('dash_required_fields'));
       return;
     }
     setAddResidentLoading(true);
@@ -256,7 +263,7 @@ export default function Dashboard() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setAddResidentError(data.error || 'Erreur lors de l\'ajout.');
+        setAddResidentError(data.error || t('dash_error_add'));
         return;
       }
       // Refresh payments to show new resident
@@ -267,7 +274,7 @@ export default function Dashboard() {
       setAddResidentOpen(false);
       setNewResident({ name: '', phone: '', buildingId: '', unitNumber: '', isOwner: false });
     } catch {
-      setAddResidentError('Erreur de connexion.');
+      setAddResidentError(t('dash_error_connection'));
     } finally {
       setAddResidentLoading(false);
     }
@@ -289,7 +296,7 @@ export default function Dashboard() {
   if (loading) {
     return (
       <div className="dashboard-shell" style={{ ...styles.shell, alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ color: 'rgba(200,184,232,0.6)', fontSize: 13, letterSpacing: 2, textTransform: 'uppercase' }}>Chargement...</div>
+        <div style={{ color: 'rgba(200,184,232,0.6)', fontSize: 13, letterSpacing: 2, textTransform: 'uppercase' }}>{t('dash_loading')}</div>
       </div>
     );
   }
@@ -313,11 +320,11 @@ export default function Dashboard() {
 
         <nav style={styles.sidebarNav}>
           {([
-            { id: 'overview', icon: '◈', label: 'Vue d\'ensemble' },
-            { id: 'buildings', icon: '⬡', label: 'Immeubles' },
-            { id: 'residents', icon: '◎', label: 'Résidents' },
-            { id: 'expenses', icon: '◉', label: 'Dépenses' },
-            { id: 'reminders', icon: '◈', label: 'Rappels WhatsApp' },
+            { id: 'overview', icon: '◈', label: t('dash_overview') },
+            { id: 'buildings', icon: '⬡', label: t('dash_buildings') },
+            { id: 'residents', icon: '◎', label: t('dash_residents') },
+            { id: 'expenses', icon: '◉', label: t('dash_expenses') },
+            { id: 'reminders', icon: '◈', label: t('dash_reminders') },
           ] as { id: Tab; icon: string; label: string }[]).map(item => (
             <button
               key={item.id}
@@ -335,10 +342,11 @@ export default function Dashboard() {
             <div style={styles.userAvatar}>{userName[0]}</div>
             <div>
               <div style={styles.userName}>{userName}</div>
-              <div style={styles.userRole}>Administrateur</div>
+              <div style={styles.userRole}>{t('user_role_admin')}</div>
             </div>
           </div>
-          <button style={styles.logoutBtn} onClick={logout}>Déconnexion</button>
+          <LangToggle style={{ marginBottom: 8 }} />
+          <button style={styles.logoutBtn} onClick={logout}>{t('dash_logout')}</button>
         </div>
       </aside>
 
@@ -349,15 +357,15 @@ export default function Dashboard() {
           <div>
             <div style={styles.headerEyebrow}>Mars 2026</div>
             <h1 style={styles.headerTitle}>
-              {activeTab === 'overview' && 'Vue d\'ensemble'}
-              {activeTab === 'buildings' && (selectedBuilding ? buildings.find(b => b.id === selectedBuilding)?.name : 'Immeubles')}
-              {activeTab === 'residents' && 'Résidents & Paiements'}
-              {activeTab === 'expenses' && 'Dépenses'}
-              {activeTab === 'reminders' && 'Rappels WhatsApp'}
+              {activeTab === 'overview' && t('dash_overview')}
+              {activeTab === 'buildings' && (selectedBuilding ? buildings.find(b => b.id === selectedBuilding)?.name : t('dash_buildings'))}
+              {activeTab === 'residents' && t('dash_residents_payments')}
+              {activeTab === 'expenses' && t('dash_expenses')}
+              {activeTab === 'reminders' && t('dash_reminders')}
             </h1>
           </div>
           <div style={styles.headerRate}>
-            <div style={styles.rateLabel}>Taux de recouvrement</div>
+            <div style={styles.rateLabel}>{t('dash_collection_rate')}</div>
             <div style={styles.rateValue}>{collectionRate}<span style={{ fontSize: 18, color: '#c8b8e8' }}>%</span></div>
           </div>
         </header>
@@ -370,10 +378,10 @@ export default function Dashboard() {
               {/* KPI STRIP */}
               <div style={styles.kpiGrid}>
                 {[
-                  { label: 'Collecté ce mois', value: `${totalCollected.toLocaleString()} MAD`, sub: `sur ${totalDue.toLocaleString()} MAD dus`, color: '#34d399' },
-                  { label: 'Impayés', value: `${totalUnpaid.toLocaleString()} MAD`, sub: `${pendingCount} résidents en retard`, color: '#f87171' },
-                  { label: 'Immeubles gérés', value: buildings.length.toString(), sub: `${buildings.reduce((s, b) => s + b.totalUnits, 0)} unités au total`, color: '#c8b8e8' },
-                  { label: 'Dépenses du mois', value: `${totalExpenses.toLocaleString()} MAD`, sub: `${expenses.length} entrées`, color: '#fbbf24' },
+                  { label: t('dash_collected_month_kpi'), value: `${totalCollected.toLocaleString()} MAD`, sub: `${t('dash_on_of')} ${totalDue.toLocaleString()} MAD ${t('dash_due_text')}`, color: '#34d399' },
+                  { label: t('dash_unpaid'), value: `${totalUnpaid.toLocaleString()} MAD`, sub: `${pendingCount} ${t('dash_late_residents')}`, color: '#f87171' },
+                  { label: t('dash_buildings_managed_kpi'), value: buildings.length.toString(), sub: `${buildings.reduce((s, b) => s + b.totalUnits, 0)} ${t('dash_total_units')}`, color: '#c8b8e8' },
+                  { label: t('dash_expenses_month_kpi'), value: `${totalExpenses.toLocaleString()} MAD`, sub: `${expenses.length} ${t('dash_entries_pl')}`, color: '#fbbf24' },
                 ].map(kpi => (
                   <div key={kpi.label} style={styles.kpiCard}>
                     <div style={styles.kpiLabel}>{kpi.label}</div>
@@ -385,18 +393,18 @@ export default function Dashboard() {
 
               {/* COLLECTION BAR */}
               <div style={styles.card}>
-                <div style={styles.cardTitle}>Recouvrement Mars 2026</div>
+                <div style={styles.cardTitle}>{t('dash_collection_header')}</div>
                 <div style={styles.collectionBar}>
                   <div style={{ ...styles.collectionFill, width: `${collectionRate}%` }} />
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 10 }}>
-                  <span style={styles.smallMuted}>{collectionRate}% collecté</span>
-                  <span style={styles.smallMuted}>{totalDue.toLocaleString()} MAD total dû</span>
+                  <span style={styles.smallMuted}>{collectionRate}{t('dash_percent_collected')}</span>
+                  <span style={styles.smallMuted}>{totalDue.toLocaleString()} {t('dash_total_due_label')}</span>
                 </div>
               </div>
 
               {/* BUILDINGS OVERVIEW */}
-              <div style={styles.cardTitle2}>Statut par immeuble</div>
+              <div style={styles.cardTitle2}>{t('dash_status_by_building')}</div>
               <div style={styles.buildingRows}>
                 {buildings.map(b => {
                   const rate = b.stats?.collectionRate || 0;
@@ -405,7 +413,7 @@ export default function Dashboard() {
                       <div style={{ ...styles.buildingDot, background: b.color }} />
                       <div style={{ flex: 1 }}>
                         <div style={styles.buildingRowName}>{b.name}</div>
-                        <div style={styles.buildingRowSub}>{b.city} · {b.totalUnits} unités · {b.monthlyFee} MAD/mois</div>
+                        <div style={styles.buildingRowSub}>{b.city} · {b.totalUnits} {t('dash_units_count')} · {b.monthlyFee} {t('dash_per_month_short')}</div>
                       </div>
                       <div style={styles.buildingRowBar}>
                         <div style={{ ...styles.buildingRowFill, width: `${rate}%`, background: b.color }} />
@@ -418,13 +426,13 @@ export default function Dashboard() {
               </div>
 
               {/* RECENT ACTIVITY */}
-              <div style={styles.cardTitle2}>Activité récente</div>
+              <div style={styles.cardTitle2}>{t('dash_recent_activity')}</div>
               <div style={styles.card}>
                 {payments.filter(p => p.status === 'PAID').slice(0, 3).map((p, i) => (
                   <div key={p.id} style={{ ...styles.activityRow, borderBottom: '1px solid rgba(200,184,232,0.1)' }}>
                     <div style={{ ...styles.activityIcon, color: '#34d399' }}>✓</div>
                     <div style={{ flex: 1, fontSize: 13, color: 'rgba(255,255,255,0.75)' }}>
-                      {p.unit?.resident?.name || 'Résident'} — {p.amount} MAD reçu ({p.unit?.building?.name || ''} {p.unit?.number || ''})
+                      {p.unit?.resident?.name || t('dash_resident_fallback')} — {p.amount} {t('dash_mad_received')} ({p.unit?.building?.name || ''} {p.unit?.number || ''})
                     </div>
                     <div style={styles.activityTime}>{fmtDate(p.paidAt)}</div>
                   </div>
@@ -433,7 +441,7 @@ export default function Dashboard() {
                   <div key={r.id} style={{ ...styles.activityRow, borderBottom: i < 1 ? '1px solid rgba(200,184,232,0.1)' : 'none' }}>
                     <div style={{ ...styles.activityIcon, color: '#7b5ea7' }}>💬</div>
                     <div style={{ flex: 1, fontSize: 13, color: 'rgba(255,255,255,0.75)' }}>
-                      {r.message} envoyé à {r.resident?.name || 'résident'}
+                      {r.message} {t('dash_sent_to')} {r.resident?.name || 'résident'}
                     </div>
                     <div style={styles.activityTime}>{fmtDate(r.sentAt)}</div>
                   </div>
@@ -461,21 +469,21 @@ export default function Dashboard() {
                     <div style={styles.buildingCardStats}>
                       <div style={styles.bStat}>
                         <div style={styles.bStatVal}>{b.totalUnits}</div>
-                        <div style={styles.bStatLabel}>Unités</div>
+                        <div style={styles.bStatLabel}>{t('dash_units_kpi')}</div>
                       </div>
                       <div style={styles.bStat}>
                         <div style={styles.bStatVal}>{b.monthlyFee}</div>
-                        <div style={styles.bStatLabel}>MAD/mois</div>
+                        <div style={styles.bStatLabel}>{t('dash_per_month_short')}</div>
                       </div>
                       <div style={styles.bStat}>
                         <div style={{ ...styles.bStatVal, color: '#34d399' }}>{collectedAmt.toLocaleString()}</div>
-                        <div style={styles.bStatLabel}>Collecté</div>
+                        <div style={styles.bStatLabel}>{t('dash_collected_kpi')}</div>
                       </div>
                     </div>
                     <div style={styles.buildingCardBar}>
                       <div style={{ ...styles.buildingCardFill, width: `${rate}%`, background: b.color }} />
                     </div>
-                    <div style={styles.buildingCardCta}>Voir les résidents →</div>
+                    <div style={styles.buildingCardCta}>{t('dash_see_residents')}</div>
                   </div>
                 );
               })}
@@ -489,7 +497,7 @@ export default function Dashboard() {
             const rate = b.stats?.collectionRate || 0;
             return (
               <div>
-                <button style={styles.backBtn} onClick={() => setSelectedBuilding(null)}>← Retour aux immeubles</button>
+                <button style={styles.backBtn} onClick={() => setSelectedBuilding(null)}>{t('dash_back_to_buildings')}</button>
                 <div style={styles.buildingDetailHeader}>
                   <div style={{ ...styles.buildingDetailDot, background: b.color }} />
                   <div>
@@ -498,17 +506,17 @@ export default function Dashboard() {
                   </div>
                   <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
                     <div style={{ ...styles.bigRate, color: b.color }}>{rate}%</div>
-                    <div style={styles.smallMuted}>taux de recouvrement</div>
+                    <div style={styles.smallMuted}>{t('dash_collection_rate_lower')}</div>
                   </div>
                 </div>
                 <div style={styles.residentTable}>
                   <div style={styles.tableHeader}>
-                    <span style={{ flex: 2 }}>Résident</span>
-                    <span style={{ flex: 1 }}>Unité</span>
-                    <span style={{ flex: 1 }}>Téléphone</span>
-                    <span style={{ flex: 1 }}>Montant</span>
-                    <span style={{ flex: 1 }}>Statut</span>
-                    <span style={{ flex: 1 }}>Date paiement</span>
+                    <span style={{ flex: 2 }}>{t('dash_resident_col')}</span>
+                    <span style={{ flex: 1 }}>{t('dash_unit_col')}</span>
+                    <span style={{ flex: 1 }}>{t('dash_phone')}</span>
+                    <span style={{ flex: 1 }}>{t('dash_amount')}</span>
+                    <span style={{ flex: 1 }}>{t('dash_status')}</span>
+                    <span style={{ flex: 1 }}>{t('dash_payment_date')}</span>
                   </div>
                   {buildingResidents.map(p => (
                     <div key={p.id} style={styles.tableRow}>
@@ -517,8 +525,8 @@ export default function Dashboard() {
                           {(p.unit?.resident?.name || '?')[0]}
                         </div>
                         <div>
-                          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.9)', fontWeight: 500 }}>{p.unit?.resident?.name || 'Inconnu'}</div>
-                          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>{p.unit?.resident?.isOwner ? 'Propriétaire' : 'Locataire'}</div>
+                          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.9)', fontWeight: 500 }}>{p.unit?.resident?.name || t('dash_unknown')}</div>
+                          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>{p.unit?.resident?.isOwner ? t('dash_owner') : t('dash_tenant')}</div>
                         </div>
                       </span>
                       <span style={{ flex: 1, fontSize: 13, color: 'rgba(255,255,255,0.6)' }}>{p.unit?.number || '—'}</span>
@@ -526,7 +534,7 @@ export default function Dashboard() {
                       <span style={{ flex: 1, fontSize: 13, color: 'rgba(255,255,255,0.8)', fontWeight: 500 }}>{p.amount} MAD</span>
                       <span style={{ flex: 1 }}>
                         <span style={{ ...styles.statusBadge, ...getStatusStyle(p.status) }}>
-                          {p.status === 'PAID' ? '✓ Payé' : p.status === 'LATE' ? '⚠ En retard' : '○ En attente'}
+                          {p.status === 'PAID' ? t('dash_paid') : p.status === 'LATE' ? t('dash_late') : t('dash_pending')}
                         </span>
                       </span>
                       <span style={{ flex: 1, fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{fmtDate(p.paidAt)}</span>
@@ -542,34 +550,37 @@ export default function Dashboard() {
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                 <div style={styles.filterRow}>
-                  {['Tous', ...buildings.map(b => b.name.split(' ').slice(-1)[0])].map(f => (
-                    <button key={f} style={{ ...styles.filterBtn, ...(residentBuildingFilter === f ? styles.filterBtnActive : {}) }} onClick={() => setResidentBuildingFilter(f)}>{f}</button>
+                  {['All', ...buildings.map(b => b.name.split(' ').slice(-1)[0])].map(f => (
+                    <button key={f} style={{ ...styles.filterBtn, ...(residentBuildingFilter === f ? styles.filterBtnActive : {}) }} onClick={() => setResidentBuildingFilter(f)}>{f === 'All' ? t('all') : f}</button>
                   ))}
                   <div style={{ display: 'flex', gap: 8 }}>
-                    {['Tous', 'Payé', 'En attente', 'En retard'].map(f => (
-                      <button key={f} style={{ ...styles.filterBtn, ...(residentStatusFilter === f ? styles.filterBtnActive : {}) }} onClick={() => setResidentStatusFilter(f)}>{f}</button>
+                    {([
+                      { key: 'All', label: t('all') },
+                      { key: 'PAID', label: t('filter_paid') },
+                      { key: 'PENDING', label: t('filter_pending') },
+                      { key: 'LATE', label: t('filter_late') },
+                    ] as { key: typeof residentStatusFilter; label: string }[]).map(f => (
+                      <button key={f.key} style={{ ...styles.filterBtn, ...(residentStatusFilter === f.key ? styles.filterBtnActive : {}) }} onClick={() => setResidentStatusFilter(f.key)}>{f.label}</button>
                     ))}
                   </div>
                 </div>
-                <button style={styles.addBtn} onClick={() => { setAddResidentError(''); setAddResidentOpen(true); }}>+ Nouveau résident</button>
+                <button style={styles.addBtn} onClick={() => { setAddResidentError(''); setAddResidentOpen(true); }}>{t('dash_new_resident')}</button>
               </div>
               <div style={styles.residentTable}>
                 <div style={styles.tableHeader}>
-                  <span style={{ flex: 2 }}>Résident</span>
-                  <span style={{ flex: 1 }}>Immeuble · Unité</span>
-                  <span style={{ flex: 1 }}>Téléphone</span>
-                  <span style={{ flex: 1 }}>Montant</span>
-                  <span style={{ flex: 1 }}>Statut</span>
-                  <span style={{ flex: 1 }}>Action</span>
+                  <span style={{ flex: 2 }}>{t('dash_resident_col')}</span>
+                  <span style={{ flex: 1 }}>{t('dash_building_unit')}</span>
+                  <span style={{ flex: 1 }}>{t('dash_phone')}</span>
+                  <span style={{ flex: 1 }}>{t('dash_amount')}</span>
+                  <span style={{ flex: 1 }}>{t('dash_status')}</span>
+                  <span style={{ flex: 1 }}>{t('dash_action')}</span>
                 </div>
                 {payments.filter(p => {
-                  if (residentBuildingFilter !== 'Tous') {
+                  if (residentBuildingFilter !== 'All') {
                     const bName = p.unit?.building?.name || '';
                     if (!bName.split(' ').slice(-1)[0].includes(residentBuildingFilter)) return false;
                   }
-                  if (residentStatusFilter === 'Payé' && p.status !== 'PAID') return false;
-                  if (residentStatusFilter === 'En attente' && p.status !== 'PENDING') return false;
-                  if (residentStatusFilter === 'En retard' && p.status !== 'LATE') return false;
+                  if (residentStatusFilter !== 'All' && p.status !== residentStatusFilter) return false;
                   return true;
                 }).map(p => (
                   <div key={p.id} style={styles.tableRow}>
@@ -578,8 +589,8 @@ export default function Dashboard() {
                         {(p.unit?.resident?.name || '?')[0]}
                       </div>
                       <div>
-                        <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.9)', fontWeight: 500 }}>{p.unit?.resident?.name || 'Inconnu'}</div>
-                        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>{p.unit?.resident?.isOwner ? 'Propriétaire' : 'Locataire'}</div>
+                        <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.9)', fontWeight: 500 }}>{p.unit?.resident?.name || t('dash_unknown')}</div>
+                        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>{p.unit?.resident?.isOwner ? t('dash_owner') : t('dash_tenant')}</div>
                       </div>
                     </span>
                     <span style={{ flex: 1, fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>
@@ -589,12 +600,12 @@ export default function Dashboard() {
                     <span style={{ flex: 1, fontSize: 13, color: 'rgba(255,255,255,0.8)', fontWeight: 500 }}>{p.amount} MAD</span>
                     <span style={{ flex: 1 }}>
                       <span style={{ ...styles.statusBadge, ...getStatusStyle(p.status) }}>
-                        {p.status === 'PAID' ? '✓ Payé' : p.status === 'LATE' ? '⚠ Retard' : '○ Attente'}
+                        {p.status === 'PAID' ? t('dash_paid') : p.status === 'LATE' ? t('dash_late') : t('dash_pending')}
                       </span>
                     </span>
                     <span style={{ flex: 1 }}>
                       {p.status !== 'PAID' && (
-                        <button style={styles.reminderBtn}>💬 Rappel</button>
+                        <button style={styles.reminderBtn}>{t('dash_send_reminder')}</button>
                       )}
                     </span>
                   </div>
@@ -605,34 +616,34 @@ export default function Dashboard() {
                 <div style={styles.modalBackdrop} onClick={() => setAddResidentOpen(false)}>
                   <div style={styles.modalBox} onClick={e => e.stopPropagation()}>
                     <button style={styles.modalClose} onClick={() => setAddResidentOpen(false)}>×</button>
-                    <div style={{ fontSize: 11, color: '#c8b8e8', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>Nouveau résident</div>
-                    <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 28, fontWeight: 300, color: 'white', marginBottom: 24 }}>Ajouter un résident</div>
+                    <div style={{ fontSize: 11, color: '#c8b8e8', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>{t('res_modal_label')}</div>
+                    <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 28, fontWeight: 300, color: 'white', marginBottom: 24 }}>{t('res_modal_title')}</div>
                     <div style={{ marginBottom: 16 }}>
-                      <label style={styles.formLabel}>Nom complet</label>
+                      <label style={styles.formLabel}>{t('res_full_name')}</label>
                       <input type="text" placeholder="Ex. Karim Benali" style={styles.formInput} value={newResident.name} onChange={e => setNewResident(p => ({ ...p, name: e.target.value }))} />
                     </div>
                     <div style={{ marginBottom: 16 }}>
-                      <label style={styles.formLabel}>Téléphone</label>
+                      <label style={styles.formLabel}>{t('res_phone')}</label>
                       <input type="tel" placeholder="+212 6 XX XX XX XX" style={styles.formInput} value={newResident.phone} onChange={e => setNewResident(p => ({ ...p, phone: e.target.value }))} />
                     </div>
                     <div style={{ marginBottom: 16 }}>
-                      <label style={styles.formLabel}>Immeuble</label>
+                      <label style={styles.formLabel}>{t('res_building')}</label>
                       <select style={styles.formInput} value={newResident.buildingId} onChange={e => setNewResident(p => ({ ...p, buildingId: e.target.value }))}>
-                        <option value="">— Choisir un immeuble —</option>
+                        <option value="">{t('res_choose_building')}</option>
                         {buildings.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                       </select>
                     </div>
                     <div style={{ marginBottom: 16 }}>
-                      <label style={styles.formLabel}>Numéro d&apos;unité</label>
-                      <input type="text" placeholder="Ex. A3, 101, E1" style={styles.formInput} value={newResident.unitNumber} onChange={e => setNewResident(p => ({ ...p, unitNumber: e.target.value }))} />
+                      <label style={styles.formLabel}>{t('res_unit_number')}</label>
+                      <input type="text" placeholder={t('res_unit_placeholder')} style={styles.formInput} value={newResident.unitNumber} onChange={e => setNewResident(p => ({ ...p, unitNumber: e.target.value }))} />
                     </div>
                     <div style={{ marginBottom: 24, display: 'flex', alignItems: 'center', gap: 10 }}>
                       <input type="checkbox" id="isOwner" checked={newResident.isOwner} onChange={e => setNewResident(p => ({ ...p, isOwner: e.target.checked }))} />
-                      <label htmlFor="isOwner" style={{ ...styles.formLabel, marginBottom: 0, cursor: 'pointer' }}>Propriétaire (décocher si locataire)</label>
+                      <label htmlFor="isOwner" style={{ ...styles.formLabel, marginBottom: 0, cursor: 'pointer' }}>{t('res_is_owner')}</label>
                     </div>
                     {addResidentError && <div style={{ color: '#f87171', fontSize: 13, marginBottom: 12 }}>{addResidentError}</div>}
                     <button style={styles.submitBtn} onClick={handleAddResident} disabled={addResidentLoading}>
-                      {addResidentLoading ? 'Ajout...' : 'Ajouter le résident'}
+                      {addResidentLoading ? t('res_submitting') : t('res_submit')}
                     </button>
                   </div>
                 </div>
@@ -644,8 +655,8 @@ export default function Dashboard() {
           {activeTab === 'expenses' && (() => {
             const today = new Date();
             const filteredBuilding = buildings.find(b => b.name.split(' ').slice(-1)[0] === expenseBuildingFilter);
-            const filteredExpenses = expenseBuildingFilter === 'Tous' ? expenses : expenses.filter(e => e.buildingId === filteredBuilding?.id);
-            const filteredPayments = expenseBuildingFilter === 'Tous' ? payments : payments.filter(p => p.unit?.building?.id === filteredBuilding?.id);
+            const filteredExpenses = expenseBuildingFilter === 'All' ? expenses : expenses.filter(e => e.buildingId === filteredBuilding?.id);
+            const filteredPayments = expenseBuildingFilter === 'All' ? payments : payments.filter(p => p.unit?.building?.id === filteredBuilding?.id);
 
             // Build month keys from both revenues and expenses
             const monthKeys = Array.from(new Set([
@@ -676,9 +687,9 @@ export default function Dashboard() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
                   <div style={styles.kpiGrid}>
                     {[
-                      { label: 'Revenus (encaissés)', value: `${totalRev.toLocaleString()} MAD`, color: '#34d399' },
-                      { label: 'Dépenses (total)', value: `${totalExp.toLocaleString()} MAD`, color: '#f87171' },
-                      { label: 'Solde net', value: `${(totalRev - totalExp) >= 0 ? '+' : ''}${(totalRev - totalExp).toLocaleString()} MAD`, color: (totalRev - totalExp) >= 0 ? '#34d399' : '#f87171' },
+                      { label: t('dash_revenues'), value: `${totalRev.toLocaleString()} MAD`, color: '#34d399' },
+                      { label: t('dash_expenses_total'), value: `${totalExp.toLocaleString()} MAD`, color: '#f87171' },
+                      { label: t('dash_net'), value: `${(totalRev - totalExp) >= 0 ? '+' : ''}${(totalRev - totalExp).toLocaleString()} MAD`, color: (totalRev - totalExp) >= 0 ? '#34d399' : '#f87171' },
                     ].map(k => (
                       <div key={k.label} style={styles.kpiCard}>
                         <div style={styles.kpiLabel}>{k.label}</div>
@@ -686,26 +697,26 @@ export default function Dashboard() {
                       </div>
                     ))}
                   </div>
-                  <button style={styles.addBtn} onClick={() => { setAddExpenseError(''); setAddExpenseOpen(true); }}>+ Nouvelle dépense</button>
+                  <button style={styles.addBtn} onClick={() => { setAddExpenseError(''); setAddExpenseOpen(true); }}>{t('dash_new_expense')}</button>
                 </div>
 
                 {/* ── Building filter ── */}
                 <div style={{ ...styles.filterRow, marginBottom: 28 }}>
-                  {['Tous', ...buildings.map(b => b.name.split(' ').slice(-1)[0])].map(f => (
-                    <button key={f} style={{ ...styles.filterBtn, ...(expenseBuildingFilter === f ? styles.filterBtnActive : {}) }} onClick={() => setExpenseBuildingFilter(f)}>{f}</button>
+                  {['All', ...buildings.map(b => b.name.split(' ').slice(-1)[0])].map(f => (
+                    <button key={f} style={{ ...styles.filterBtn, ...(expenseBuildingFilter === f ? styles.filterBtnActive : {}) }} onClick={() => setExpenseBuildingFilter(f)}>{f === 'All' ? t('all') : f}</button>
                   ))}
                 </div>
 
                 {/* ── Monthly cashflow table ── */}
                 <div style={{ marginBottom: 32 }}>
-                  <div style={styles.cardTitle2}>Trésorerie mensuelle</div>
+                  <div style={styles.cardTitle2}>{t('dash_cashflow')}</div>
                   <div style={{ ...styles.residentTable, marginTop: 12 }}>
                     <div style={{ ...styles.tableHeader, background: 'rgba(52,211,153,0.05)' }}>
-                      <span style={{ flex: 1 }}>Mois</span>
-                      <span style={{ flex: 1 }}>Revenus</span>
-                      <span style={{ flex: 1 }}>Dépenses</span>
-                      <span style={{ flex: 1 }}>Solde</span>
-                      <span style={{ flex: 2 }}>Visuel</span>
+                      <span style={{ flex: 1 }}>{t('dash_month_col')}</span>
+                      <span style={{ flex: 1 }}>{t('dash_revenues_col')}</span>
+                      <span style={{ flex: 1 }}>{t('dash_expenses_col')}</span>
+                      <span style={{ flex: 1 }}>{t('dash_balance')}</span>
+                      <span style={{ flex: 2 }}>{t('dash_visual')}</span>
                     </div>
                     {cashflow.map(c => {
                       const maxVal = Math.max(...cashflow.map(x => Math.max(x.rev, x.exp)), 1);
@@ -737,18 +748,18 @@ export default function Dashboard() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
                       <div style={{ ...styles.cardTitle2, textTransform: 'capitalize', margin: 0 }}>{group.label}</div>
                       <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', background: 'rgba(255,255,255,0.05)', padding: '2px 10px', borderRadius: 100 }}>
-                        {group.rows.length} entrée{group.rows.length > 1 ? 's' : ''} · {group.rows.reduce((s,e) => s + e.amount, 0).toLocaleString()} MAD
+                        {group.rows.length} {group.rows.length > 1 ? t('dash_entries_pl') : t('dash_entries')} · {group.rows.reduce((s,e) => s + e.amount, 0).toLocaleString()} MAD
                       </div>
                     </div>
                     <div style={styles.residentTable}>
                       <div style={styles.tableHeader}>
                         <span style={{ flex: '0 0 32px' }}></span>
-                        <span style={{ flex: 2 }}>Libellé</span>
-                        <span style={{ flex: 1 }}>Immeuble</span>
-                        <span style={{ flex: 1 }}>Catégorie</span>
-                        <span style={{ flex: 1 }}>Montant</span>
-                        <span style={{ flex: 1 }}>Échéance</span>
-                        <span style={{ flex: 1 }}>Statut</span>
+                        <span style={{ flex: 2 }}>{t('dash_label_col')}</span>
+                        <span style={{ flex: 1 }}>{t('dash_building_col')}</span>
+                        <span style={{ flex: 1 }}>{t('dash_category_col')}</span>
+                        <span style={{ flex: 1 }}>{t('dash_amount_col')}</span>
+                        <span style={{ flex: 1 }}>{t('dash_due_col')}</span>
+                        <span style={{ flex: 1 }}>{t('dash_status_col')}</span>
                         <span style={{ flex: '0 0 48px' }}></span>
                       </div>
                       {group.rows.map(e => {
@@ -772,15 +783,15 @@ export default function Dashboard() {
                             </span>
                             <span style={{ flex: 1 }}>
                               {e.isPaid ? (
-                                <span style={{ fontSize: 11, color: '#34d399', background: 'rgba(52,211,153,0.12)', padding: '3px 10px', borderRadius: 100 }}>✓ Réglé</span>
+                                <span style={{ fontSize: 11, color: '#34d399', background: 'rgba(52,211,153,0.12)', padding: '3px 10px', borderRadius: 100 }}>{t('exp_paid')}</span>
                               ) : isOverdue ? (
-                                <button onClick={() => handleMarkExpensePaid(e.id, true)} style={{ fontSize: 11, color: '#f87171', background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.3)', padding: '3px 10px', borderRadius: 100, cursor: 'pointer' }}>⚠ En retard</button>
+                                <button onClick={() => handleMarkExpensePaid(e.id, true)} style={{ fontSize: 11, color: '#f87171', background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.3)', padding: '3px 10px', borderRadius: 100, cursor: 'pointer' }}>{t('exp_overdue')}</button>
                               ) : (
-                                <button onClick={() => handleMarkExpensePaid(e.id, true)} style={{ fontSize: 11, color: '#fbbf24', background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)', padding: '3px 10px', borderRadius: 100, cursor: 'pointer' }}>Marquer réglé</button>
+                                <button onClick={() => handleMarkExpensePaid(e.id, true)} style={{ fontSize: 11, color: '#fbbf24', background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)', padding: '3px 10px', borderRadius: 100, cursor: 'pointer' }}>{t('exp_mark_paid')}</button>
                               )}
                             </span>
                             <span style={{ flex: '0 0 48px' }}>
-                              <button onClick={() => handleDeleteExpense(e.id)} style={{ background: 'none', border: 'none', color: 'rgba(248,113,113,0.4)', cursor: 'pointer', fontSize: 16, padding: '2px 6px', borderRadius: 6, lineHeight: 1 }} title="Supprimer">×</button>
+                              <button onClick={() => handleDeleteExpense(e.id)} style={{ background: 'none', border: 'none', color: 'rgba(248,113,113,0.4)', cursor: 'pointer', fontSize: 16, padding: '2px 6px', borderRadius: 6, lineHeight: 1 }} title={t('dash_delete_tooltip')}>×</button>
                             </span>
                           </div>
                         );
@@ -794,36 +805,36 @@ export default function Dashboard() {
                   <div style={styles.modalBackdrop} onClick={() => setAddExpenseOpen(false)}>
                     <div style={styles.modalBox} onClick={e => e.stopPropagation()}>
                       <button style={styles.modalClose} onClick={() => setAddExpenseOpen(false)}>×</button>
-                      <div style={{ fontSize: 11, color: '#c8b8e8', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>Comptabilité</div>
-                      <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 28, fontWeight: 300, color: 'white', marginBottom: 24 }}>Nouvelle dépense</div>
+                      <div style={{ fontSize: 11, color: '#c8b8e8', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>{t('exp_modal_label')}</div>
+                      <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 28, fontWeight: 300, color: 'white', marginBottom: 24 }}>{t('exp_modal_title')}</div>
                       <div style={{ marginBottom: 16 }}>
-                        <label style={styles.formLabel}>Libellé</label>
+                        <label style={styles.formLabel}>{t('exp_libelle')}</label>
                         <input type="text" placeholder="Ex. Entretien ascenseur" style={styles.formInput} value={newExpense.label} onChange={ev => setNewExpense(p => ({ ...p, label: ev.target.value }))} />
                       </div>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
                         <div>
-                          <label style={styles.formLabel}>Montant (MAD)</label>
+                          <label style={styles.formLabel}>{t('exp_amount')}</label>
                           <input type="number" placeholder="0" style={styles.formInput} value={newExpense.amount} onChange={ev => setNewExpense(p => ({ ...p, amount: ev.target.value }))} />
                         </div>
                         <div>
-                          <label style={styles.formLabel}>Date de dépense</label>
+                          <label style={styles.formLabel}>{t('exp_date')}</label>
                           <input type="date" style={styles.formInput} value={newExpense.date} onChange={ev => setNewExpense(p => ({ ...p, date: ev.target.value }))} />
                         </div>
                       </div>
                       <div style={{ marginBottom: 16 }}>
-                        <label style={styles.formLabel}>Date d&apos;échéance (optionnel)</label>
+                        <label style={styles.formLabel}>{t('exp_due_date')}</label>
                         <input type="date" style={styles.formInput} value={newExpense.dueDate} onChange={ev => setNewExpense(p => ({ ...p, dueDate: ev.target.value }))} />
                       </div>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
                         <div>
-                          <label style={styles.formLabel}>Immeuble</label>
+                          <label style={styles.formLabel}>{t('exp_building')}</label>
                           <select style={styles.formInput} value={newExpense.buildingId} onChange={ev => setNewExpense(p => ({ ...p, buildingId: ev.target.value }))}>
-                            <option value="">— Choisir —</option>
+                            <option value="">{t('exp_choose')}</option>
                             {buildings.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                           </select>
                         </div>
                         <div>
-                          <label style={styles.formLabel}>Catégorie</label>
+                          <label style={styles.formLabel}>{t('exp_category')}</label>
                           <select style={styles.formInput} value={newExpense.category} onChange={ev => setNewExpense(p => ({ ...p, category: ev.target.value }))}>
                             {Object.entries(CAT_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                           </select>
@@ -831,11 +842,11 @@ export default function Dashboard() {
                       </div>
                       <div style={{ marginBottom: 24, display: 'flex', alignItems: 'center', gap: 10 }}>
                         <input type="checkbox" id="expIsPaid" checked={newExpense.isPaid} onChange={ev => setNewExpense(p => ({ ...p, isPaid: ev.target.checked }))} />
-                        <label htmlFor="expIsPaid" style={{ ...styles.formLabel, marginBottom: 0, cursor: 'pointer' }}>Déjà réglée</label>
+                        <label htmlFor="expIsPaid" style={{ ...styles.formLabel, marginBottom: 0, cursor: 'pointer' }}>{t('exp_already_paid')}</label>
                       </div>
                       {addExpenseError && <div style={{ color: '#f87171', fontSize: 13, marginBottom: 12 }}>{addExpenseError}</div>}
                       <button style={styles.submitBtn} onClick={handleAddExpense} disabled={addExpenseLoading}>
-                        {addExpenseLoading ? 'Enregistrement...' : 'Enregistrer la dépense'}
+                        {addExpenseLoading ? t('exp_saving') : t('exp_save')}
                       </button>
                     </div>
                   </div>
@@ -849,10 +860,10 @@ export default function Dashboard() {
             <div>
               <div style={styles.kpiGrid}>
                 {[
-                  { label: 'Envoyés ce mois', value: reminders.length.toString(), color: '#c8b8e8' },
-                  { label: 'Délivrés', value: reminders.filter(r => r.status === 'DELIVERED').length.toString(), color: '#34d399' },
-                  { label: 'En attente', value: reminders.filter(r => r.status === 'SENT').length.toString(), color: '#fbbf24' },
-                  { label: 'Échecs', value: reminders.filter(r => r.status === 'FAILED').length.toString(), color: '#f87171' },
+                  { label: t('rem_sent_month'), value: reminders.length.toString(), color: '#c8b8e8' },
+                  { label: t('rem_delivered'), value: reminders.filter(r => r.status === 'DELIVERED').length.toString(), color: '#34d399' },
+                  { label: t('rem_pending'), value: reminders.filter(r => r.status === 'SENT').length.toString(), color: '#fbbf24' },
+                  { label: t('rem_failed'), value: reminders.filter(r => r.status === 'FAILED').length.toString(), color: '#f87171' },
                 ].map(k => (
                   <div key={k.label} style={styles.kpiCard}>
                     <div style={styles.kpiLabel}>{k.label}</div>
@@ -862,17 +873,17 @@ export default function Dashboard() {
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '28px 0 16px' }}>
-                <div style={styles.cardTitle2}>Historique des rappels</div>
-                <button style={styles.addBtn} onClick={() => { setCustomReminderError(''); setCustomReminderOpen(true); }}>✏️ Message personnalisé</button>
+                <div style={styles.cardTitle2}>{t('rem_history')}</div>
+                <button style={styles.addBtn} onClick={() => { setCustomReminderError(''); setCustomReminderOpen(true); }}>{t('rem_custom_btn')}</button>
               </div>
 
               <div style={styles.residentTable}>
                 <div style={styles.tableHeader}>
-                  <span style={{ flex: 2 }}>Résident</span>
-                  <span style={{ flex: 1 }}>Immeuble · Unité</span>
-                  <span style={{ flex: 1 }}>Téléphone</span>
-                  <span style={{ flex: 1 }}>Envoyé le</span>
-                  <span style={{ flex: 1 }}>Statut</span>
+                  <span style={{ flex: 2 }}>{t('dash_resident_col')}</span>
+                  <span style={{ flex: 1 }}>{t('rem_building_unit')}</span>
+                  <span style={{ flex: 1 }}>{t('dash_phone')}</span>
+                  <span style={{ flex: 1 }}>{t('rem_sent_at')}</span>
+                  <span style={{ flex: 1 }}>{t('dash_status')}</span>
                 </div>
                 {reminders.map(r => (
                   <div key={r.id} style={styles.tableRow}>
@@ -889,7 +900,7 @@ export default function Dashboard() {
                     <span style={{ flex: 1, fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>{fmtDate(r.sentAt)}</span>
                     <span style={{ flex: 1 }}>
                       <span style={{ ...styles.statusBadge, ...getReminderStatusStyle(r.status) }}>
-                        {r.status === 'DELIVERED' ? '✓ Délivré' : r.status === 'SENT' ? '○ Envoyé' : '✗ Échec'}
+                        {r.status === 'DELIVERED' ? t('rem_delivered_badge') : r.status === 'SENT' ? t('rem_sent_badge') : t('rem_failed_badge')}
                       </span>
                     </span>
                   </div>
@@ -900,12 +911,12 @@ export default function Dashboard() {
                 <div style={styles.modalBackdrop} onClick={() => setCustomReminderOpen(false)}>
                   <div style={styles.modalBox} onClick={e => e.stopPropagation()}>
                     <button style={styles.modalClose} onClick={() => setCustomReminderOpen(false)}>×</button>
-                    <div style={{ fontSize: 11, color: '#c8b8e8', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>Rappel WhatsApp</div>
-                    <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 28, fontWeight: 300, color: 'white', marginBottom: 24 }}>Message personnalisé</div>
+                    <div style={{ fontSize: 11, color: '#c8b8e8', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>{t('rem_modal_label')}</div>
+                    <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 28, fontWeight: 300, color: 'white', marginBottom: 24 }}>{t('rem_modal_title')}</div>
                     <div style={{ marginBottom: 16 }}>
-                      <label style={styles.formLabel}>Résident</label>
+                      <label style={styles.formLabel}>{t('dash_resident_col')}</label>
                       <select style={styles.formInput} value={customReminderResidentId} onChange={e => setCustomReminderResidentId(e.target.value)}>
-                        <option value="">— Choisir un résident —</option>
+                        <option value="">{t('rem_choose_resident')}</option>
                         {Array.from(new Map(payments.filter(p => p.unit?.resident?.id).map(p => [p.unit.resident!.id, p])).values()).map(p => (
                           <option key={p.unit.resident!.id} value={p.unit.resident!.id}>
                             {p.unit.resident!.name} — {p.unit?.building?.name?.split(' ').slice(-1)[0]} {p.unit.number}
@@ -914,7 +925,7 @@ export default function Dashboard() {
                       </select>
                     </div>
                     <div style={{ marginBottom: 24 }}>
-                      <label style={styles.formLabel}>Message</label>
+                      <label style={styles.formLabel}>{t('rem_message')}</label>
                       <textarea
                         rows={5}
                         placeholder="Bonjour, votre charge de Mars est due..."
@@ -925,7 +936,7 @@ export default function Dashboard() {
                     </div>
                     {customReminderError && <div style={{ color: '#f87171', fontSize: 13, marginBottom: 12 }}>{customReminderError}</div>}
                     <button style={styles.submitBtn} onClick={handleCustomReminder} disabled={customReminderLoading}>
-                      {customReminderLoading ? 'Envoi...' : '💬 Envoyer via WhatsApp'}
+                      {customReminderLoading ? t('rem_sending') : t('rem_send_btn')}
                     </button>
                   </div>
                 </div>

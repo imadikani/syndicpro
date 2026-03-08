@@ -3,13 +3,13 @@
 import './portal.css';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useLanguage, LangToggle } from '@/lib/i18n';
 
 const API_BASE = process.env.NEXT_PUBLIC_APP_URL || '';
 
-const MONTH_NAMES = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
-
 export default function PortalPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [phone, setPhone] = useState('');
   const [channel, setChannel] = useState<'whatsapp' | 'sms'>('whatsapp');
   const [loading, setLoading] = useState(false);
@@ -30,7 +30,7 @@ export default function PortalPage() {
       sessionStorage.setItem('portal_channel', channel);
       router.push('/portal/verify');
     } catch {
-      setError('Erreur de connexion. Réessayez.');
+      setError(t('portal_error'));
     } finally {
       setLoading(false);
     }
@@ -39,15 +39,18 @@ export default function PortalPage() {
   return (
     <div className="portal-shell" style={s.shell}>
       <div style={s.card}>
-        <div style={s.logo}>Syndic<span style={{ color: '#7b5ea7' }}>Pro</span></div>
-        <div style={s.logoSub}>Portail Résident</div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 2 }}>
+          <div style={s.logo}>Syndic<span style={{ color: '#7b5ea7' }}>Pro</span></div>
+          <LangToggle style={{ border: '1px solid rgba(123,94,167,0.2)' }} />
+        </div>
+        <div style={s.logoSub}>{t('portal_title')}</div>
 
-        <h1 style={s.heading}>Accéder à mon espace</h1>
-        <p style={s.sub}>Entrez votre numéro de téléphone enregistré auprès de votre syndic.</p>
+        <h1 style={s.heading}>{t('portal_h1')}</h1>
+        <p style={s.sub}>{t('portal_sub')}</p>
 
         <form onSubmit={handleSubmit} style={s.form}>
           <div style={s.field}>
-            <label style={s.label}>Numéro de téléphone</label>
+            <label style={s.label}>{t('portal_phone_label')}</label>
             <input
               type="tel"
               value={phone}
@@ -60,21 +63,21 @@ export default function PortalPage() {
           </div>
 
           <div style={s.channelRow}>
-            <span style={s.channelLabel}>Recevoir le code par :</span>
+            <span style={s.channelLabel}>{t('portal_receive')}</span>
             <div style={s.channelBtns}>
               <button
                 type="button"
                 style={{ ...s.channelBtn, ...(channel === 'whatsapp' ? s.channelBtnActive : {}) }}
                 onClick={() => setChannel('whatsapp')}
               >
-                💬 WhatsApp
+                {t('portal_whatsapp')}
               </button>
               <button
                 type="button"
                 style={{ ...s.channelBtn, ...(channel === 'sms' ? s.channelBtnActive : {}) }}
                 onClick={() => setChannel('sms')}
               >
-                📱 SMS
+                {t('portal_sms')}
               </button>
             </div>
           </div>
@@ -82,13 +85,11 @@ export default function PortalPage() {
           {error && <div style={s.error}>{error}</div>}
 
           <button type="submit" disabled={loading} style={s.btn}>
-            {loading ? 'Envoi...' : 'Recevoir mon code →'}
+            {loading ? t('portal_sending') : t('portal_send')}
           </button>
         </form>
 
-        <p style={s.note}>
-          Votre numéro doit être enregistré par votre syndic. Contactez-le s&apos;il y a un problème.
-        </p>
+        <p style={s.note}>{t('portal_note')}</p>
       </div>
     </div>
   );

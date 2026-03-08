@@ -3,8 +3,10 @@
 import './forgot.css';
 import { useState } from 'react';
 import Link from 'next/link';
+import { useLanguage, LangToggle } from '@/lib/i18n';
 
 export default function ForgotPasswordPage() {
+  const { t } = useLanguage();
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
@@ -16,26 +18,27 @@ export default function ForgotPasswordPage() {
   return (
     <div className="forgot-shell" style={s.shell}>
       <div style={s.card}>
-        <div style={s.logo}>Syndic<span style={{ color: '#c8b8e8' }}>Pro</span></div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 2 }}>
+          <div style={s.logo}>Syndic<span style={{ color: '#c8b8e8' }}>Pro</span></div>
+          <LangToggle style={{ marginTop: 4 }} />
+        </div>
         <div style={s.logoSub}>by Mizane AI</div>
 
         {submitted ? (
           <div style={s.successBox}>
             <div style={s.successIcon}>✓</div>
-            <h2 style={s.successTitle}>Email envoyé</h2>
-            <p style={s.successText}>
-              Si un compte existe avec cet email, vous recevrez un lien de réinitialisation dans quelques minutes.
-            </p>
-            <Link href="/login" style={s.backLink}>← Retour à la connexion</Link>
+            <h2 style={s.successTitle}>{t('forgot_email')}</h2>
+            <p style={s.successText}>{t('forgot_success')}</p>
+            <Link href="/login" style={s.backLink}>{t('forgot_back')}</Link>
           </div>
         ) : (
           <>
-            <h1 style={s.heading}>Mot de passe oublié</h1>
-            <p style={s.sub}>Entrez votre email et nous vous enverrons un lien de réinitialisation.</p>
+            <h1 style={s.heading}>{t('forgot_title')}</h1>
+            <p style={s.sub}>{t('forgot_sub')}</p>
 
             <form onSubmit={handleSubmit} style={s.form}>
               <div style={s.field}>
-                <label style={s.label}>Email</label>
+                <label style={s.label}>{t('forgot_email')}</label>
                 <input
                   type="email"
                   value={email}
@@ -48,12 +51,12 @@ export default function ForgotPasswordPage() {
               </div>
 
               <button type="submit" style={s.btn}>
-                Envoyer le lien de réinitialisation
+                {t('forgot_submit')}
               </button>
             </form>
 
             <div style={s.footer}>
-              <Link href="/login" style={s.footerLink}>← Retour à la connexion</Link>
+              <Link href="/login" style={s.footerLink}>{t('forgot_back')}</Link>
             </div>
           </>
         )}

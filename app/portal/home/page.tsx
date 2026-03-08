@@ -3,10 +3,9 @@
 import '../portal.css';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useLanguage, LangToggle } from '@/lib/i18n';
 
 const API_BASE = process.env.NEXT_PUBLIC_APP_URL || '';
-
-const MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 
 type Resident = {
   id: string; name: string; phone: string; isOwner: boolean;
@@ -20,6 +19,7 @@ type Post = { id: string; content: string; authorName: string; isPinned: boolean
 
 export default function PortalHome() {
   const router = useRouter();
+  const { t, months: MONTHS } = useLanguage();
   const [tab, setTab] = useState<'home' | 'history' | 'community' | 'contact'>('home');
   const [resident, setResident] = useState<Resident | null>(null);
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -46,7 +46,7 @@ export default function PortalHome() {
         setResident(meData);
         setPayments(Array.isArray(paymentsData) ? paymentsData : []);
       } catch {
-        setError('Erreur de chargement');
+        setError(t('portal_loading_error'));
       } finally {
         setLoading(false);
       }
@@ -100,21 +100,21 @@ export default function PortalHome() {
     return '#d97706';
   }
   function statusLabel(status: string) {
-    if (status === 'PAID') return '✓ Payé';
-    if (status === 'LATE') return '⚠ En retard';
-    if (status === 'WAIVED') return '○ Exonéré';
-    return '○ En attente';
+    if (status === 'PAID') return t('portal_status_paid');
+    if (status === 'LATE') return t('portal_status_late');
+    if (status === 'WAIVED') return t('portal_status_waived');
+    return t('portal_status_pending');
   }
 
   if (loading) return (
     <div className="portal-shell" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
-      <div style={{ color: '#8a7a6e', fontSize: 13 }}>Chargement...</div>
+      <div style={{ color: '#8a7a6e', fontSize: 13 }}>{t('loading')}</div>
     </div>
   );
 
   if (error || !resident) return (
     <div className="portal-shell" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
-      <div style={{ color: '#dc2626', fontSize: 13 }}>{error || 'Erreur'}</div>
+      <div style={{ color: '#dc2626', fontSize: 13 }}>{error || t('error')}</div>
     </div>
   );
 
@@ -127,17 +127,20 @@ export default function PortalHome() {
       <div style={{ ...s.header, background: `linear-gradient(135deg, ${buildingColor}dd, ${buildingColor}99)` }}>
         <div style={s.headerTop}>
           <div style={s.headerLogo}>Syndic<span style={{ color: 'rgba(255,255,255,0.7)' }}>Pro</span></div>
-          <button style={s.logoutBtn} onClick={logout}>Déconnexion</button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <LangToggle style={{ border: '1px solid rgba(255,255,255,0.2)' }} />
+            <button style={s.logoutBtn} onClick={logout}>{t('portal_logout')}</button>
+          </div>
         </div>
         <div style={s.headerBuilding}>{resident.building.name}</div>
         <div style={s.headerName}>{resident.name}</div>
-        <div style={s.headerUnit}>Appartement {resident.unit} · {resident.isOwner ? 'Propriétaire' : 'Locataire'}</div>
+        <div style={s.headerUnit}>{t('portal_apt')} {resident.unit} · {resident.isOwner ? t('portal_owner') : t('portal_tenant')}</div>
       </div>
 
       {/* CURRENT PAYMENT CARD */}
       {cp && (
         <div style={s.payCard}>
-          <div style={s.payLabel}>Charge — {MONTHS[cp.month - 1]} {cp.year}</div>
+          <div style={s.payLabel}>{t('portal_charge')} — {MONTHS[cp.month - 1]} {cp.year}</div>
           <div style={{ ...s.payAmount, color: statusColor(cp.status) }}>
             {cp.amount.toLocaleString()} MAD
           </div>
@@ -145,10 +148,10 @@ export default function PortalHome() {
             {statusLabel(cp.status)}
           </div>
           {cp.status !== 'PAID' && (
-            <div style={s.payNote}>Pour payer, contactez votre syndic ou effectuez un virement.</div>
+            <div style={s.payNote}>{t('portal_pay_note')}</div>
           )}
           {cp.paidAt && (
-            <div style={s.payDate}>Payé le {fmtDate(cp.paidAt)}</div>
+            <div style={s.payDate}>{t('portal_paid_on')} {fmtDate(cp.paidAt)}</div>
           )}
         </div>
       )}
@@ -156,18 +159,18 @@ export default function PortalHome() {
       {/* TAB BAR */}
       <div style={s.tabBar}>
         {([
-          { id: 'home', label: 'Accueil', icon: '⬡' },
-          { id: 'history', label: 'Historique', icon: '◉' },
-          { id: 'community', label: 'Communauté', icon: '◎' },
-          { id: 'contact', label: 'Contact', icon: '💬' },
-        ] as { id: typeof tab; label: string; icon: string }[]).map(t => (
+          { id: 'home', label: t('portal_tab_home'), icon: '⬡' },
+          { id: 'history', label: t('portal_tab_history'), icon: '◉' },
+          { id: 'community', label: t('portal_tab_community'), icon: '◎' },
+          { id: 'contact', label: t('portal_tab_contact'), icon: '💬' },
+        ] as { id: typeof tab; label: string; icon: string }[]).map(tb => (
           <button
-            key={t.id}
-            style={{ ...s.tabBtn, ...(tab === t.id ? s.tabBtnActive : {}) }}
-            onClick={() => setTab(t.id)}
+            key={tb.id}
+            style={{ ...s.tabBtn, ...(tab === tb.id ? s.tabBtnActive : {}) }}
+            onClick={() => setTab(tb.id)}
           >
-            <span style={{ fontSize: 16 }}>{t.icon}</span>
-            <span style={{ fontSize: 10 }}>{t.label}</span>
+            <span style={{ fontSize: 16 }}>{tb.icon}</span>
+            <span style={{ fontSize: 10 }}>{tb.label}</span>
           </button>
         ))}
       </div>
@@ -179,29 +182,29 @@ export default function PortalHome() {
         {tab === 'home' && (
           <div>
             <div style={s.infoCard}>
-              <div style={s.infoTitle}>Mon immeuble</div>
-              <div style={s.infoRow}><span style={s.infoKey}>Adresse</span><span style={s.infoVal}>{resident.building.address}</span></div>
-              <div style={s.infoRow}><span style={s.infoKey}>Ville</span><span style={s.infoVal}>{resident.building.city}</span></div>
-              <div style={s.infoRow}><span style={s.infoKey}>Appartement</span><span style={s.infoVal}>{resident.unit}</span></div>
-              <div style={s.infoRow}><span style={s.infoKey}>Statut</span><span style={s.infoVal}>{resident.isOwner ? 'Propriétaire' : 'Locataire'}</span></div>
+              <div style={s.infoTitle}>{t('portal_my_building')}</div>
+              <div style={s.infoRow}><span style={s.infoKey}>{t('portal_address')}</span><span style={s.infoVal}>{resident.building.address}</span></div>
+              <div style={s.infoRow}><span style={s.infoKey}>{t('portal_city')}</span><span style={s.infoVal}>{resident.building.city}</span></div>
+              <div style={s.infoRow}><span style={s.infoKey}>{t('portal_apartment')}</span><span style={s.infoVal}>{resident.unit}</span></div>
+              <div style={s.infoRow}><span style={s.infoKey}>{t('portal_status')}</span><span style={s.infoVal}>{resident.isOwner ? t('portal_owner') : t('portal_tenant')}</span></div>
             </div>
 
             <div style={s.infoCard}>
-              <div style={s.infoTitle}>Résumé des paiements</div>
+              <div style={s.infoTitle}>{t('portal_payment_summary')}</div>
               <div style={s.infoRow}>
-                <span style={s.infoKey}>Payés</span>
+                <span style={s.infoKey}>{t('portal_paid_count')}</span>
                 <span style={{ ...s.infoVal, color: '#16a34a', fontWeight: 600 }}>
                   {payments.filter(p => p.status === 'PAID' || p.status === 'LATE').length}
                 </span>
               </div>
               <div style={s.infoRow}>
-                <span style={s.infoKey}>En attente</span>
+                <span style={s.infoKey}>{t('portal_pending_count')}</span>
                 <span style={{ ...s.infoVal, color: '#d97706', fontWeight: 600 }}>
                   {payments.filter(p => p.status === 'PENDING').length}
                 </span>
               </div>
               <div style={s.infoRow}>
-                <span style={s.infoKey}>En retard</span>
+                <span style={s.infoKey}>{t('portal_late_count')}</span>
                 <span style={{ ...s.infoVal, color: '#dc2626', fontWeight: 600 }}>
                   {payments.filter(p => p.status === 'LATE').length}
                 </span>
@@ -213,14 +216,14 @@ export default function PortalHome() {
         {/* HISTORY */}
         {tab === 'history' && (
           <div>
-            <div style={s.sectionTitle}>Historique des paiements</div>
+            <div style={s.sectionTitle}>{t('portal_history_title')}</div>
             {payments.length === 0 ? (
-              <div style={s.empty}>Aucun paiement enregistré</div>
+              <div style={s.empty}>{t('portal_no_payments')}</div>
             ) : payments.map(p => (
               <div key={p.id} style={s.historyRow}>
                 <div>
                   <div style={s.historyMonth}>{MONTHS[p.month - 1]} {p.year}</div>
-                  {p.paidAt && <div style={s.historyDate}>Payé le {fmtDate(p.paidAt)}</div>}
+                  {p.paidAt && <div style={s.historyDate}>{t('portal_paid_on')} {fmtDate(p.paidAt)}</div>}
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <div style={s.historyAmount}>{p.amount.toLocaleString()} MAD</div>
@@ -234,13 +237,13 @@ export default function PortalHome() {
         {/* COMMUNITY */}
         {tab === 'community' && (
           <div>
-            <div style={s.sectionTitle}>Communauté — {resident.building.name}</div>
+            <div style={s.sectionTitle}>{t('portal_community_title')} — {resident.building.name}</div>
 
             {/* New post */}
             <div style={s.newPostCard}>
               <textarea
                 style={s.postInput}
-                placeholder="Partagez quelque chose avec vos voisins..."
+                placeholder={t('portal_share')}
                 value={newPost}
                 onChange={e => setNewPost(e.target.value)}
                 maxLength={500}
@@ -249,16 +252,16 @@ export default function PortalHome() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 }}>
                 <span style={{ fontSize: 11, color: '#8a7a6e' }}>{newPost.length}/500</span>
                 <button style={s.postBtn} onClick={submitPost} disabled={postLoading || !newPost.trim()}>
-                  {postLoading ? 'Envoi...' : 'Publier'}
+                  {postLoading ? t('portal_publishing') : t('portal_publish')}
                 </button>
               </div>
             </div>
 
             {posts.length === 0 ? (
-              <div style={s.empty}>Aucun message pour l&apos;instant. Soyez le premier à poster !</div>
+              <div style={s.empty}>{t('portal_no_posts')}</div>
             ) : posts.map(post => (
               <div key={post.id} style={{ ...s.postCard, ...(post.isPinned ? s.postCardPinned : {}) }}>
-                {post.isPinned && <div style={s.pinnedBadge}>📌 Épinglé</div>}
+                {post.isPinned && <div style={s.pinnedBadge}>{t('portal_pinned')}</div>}
                 <div style={s.postAuthor}>{post.authorName}</div>
                 <div style={s.postContent}>{post.content}</div>
                 <div style={s.postDate}>{new Date(post.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}</div>
@@ -270,10 +273,10 @@ export default function PortalHome() {
         {/* CONTACT */}
         {tab === 'contact' && (
           <div>
-            <div style={s.sectionTitle}>Contacter le syndic</div>
+            <div style={s.sectionTitle}>{t('portal_contact_title')}</div>
             <div style={s.infoCard}>
               <p style={{ fontSize: 14, color: '#4a3f35', lineHeight: 1.7, margin: '0 0 20px' }}>
-                Pour toute question concernant vos charges, votre appartement ou un problème dans l&apos;immeuble, contactez directement votre syndic.
+                {t('portal_contact_desc')}
               </p>
               <a
                 href={`https://wa.me/${process.env.NEXT_PUBLIC_SYNDIC_WHATSAPP || '212600000000'}?text=Bonjour, je suis ${resident.name} (Apt. ${resident.unit} - ${resident.building.name}). `}
@@ -281,14 +284,14 @@ export default function PortalHome() {
                 rel="noopener noreferrer"
                 style={s.whatsappBtn}
               >
-                💬 Envoyer un message WhatsApp
+                {t('portal_whatsapp_btn')}
               </a>
             </div>
             <div style={s.infoCard}>
-              <div style={s.infoTitle}>Mon immeuble</div>
-              <div style={s.infoRow}><span style={s.infoKey}>Nom</span><span style={s.infoVal}>{resident.building.name}</span></div>
-              <div style={s.infoRow}><span style={s.infoKey}>Adresse</span><span style={s.infoVal}>{resident.building.address}, {resident.building.city}</span></div>
-              <div style={s.infoRow}><span style={s.infoKey}>Mon appartement</span><span style={s.infoVal}>{resident.unit}</span></div>
+              <div style={s.infoTitle}>{t('portal_my_building')}</div>
+              <div style={s.infoRow}><span style={s.infoKey}>{t('portal_name_col')}</span><span style={s.infoVal}>{resident.building.name}</span></div>
+              <div style={s.infoRow}><span style={s.infoKey}>{t('portal_address')}</span><span style={s.infoVal}>{resident.building.address}, {resident.building.city}</span></div>
+              <div style={s.infoRow}><span style={s.infoKey}>{t('portal_apartment')}</span><span style={s.infoVal}>{resident.unit}</span></div>
             </div>
           </div>
         )}
