@@ -35,7 +35,7 @@ function AdminSidebar() {
     <aside style={s.sidebar}>
       <div style={s.brand}>
         <OrvaneLogo size={56} style={{ marginBottom: 8 }} />
-        <div style={{ fontSize: 15, fontWeight: 300, color: '#c4b5f4', letterSpacing: 6, marginBottom: 4, textAlign: 'center' }}>orvane</div>
+        <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 20, fontWeight: 600, color: '#e8e0ff', letterSpacing: 0.3, marginBottom: 4, textAlign: 'center' }}>orvane</div>
         <div style={s.logoSub}>Admin Panel</div>
       </div>
 
