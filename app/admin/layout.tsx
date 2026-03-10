@@ -1,7 +1,7 @@
 'use client';
 
 import './admin.css';
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useTransition, Suspense } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import OrvaneLogo from '@/components/OrvaneLogo';
 
@@ -16,6 +16,7 @@ function AdminSidebar() {
   const params = useSearchParams();
   const activeTab = params.get('tab') || 'syndics';
   const [user, setUser] = useState<{ name: string } | null>(null);
+  const [, startTransition] = useTransition();
 
   useEffect(() => {
     const raw = localStorage.getItem('syndic_user') || sessionStorage.getItem('syndic_user');
@@ -42,7 +43,7 @@ function AdminSidebar() {
           <button
             key={item.id}
             style={{ ...s.navItem, ...(activeTab === item.id ? s.navActive : {}) }}
-            onClick={() => router.push(`/admin?tab=${item.id}`)}
+            onClick={() => startTransition(() => router.push(`/admin?tab=${item.id}`))}
           >
             <span style={s.navIcon}>{item.icon}</span>
             <span>{item.label}</span>
