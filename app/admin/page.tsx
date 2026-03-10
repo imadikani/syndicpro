@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 
 const API_BASE = process.env.NEXT_PUBLIC_APP_URL || '';
 
@@ -42,11 +42,14 @@ type DemoRequest = {
 const COLORS = ['#7c5cbf', '#e8906a', '#34d399', '#f87171', '#60a5fa', '#fbbf24', '#a78bfa'];
 
 function AdminPageInner() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const tab = (searchParams.get('tab') || 'syndics') as 'syndics' | 'buildings' | 'demos';
-  const [token, setToken] = useState('');
-  const [authChecked, setAuthChecked] = useState(false);
+
+  // Auth is guaranteed by AdminLayout before this component ever mounts.
+  // Read token directly — it won't change during the session.
+  const [token] = useState(() =>
+    localStorage.getItem('syndic_token') || sessionStorage.getItem('syndic_token') || ''
+  );
 
   // Data
   const [syndics, setSyndics] = useState<Syndic[]>([]);
@@ -69,30 +72,11 @@ function AdminPageInner() {
   const [deleteConfirm, setDeleteConfirm] = useState<{ type: 'syndic' | 'building'; id: string; label: string } | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  useEffect(() => {
-    const t = localStorage.getItem('syndic_token') || sessionStorage.getItem('syndic_token') || '';
-    if (!t) { router.push('/login'); return; }
-    setToken(t);
-    // Verify admin role via API (don't rely on potentially stale localStorage)
-    fetch(`${API_BASE}/api/admin/syndics`, {
-      headers: { Authorization: `Bearer ${t}` },
-    }).then(async res => {
-      if (res.status === 401) { router.push('/login'); return; }
-      if (res.status === 403) {
-        // Check if any admin exists — if not, go to setup; if yes, go to login with admin account
-        const check = await fetch(`${API_BASE}/api/admin/bootstrap/check`).then(r => r.json()).catch(() => ({ adminExists: true }));
-        router.push(check.adminExists ? '/login' : '/admin/setup');
-        return;
-      }
-      if (!res.ok) { router.push('/dashboard'); return; }
-      setAuthChecked(true);
-    }).catch(() => router.push('/login'));
-  }, []);
-
   const headers = useCallback(() => ({ Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }), [token]);
 
+  // Load data once on mount — layout already verified auth
   useEffect(() => {
-    if (!authChecked || !token) return;
+    if (!token) return;
     const h = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
     Promise.all([
       fetch(`${API_BASE}/api/admin/syndics`, { headers: h }).then(r => r.json()),
@@ -103,7 +87,7 @@ function AdminPageInner() {
       if (Array.isArray(b)) setBuildings(b);
       if (Array.isArray(d)) setDemos(d);
     }).catch(console.error);
-  }, [authChecked, token]);
+  }, []);
 
   async function createSyndic() {
     if (!newSyndic.name || !newSyndic.email || !newSyndic.password) {
@@ -176,12 +160,6 @@ function AdminPageInner() {
   function fmtDate(iso: string) {
     return new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
   }
-
-  if (!authChecked) return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, fontFamily: "'DM Sans', sans-serif", color: 'rgba(255,255,255,0.3)', fontSize: 13 }}>
-      Loading admin panel...
-    </div>
-  );
 
   return (
     <><div style={s.main}>

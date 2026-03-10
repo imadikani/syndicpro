@@ -5,6 +5,8 @@ import { useState, useEffect, useTransition, Suspense } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import OrvaneLogo from '@/components/OrvaneLogo';
 
+const API_BASE = process.env.NEXT_PUBLIC_APP_URL || '';
+
 const NAV = [
   { id: 'syndics',   icon: '◎', label: 'Syndics' },
   { id: 'buildings', icon: '⬡', label: 'Buildings' },
@@ -66,10 +68,41 @@ function AdminSidebar() {
 }
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
   const pathname = usePathname();
+  const [authChecked, setAuthChecked] = useState(false);
+  const isSetup = pathname === '/admin/setup';
 
-  // Setup page has no sidebar
-  if (pathname === '/admin/setup') return <>{children}</>;
+  useEffect(() => {
+    // Setup page needs no auth
+    if (isSetup) { setAuthChecked(true); return; }
+
+    const t = localStorage.getItem('syndic_token') || sessionStorage.getItem('syndic_token') || '';
+    if (!t) { router.push('/login'); return; }
+
+    fetch(`${API_BASE}/api/admin/syndics`, {
+      headers: { Authorization: `Bearer ${t}` },
+    }).then(async res => {
+      if (res.status === 401) { router.push('/login'); return; }
+      if (res.status === 403) {
+        const check = await fetch(`${API_BASE}/api/admin/bootstrap/check`)
+          .then(r => r.json()).catch(() => ({ adminExists: true }));
+        router.push(check.adminExists ? '/login' : '/admin/setup');
+        return;
+      }
+      if (!res.ok) { router.push('/dashboard'); return; }
+      setAuthChecked(true);
+    }).catch(() => router.push('/login'));
+  }, [isSetup]);
+
+  // Block render until auth resolves — prevents children from mounting
+  // and avoids any redirect loops caused by page-level auth effects
+  if (!authChecked) return (
+    <div style={s.loading}>Loading...</div>
+  );
+
+  // Setup page: no sidebar
+  if (isSetup) return <>{children}</>;
 
   return (
     <div style={s.shell}>
@@ -83,6 +116,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
 const s: Record<string, React.CSSProperties> = {
   shell:    { display: 'flex', minHeight: '100vh', background: '#16131f', fontFamily: "'DM Sans', sans-serif" },
+  loading:  { display: 'flex', minHeight: '100vh', background: '#16131f', fontFamily: "'DM Sans', sans-serif", alignItems: 'center', justifyContent: 'center', color: 'rgba(196,181,244,0.4)', fontSize: 13 },
   sidebar:  { width: 240, background: '#1d1a2e', borderRight: '1px solid rgba(196,181,244,0.08)', display: 'flex', flexDirection: 'column', flexShrink: 0, height: '100vh', position: 'sticky', top: 0 },
   brand:    { padding: '28px 24px 20px', borderBottom: '1px solid rgba(196,181,244,0.07)' },
   logoSub:  { fontSize: 9, color: 'rgba(196,181,244,0.4)', letterSpacing: 2, textTransform: 'uppercase', marginTop: 2 },
