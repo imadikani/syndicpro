@@ -2,29 +2,18 @@ import Image from 'next/image';
 
 interface OrvaneLogoProps {
   size?: number;
-  /** 'default' uses orvane-logo.png; 'empty-bg' uses the transparent-background variant */
-  variant?: 'default' | 'empty-bg';
   style?: React.CSSProperties;
   className?: string;
 }
 
-export default function OrvaneLogo({
-  size = 120,
-  variant = 'default',
-  style,
-  className,
-}: OrvaneLogoProps) {
-  const src =
-    variant === 'empty-bg'
-      ? '/orvane-logo-emptybackground.png'
-      : '/orvane-logo.png';
-
+// logo_only.png: 676×511 → aspect ratio ≈ 1.323 wide : 1 tall
+export default function OrvaneLogo({ size = 120, style, className }: OrvaneLogoProps) {
   return (
     <Image
-      src={src}
+      src="/logo_only.png"
       alt="Orvane"
       width={size}
-      height={Math.round(size * 0.38)}
+      height={Math.round(size / 1.323)}
       style={{ objectFit: 'contain', display: 'block', ...style }}
       className={className}
       priority
