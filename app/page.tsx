@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import Image from 'next/image';
 import { useLanguage, LangToggle } from '@/lib/i18n';
 
 const API_BASE = process.env.NEXT_PUBLIC_APP_URL || '';
@@ -125,7 +124,7 @@ export default function LandingPage() {
       {/* NAV */}
       <nav>
         <div className="nav-brand">
-          <Image src="/orvane-logo-emptybackground.png" alt="Orvane" width={110} height={110} style={{ objectFit: 'contain', height: 'auto' }} priority />
+          <div className="nav-logo">Orvane</div>
           <div className="nav-sub">by Mizane AI</div>
         </div>
         <ul className="nav-links">
@@ -477,7 +476,7 @@ export default function LandingPage() {
       {/* FOOTER */}
       <footer>
         <div className="footer-brand">
-          <Image src="/orvane-logo-emptybackground.png" alt="Orvane" width={90} height={90} style={{ objectFit: 'contain', height: 'auto' }} />
+          <div className="footer-logo">Orvane</div>
           <div className="footer-by">{t('footer_by')}</div>
         </div>
         <div className="footer-copy">{t('footer_copy')}</div>
