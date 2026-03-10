@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { useLanguage, LangToggle } from '@/lib/i18n';
 
 const API_BASE = process.env.NEXT_PUBLIC_APP_URL || '';
@@ -124,7 +125,10 @@ export default function LandingPage() {
       {/* NAV */}
       <nav>
         <div className="nav-brand">
-          <div className="nav-logo">Orvane</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <Image src="/logo_only.png" width={32} height={32} alt="Orvane" className="rounded-md" />
+            <div className="nav-logo">orvane</div>
+          </div>
           <div className="nav-sub">by Mizane AI</div>
         </div>
         <ul className="nav-links">
