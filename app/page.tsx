@@ -125,11 +125,11 @@ export default function LandingPage() {
       {/* NAV */}
       <nav>
         <div className="nav-brand">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <Image src="/logo_only.png" width={32} height={32} alt="Orvane" className="rounded-md" />
+          <Image src="/logo_only.png" width={36} height={36} alt="Orvane" className="rounded-md" />
+          <div className="nav-brand-text">
             <div className="nav-logo">orvane</div>
+            <div className="nav-sub">by Mizane AI</div>
           </div>
-          <div className="nav-sub">by Mizane AI</div>
         </div>
         <ul className="nav-links">
           <li><a href="#features">{t('nav_features')}</a></li>

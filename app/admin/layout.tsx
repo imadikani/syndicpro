@@ -34,8 +34,8 @@ function AdminSidebar() {
   return (
     <aside style={s.sidebar}>
       <div style={s.brand}>
-        <OrvaneLogo size={48} style={{ marginBottom: 6 }} />
-        <div style={{ fontSize: 18, fontWeight: 300, color: '#c4b5f4', letterSpacing: 0.5, marginBottom: 2 }}>orvane</div>
+        <OrvaneLogo size={56} style={{ marginBottom: 8 }} />
+        <div style={{ fontSize: 15, fontWeight: 300, color: '#c4b5f4', letterSpacing: 6, marginBottom: 4, textAlign: 'center' }}>orvane</div>
         <div style={s.logoSub}>Admin Panel</div>
       </div>
 
@@ -107,7 +107,7 @@ const s: Record<string, React.CSSProperties> = {
   shell:    { display: 'flex', minHeight: '100vh', background: '#16131f', fontFamily: "'DM Sans', sans-serif" },
   loading:  { display: 'flex', minHeight: '100vh', background: '#16131f', fontFamily: "'DM Sans', sans-serif", alignItems: 'center', justifyContent: 'center', color: 'rgba(196,181,244,0.4)', fontSize: 13 },
   sidebar:  { width: 240, background: '#1d1a2e', borderRight: '1px solid rgba(196,181,244,0.08)', display: 'flex', flexDirection: 'column', flexShrink: 0, height: '100vh', position: 'sticky', top: 0 },
-  brand:    { padding: '28px 24px 20px', borderBottom: '1px solid rgba(196,181,244,0.07)' },
+  brand:    { padding: '28px 24px 20px', borderBottom: '1px solid rgba(196,181,244,0.07)', display: 'flex', flexDirection: 'column', alignItems: 'center' },
   logoSub:  { fontSize: 9, color: 'rgba(196,181,244,0.4)', letterSpacing: 2, textTransform: 'uppercase', marginTop: 2 },
   nav:      { padding: '16px 12px', display: 'flex', flexDirection: 'column', gap: 2, flex: 1 },
   navItem:  { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 10, background: 'none', border: 'none', color: 'rgba(196,181,244,0.45)', fontSize: 13, cursor: 'pointer', textAlign: 'left', width: '100%', fontFamily: "'DM Sans', sans-serif", transition: 'all 0.15s' },

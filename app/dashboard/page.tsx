@@ -380,8 +380,8 @@ export default function Dashboard() {
       {/* SIDEBAR */}
       <aside style={styles.sidebar}>
         <div style={styles.sidebarBrand}>
-          <OrvaneLogo size={48} style={{ marginBottom: 6 }} />
-          <div style={{ fontSize: 18, fontWeight: 300, color: '#c4b5f4', letterSpacing: 0.5, marginBottom: 2 }}>orvane</div>
+          <OrvaneLogo size={56} style={{ marginBottom: 8 }} />
+          <div style={{ fontSize: 15, fontWeight: 300, color: '#c4b5f4', letterSpacing: 6, marginBottom: 4, textAlign: 'center' }}>orvane</div>
           <div style={styles.brandSub}>by Mizane AI</div>
         </div>
 
@@ -1056,7 +1056,7 @@ const styles: Record<string, React.CSSProperties> = {
 
   // SIDEBAR
   sidebar: { width: 240, background: '#1d1a2e', borderRight: '1px solid rgba(196,181,244,0.08)', display: 'flex', flexDirection: 'column', position: 'sticky', top: 0, height: '100vh' },
-  sidebarBrand: { padding: '28px 24px 24px', borderBottom: '1px solid rgba(196,181,244,0.07)' },
+  sidebarBrand: { padding: '28px 24px 24px', borderBottom: '1px solid rgba(196,181,244,0.07)', display: 'flex', flexDirection: 'column', alignItems: 'center' },
   brandLogo: { fontFamily: "'DM Sans', sans-serif", fontSize: 22, fontWeight: 600, color: 'white', letterSpacing: 0.3 },
   brandSub: { fontSize: 9, color: 'rgba(255,255,255,0.3)', letterSpacing: 2, textTransform: 'uppercase', marginTop: 3 },
   sidebarNav: { padding: '16px 12px', display: 'flex', flexDirection: 'column', gap: 2 },
