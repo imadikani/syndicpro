@@ -125,7 +125,7 @@ export default function LandingPage() {
       {/* NAV */}
       <nav>
         <div className="nav-brand">
-          <Image src="/logo_only.png" width={36} height={36} alt="Orvane" className="rounded-md" />
+          <Image src="/logo_only.png" width={42} height={36} alt="Orvane" className="rounded-md" />
           <div className="nav-brand-text">
             <div className="nav-logo">orvane</div>
             <div className="nav-sub">by Mizane AI</div>
