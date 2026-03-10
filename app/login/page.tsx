@@ -16,14 +16,18 @@ export default function LoginPage() {
   const [remember, setRemember] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [checking, setChecking] = useState(true);
 
   useEffect(() => {
     const token = localStorage.getItem('syndic_token') || sessionStorage.getItem('syndic_token');
-    if (!token) return;
+    if (!token) { setChecking(false); return; }
     const raw = localStorage.getItem('syndic_user') || sessionStorage.getItem('syndic_user');
     const user = raw ? JSON.parse(raw) : null;
     router.replace(user?.role === 'ADMIN' ? '/admin' : '/dashboard');
+    // Don't setChecking(false) — we're navigating away
   }, []);
+
+  if (checking) return null;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

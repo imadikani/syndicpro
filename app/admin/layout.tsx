@@ -5,8 +5,6 @@ import { useState, useEffect, useTransition, Suspense } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import OrvaneLogo from '@/components/OrvaneLogo';
 
-const API_BASE = process.env.NEXT_PUBLIC_APP_URL || '';
-
 const NAV = [
   { id: 'syndics',   icon: '◎', label: 'Syndics' },
   { id: 'buildings', icon: '⬡', label: 'Buildings' },
@@ -79,20 +77,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
     const t = localStorage.getItem('syndic_token') || sessionStorage.getItem('syndic_token') || '';
     if (!t) { router.push('/login'); return; }
-
-    fetch(`${API_BASE}/api/admin/syndics`, {
-      headers: { Authorization: `Bearer ${t}` },
-    }).then(async res => {
-      if (res.status === 401) { router.push('/login'); return; }
-      if (res.status === 403) {
-        const check = await fetch(`${API_BASE}/api/admin/bootstrap/check`)
-          .then(r => r.json()).catch(() => ({ adminExists: true }));
-        router.push(check.adminExists ? '/login' : '/admin/setup');
-        return;
-      }
-      if (!res.ok) { router.push('/dashboard'); return; }
-      setAuthChecked(true);
-    }).catch(() => router.push('/login'));
+    const raw = localStorage.getItem('syndic_user') || sessionStorage.getItem('syndic_user');
+    const user = raw ? JSON.parse(raw) : null;
+    if (!user || user.role !== 'ADMIN') { router.push('/login'); return; }
+    setAuthChecked(true);
   }, [isSetup]);
 
   // Block render until auth resolves — prevents children from mounting
