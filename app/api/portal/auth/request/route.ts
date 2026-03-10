@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
       data: { phone: normalized, pinHash: otpHash, expiresAt },
     });
 
-    const message = `Votre code SyndicPro est : ${otp}. Valide 10 minutes.`;
+    const message = `Votre code Orvane est : ${otp}. Valide 10 minutes.`;
 
     try {
       if (channel === "sms") {

@@ -1,5 +1,5 @@
 body:has(.dashboard-shell) {
-  background: #0f0b08 !important;
+  background: #16131f !important;
 }
 
 body:has(.dashboard-shell)::before {
@@ -15,6 +15,6 @@ body:has(.dashboard-shell) nav {
 }
 
 .dashboard-shell {
-  background: #0f0b08;
+  background: #16131f;
   min-height: 100vh;
 }

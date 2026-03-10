@@ -88,7 +88,7 @@ export default function PortalVerifyPage() {
   return (
     <div className="portal-shell" style={s.shell}>
       <div style={s.card}>
-        <div style={s.logo}>Syndic<span style={{ color: '#7b5ea7' }}>Pro</span></div>
+        <div style={s.logo}>Orvane</div>
         <div style={s.logoSub}>{t('portal_title')}</div>
 
         <h1 style={s.heading}>{t('verify_h1')}</h1>
@@ -119,7 +119,7 @@ export default function PortalVerifyPage() {
 
         <div style={s.resendRow}>
           {resent ? (
-            <span style={{ color: '#7b5ea7', fontSize: 13 }}>{t('verify_resent')}</span>
+            <span style={{ color: '#7c5cbf', fontSize: 13 }}>{t('verify_resent')}</span>
           ) : (
             <button style={s.resendBtn} onClick={resendCode} disabled={resending}>
               {resending ? t('verify_resending') : t('verify_resend')}
@@ -143,10 +143,10 @@ const s: Record<string, React.CSSProperties> = {
   sub: { fontSize: 13, color: '#8a7a6e', fontWeight: 300, margin: '0 0 32px', lineHeight: 1.6 },
   pinRow: { display: 'flex', gap: 12, justifyContent: 'center', marginBottom: 24 },
   pinBox: { width: 48, height: 58, border: '1.5px solid rgba(0,0,0,0.12)', borderRadius: 12, textAlign: 'center', fontSize: 24, fontWeight: 600, color: '#1a1410', background: '#faf7f2', outline: 'none', fontFamily: "'DM Sans', sans-serif", transition: 'border-color 0.15s' },
-  pinBoxFilled: { border: '1.5px solid #7b5ea7', background: '#f0ebff' },
+  pinBoxFilled: { border: '1.5px solid #7c5cbf', background: 'rgba(124,92,191,0.08)' },
   error: { background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.2)', color: '#dc2626', borderRadius: 10, padding: '10px 14px', fontSize: 13, marginBottom: 14 },
-  loading: { color: '#7b5ea7', fontSize: 13, marginBottom: 14 },
+  loading: { color: '#7c5cbf', fontSize: 13, marginBottom: 14 },
   resendRow: { display: 'flex', justifyContent: 'space-between', marginTop: 8 },
-  resendBtn: { background: 'none', border: 'none', color: '#7b5ea7', fontSize: 13, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", padding: 0 },
+  resendBtn: { background: 'none', border: 'none', color: '#7c5cbf', fontSize: 13, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", padding: 0 },
   backBtn: { background: 'none', border: 'none', color: '#8a7a6e', fontSize: 13, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", padding: 0 },
 };

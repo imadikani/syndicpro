@@ -1,6 +1,6 @@
 /* Reset global landing page styles for admin routes */
 body {
-  background: #0f0d0b !important;
+  background: #16131f !important;
 }
 body::before {
   display: none !important;

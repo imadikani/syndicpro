@@ -46,16 +46,16 @@ export default function AdminSetupPage() {
   }
 
   if (checking) return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: '#0f0d0b', color: 'rgba(255,255,255,0.3)', fontFamily: "'DM Sans', sans-serif", fontSize: 13 }}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: '#16131f', color: 'rgba(196,181,244,0.4)', fontFamily: "'DM Sans', sans-serif", fontSize: 13 }}>
       Checking...
     </div>
   );
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: '#0f0d0b', fontFamily: "'DM Sans', sans-serif", padding: 24 }}>
-      <div style={{ background: '#1a1410', border: '1px solid rgba(200,184,232,0.1)', borderRadius: 24, padding: '48px 44px', width: '100%', maxWidth: 420, boxShadow: '0 32px 80px rgba(0,0,0,0.4)' }}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: '#16131f', fontFamily: "'DM Sans', sans-serif", padding: 24 }}>
+      <div style={{ background: '#1d1a2e', border: '1px solid rgba(196,181,244,0.12)', borderRadius: 24, padding: '48px 44px', width: '100%', maxWidth: 420, boxShadow: '0 32px 80px rgba(0,0,0,0.5)' }}>
         <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 26, fontWeight: 600, color: 'white', marginBottom: 2 }}>
-          Syndic<span style={{ color: '#c8b8e8' }}>Pro</span>
+          Orvane
         </div>
         <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 36 }}>Admin Setup</div>
 
@@ -71,7 +71,7 @@ export default function AdminSetupPage() {
           </div>
           <div>
             <label style={labelStyle}>Email</label>
-            <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="admin@syndicpro.ma" required style={inputStyle} />
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="admin@orvane.com" required style={inputStyle} />
           </div>
           <div>
             <label style={labelStyle}>Password</label>
@@ -97,7 +97,7 @@ const inputStyle: React.CSSProperties = {
   fontSize: 14, fontFamily: "'DM Sans', sans-serif", outline: 'none', boxSizing: 'border-box',
 };
 const btnStyle: React.CSSProperties = {
-  width: '100%', padding: 14, background: 'linear-gradient(135deg,#7b5ea7,#9b6bc0)',
+  width: '100%', padding: 14, background: 'linear-gradient(135deg,#7c5cbf,#9b70e0)',
   border: 'none', borderRadius: 12, color: 'white', fontSize: 14, fontWeight: 500,
   cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
 };

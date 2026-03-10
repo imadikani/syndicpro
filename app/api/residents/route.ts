@@ -80,12 +80,14 @@ export async function POST(req: NextRequest) {
     // Create a PENDING payment for the current month
     const now = new Date();
     await prisma.payment.upsert({
-      where: { unitId_month_year: { unitId: unit.id, month: now.getMonth() + 1, year: now.getFullYear() } },
+      where: { unitId_year_month_billingPeriod: { unitId: unit.id, year: now.getFullYear(), month: now.getMonth() + 1, billingPeriod: 'MONTHLY' } },
       update: {},
       create: {
         unitId: unit.id,
         month: now.getMonth() + 1,
         year: now.getFullYear(),
+        chargeMonth: now.getMonth() + 1,
+        billingPeriod: 'MONTHLY',
         amount: building.monthlyFee,
         status: "PENDING",
       },

@@ -28,7 +28,7 @@ Votre charge de ${payment.amount} MAD pour ${building.name} (Appt ${building.uni
 
 Pour toute question, contactez votre syndic.
 
-— SyndicPro`;
+— Orvane`;
 }
 
 export async function sendWhatsApp(phone: string, message: string): Promise<void> {

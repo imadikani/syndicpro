@@ -1,4 +1,4 @@
-# SyndicPro
+# Orvane
 
 Property management platform for Moroccan syndics (building managers). Handles residents, payments, expenses, WhatsApp reminders, and a resident self-service portal — all in one.
 

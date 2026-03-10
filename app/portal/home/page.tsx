@@ -119,14 +119,14 @@ export default function PortalHome() {
   );
 
   const cp = resident.currentPayment;
-  const buildingColor = resident.building.color || '#7b5ea7';
+  const buildingColor = resident.building.color || '#7c5cbf';
 
   return (
     <div className="portal-shell" style={s.shell}>
       {/* HEADER */}
       <div style={{ ...s.header, background: `linear-gradient(135deg, ${buildingColor}dd, ${buildingColor}99)` }}>
         <div style={s.headerTop}>
-          <div style={s.headerLogo}>Syndic<span style={{ color: 'rgba(255,255,255,0.7)' }}>Pro</span></div>
+          <div style={s.headerLogo}>Orvane</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <LangToggle style={{ border: '1px solid rgba(255,255,255,0.2)' }} />
             <button style={s.logoutBtn} onClick={logout}>{t('portal_logout')}</button>
@@ -320,7 +320,7 @@ const s: Record<string, React.CSSProperties> = {
 
   tabBar: { display: 'flex', background: 'white', borderTop: '1px solid rgba(0,0,0,0.06)', borderBottom: '1px solid rgba(0,0,0,0.06)', marginTop: 16, position: 'sticky', top: 0, zIndex: 10 },
   tabBtn: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '12px 4px', background: 'none', border: 'none', cursor: 'pointer', color: '#8a7a6e', fontFamily: "'DM Sans', sans-serif", borderBottom: '2px solid transparent' },
-  tabBtnActive: { color: '#7b5ea7', borderBottom: '2px solid #7b5ea7' },
+  tabBtnActive: { color: '#7c5cbf', borderBottom: '2px solid #7c5cbf' },
 
   content: { padding: '20px 16px 40px', flex: 1 },
 
@@ -340,11 +340,11 @@ const s: Record<string, React.CSSProperties> = {
 
   newPostCard: { background: 'white', borderRadius: 14, padding: '16px', marginBottom: 14, border: '1px solid rgba(0,0,0,0.06)' },
   postInput: { width: '100%', border: 'none', outline: 'none', resize: 'none', fontSize: 14, color: '#1a1410', fontFamily: "'DM Sans', sans-serif", background: 'transparent', lineHeight: 1.6 },
-  postBtn: { background: '#7b5ea7', color: 'white', border: 'none', borderRadius: 8, padding: '7px 18px', fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" },
+  postBtn: { background: '#7c5cbf', color: 'white', border: 'none', borderRadius: 8, padding: '7px 18px', fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" },
   postCard: { background: 'white', borderRadius: 14, padding: '16px 18px', marginBottom: 10, border: '1px solid rgba(0,0,0,0.06)' },
   postCardPinned: { border: '1px solid rgba(123,94,167,0.25)', background: '#f9f7ff' },
-  pinnedBadge: { fontSize: 10, color: '#7b5ea7', marginBottom: 8 },
-  postAuthor: { fontSize: 11, fontWeight: 600, color: '#7b5ea7', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 },
+  pinnedBadge: { fontSize: 10, color: '#7c5cbf', marginBottom: 8 },
+  postAuthor: { fontSize: 11, fontWeight: 600, color: '#7c5cbf', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 },
   postContent: { fontSize: 14, color: '#1a1410', lineHeight: 1.6, marginBottom: 8 },
   postDate: { fontSize: 11, color: '#8a7a6e' },
 

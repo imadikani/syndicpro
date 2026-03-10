@@ -4,15 +4,15 @@ import bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('🌱 Seeding SyndicPro database...');
+  console.log('🌱 Seeding Orvane database...');
 
   // ── USER ──────────────────────────────────────────────────────────────────
-  const hashed = await bcrypt.hash('syndicpro2026', 10);
+  const hashed = await bcrypt.hash('orvane2026', 10);
   const user = await prisma.user.upsert({
-    where: { email: 'imad@syndicpro.ma' },
+    where: { email: 'imad@orvane.com' },
     update: {},
     create: {
-      email: 'imad@syndicpro.ma',
+      email: 'imad@orvane.com',
       name: 'Imad Ikani',
       phone: '+212 6 00 00 00 00',
       password: hashed,
@@ -114,7 +114,7 @@ async function main() {
 
     // Payment for March 2026
     await prisma.payment.upsert({
-      where: { unitId_month_year: { unitId: unit.id, month: 3, year: 2026 } },
+      where: { unitId_year_month_billingPeriod: { unitId: unit.id, year: 2026, month: 3, billingPeriod: 'MONTHLY' } },
       update: {},
       create: {
         unitId: unit.id,

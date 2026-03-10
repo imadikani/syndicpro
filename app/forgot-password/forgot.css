@@ -1,5 +1,5 @@
 body:has(.forgot-shell) {
-  background: #0f0b08 !important;
+  background: #16131f !important;
 }
 
 body:has(.forgot-shell)::before {
@@ -11,6 +11,6 @@ body:has(.forgot-shell) nav {
 }
 
 .forgot-shell {
-  background: #0f0b08;
+  background: #16131f;
   min-height: 100vh;
 }

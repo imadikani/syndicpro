@@ -39,7 +39,7 @@ type DemoRequest = {
   contacted: boolean;
 };
 
-const COLORS = ['#7b5ea7', '#e8906a', '#34d399', '#f87171', '#60a5fa', '#fbbf24', '#a78bfa'];
+const COLORS = ['#7c5cbf', '#e8906a', '#34d399', '#f87171', '#60a5fa', '#fbbf24', '#a78bfa'];
 
 function AdminPageInner() {
   const router = useRouter();
@@ -212,7 +212,7 @@ function AdminPageInner() {
                     <tr key={sy.id} style={s.tr}>
                       <td style={s.td}>
                         <div style={s.avatarRow}>
-                          <div style={{ ...s.avatar, background: 'linear-gradient(135deg,#7b5ea7,#9b6bc0)' }}>
+                          <div style={{ ...s.avatar, background: 'linear-gradient(135deg,#7c5cbf,#9b70e0)' }}>
                             {sy.name.charAt(0).toUpperCase()}
                           </div>
                           <span style={s.tdName}>{sy.name}</span>
@@ -535,7 +535,7 @@ const s: Record<string, React.CSSProperties> = {
   },
   addBtn: {
     padding: '10px 20px',
-    background: 'linear-gradient(135deg,#7b5ea7,#9b6bc0)',
+    background: 'linear-gradient(135deg,#7c5cbf,#9b70e0)',
     border: 'none',
     borderRadius: 10,
     color: 'white',
@@ -551,7 +551,7 @@ const s: Record<string, React.CSSProperties> = {
 
   // Table
   tableWrap: {
-    background: '#1a1410',
+    background: '#1d1a2e',
     borderRadius: 14,
     border: '1px solid rgba(255,255,255,0.06)',
     overflow: 'hidden',
@@ -619,7 +619,7 @@ const s: Record<string, React.CSSProperties> = {
   },
   countBadge: {
     background: 'rgba(123,94,167,0.2)',
-    color: '#c8b8e8',
+    color: '#c4b5f4',
     fontSize: 11,
     fontWeight: 600,
     padding: '2px 8px',
@@ -638,7 +638,7 @@ const s: Record<string, React.CSSProperties> = {
   actionBtn: {
     background: 'rgba(123,94,167,0.15)',
     border: '1px solid rgba(123,94,167,0.3)',
-    color: '#c8b8e8',
+    color: '#c4b5f4',
     borderRadius: 6,
     padding: '4px 12px',
     fontSize: 11,
@@ -774,7 +774,7 @@ const s: Record<string, React.CSSProperties> = {
   },
   submitBtn: {
     padding: '10px 24px',
-    background: 'linear-gradient(135deg,#7b5ea7,#9b6bc0)',
+    background: 'linear-gradient(135deg,#7c5cbf,#9b70e0)',
     border: 'none',
     borderRadius: 8,
     color: 'white',

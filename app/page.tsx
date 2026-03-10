@@ -124,7 +124,7 @@ export default function LandingPage() {
       {/* NAV */}
       <nav>
         <div className="nav-brand">
-          <div className="nav-logo">Syndic<span>Pro</span></div>
+          <div className="nav-logo">Orvane</div>
           <div className="nav-sub">by Mizane AI</div>
         </div>
         <ul className="nav-links">
@@ -476,7 +476,7 @@ export default function LandingPage() {
       {/* FOOTER */}
       <footer>
         <div className="footer-brand">
-          <div className="footer-logo">Syndic<span>Pro</span></div>
+          <div className="footer-logo">Orvane</div>
           <div className="footer-by">{t('footer_by')}</div>
         </div>
         <div className="footer-copy">{t('footer_copy')}</div>

@@ -40,7 +40,7 @@ export default function PortalPage() {
     <div className="portal-shell" style={s.shell}>
       <div style={s.card}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 2 }}>
-          <div style={s.logo}>Syndic<span style={{ color: '#7b5ea7' }}>Pro</span></div>
+          <div style={s.logo}>Orvane</div>
           <LangToggle style={{ border: '1px solid rgba(123,94,167,0.2)' }} />
         </div>
         <div style={s.logoSub}>{t('portal_title')}</div>
@@ -110,8 +110,8 @@ const s: Record<string, React.CSSProperties> = {
   channelLabel: { fontSize: 12, color: '#8a7a6e' },
   channelBtns: { display: 'flex', gap: 8 },
   channelBtn: { background: 'transparent', border: '1.5px solid rgba(0,0,0,0.1)', borderRadius: 100, padding: '6px 14px', fontSize: 12, cursor: 'pointer', color: '#4a3f35', fontFamily: "'DM Sans', sans-serif" },
-  channelBtnActive: { background: '#f0ebff', border: '1.5px solid #7b5ea7', color: '#7b5ea7' },
+  channelBtnActive: { background: 'rgba(124,92,191,0.08)', border: '1.5px solid #7c5cbf', color: '#7c5cbf' },
   error: { background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.2)', color: '#dc2626', borderRadius: 10, padding: '10px 14px', fontSize: 13, marginBottom: 14 },
-  btn: { width: '100%', padding: 14, background: 'linear-gradient(135deg,#7b5ea7,#9b6bc0)', border: 'none', borderRadius: 12, color: 'white', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" },
+  btn: { width: '100%', padding: 14, background: 'linear-gradient(135deg,#7c5cbf,#9b70e0)', border: 'none', borderRadius: 12, color: 'white', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" },
   note: { marginTop: 20, fontSize: 11, color: '#8a7a6e', textAlign: 'center', lineHeight: 1.6 },
 };

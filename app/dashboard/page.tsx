@@ -4,6 +4,7 @@ import './dashboard.css';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLanguage, LangToggle } from '@/lib/i18n';
+import OrvaneLogo from '@/components/OrvaneLogo';
 
 const API_BASE = process.env.NEXT_PUBLIC_APP_URL || '';
 
@@ -72,7 +73,7 @@ const CAT_LABELS_EN: Record<string, string> = {
   ELECTRICITE: 'Electricity', EAU: 'Water', ASSURANCE: 'Insurance', AUTRE: 'Other',
 };
 const CAT_COLORS: Record<string, string> = {
-  ENTRETIEN: '#7b5ea7', REPARATION: '#f87171', SECURITE: '#34d399',
+  ENTRETIEN: '#7c5cbf', REPARATION: '#f87171', SECURITE: '#34d399',
   ELECTRICITE: '#fbbf24', EAU: '#60a5fa', ASSURANCE: '#e8906a', AUTRE: '#9ca3af',
 };
 
@@ -347,7 +348,7 @@ export default function Dashboard() {
   if (loading) {
     return (
       <div className="dashboard-shell" style={{ ...styles.shell, alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ color: 'rgba(200,184,232,0.6)', fontSize: 13, letterSpacing: 2, textTransform: 'uppercase' }}>{t('dash_loading')}</div>
+        <div style={{ color: 'rgba(196,181,244,0.6)', fontSize: 13, letterSpacing: 2, textTransform: 'uppercase' }}>{t('dash_loading')}</div>
       </div>
     );
   }
@@ -379,7 +380,7 @@ export default function Dashboard() {
       {/* SIDEBAR */}
       <aside style={styles.sidebar}>
         <div style={styles.sidebarBrand}>
-          <div style={styles.brandLogo}>Syndic<span style={{ color: '#c8b8e8' }}>Pro</span></div>
+          <OrvaneLogo size={96} variant="empty-bg" style={{ marginBottom: 4 }} />
           <div style={styles.brandSub}>by Mizane AI</div>
         </div>
 
@@ -431,7 +432,7 @@ export default function Dashboard() {
           </div>
           <div style={styles.headerRate}>
             <div style={styles.rateLabel}>{t('dash_collection_rate')}</div>
-            <div style={styles.rateValue}>{collectionRate}<span style={{ fontSize: 18, color: '#c8b8e8' }}>%</span></div>
+            <div style={styles.rateValue}>{collectionRate}<span style={{ fontSize: 18, color: '#c4b5f4' }}>%</span></div>
           </div>
         </header>
 
@@ -445,7 +446,7 @@ export default function Dashboard() {
                 {[
                   { label: t('dash_collected_month_kpi'), value: `${totalCollected.toLocaleString()} MAD`, sub: `${t('dash_on_of')} ${totalDue.toLocaleString()} MAD ${t('dash_due_text')}`, color: '#34d399' },
                   { label: t('dash_unpaid'), value: `${totalUnpaid.toLocaleString()} MAD`, sub: `${pendingCount} ${t('dash_late_residents')}`, color: '#f87171' },
-                  { label: t('dash_buildings_managed_kpi'), value: buildings.length.toString(), sub: `${buildings.reduce((s, b) => s + b.totalUnits, 0)} ${t('dash_total_units')}`, color: '#c8b8e8' },
+                  { label: t('dash_buildings_managed_kpi'), value: buildings.length.toString(), sub: `${buildings.reduce((s, b) => s + b.totalUnits, 0)} ${t('dash_total_units')}`, color: '#c4b5f4' },
                   { label: t('dash_expenses_month_kpi'), value: `${totalExpenses.toLocaleString()} MAD`, sub: `${expenses.length} ${t('dash_entries_pl')}`, color: '#fbbf24' },
                 ].map(kpi => (
                   <div key={kpi.label} style={styles.kpiCard}>
@@ -494,7 +495,7 @@ export default function Dashboard() {
               <div style={styles.cardTitle2}>{t('dash_recent_activity')}</div>
               <div style={styles.card}>
                 {payments.filter(p => p.status === 'PAID').slice(0, 3).map((p, i) => (
-                  <div key={p.id} style={{ ...styles.activityRow, borderBottom: '1px solid rgba(200,184,232,0.1)' }}>
+                  <div key={p.id} style={{ ...styles.activityRow, borderBottom: '1px solid rgba(196,181,244,0.1)' }}>
                     <div style={{ ...styles.activityIcon, color: '#34d399' }}>✓</div>
                     <div style={{ flex: 1, fontSize: 13, color: 'rgba(255,255,255,0.75)' }}>
                       {p.unit?.resident?.name || t('dash_resident_fallback')} — {p.amount} {t('dash_mad_received')} ({p.unit?.building?.name || ''} {p.unit?.number || ''})
@@ -503,8 +504,8 @@ export default function Dashboard() {
                   </div>
                 ))}
                 {reminders.slice(0, 2).map((r, i) => (
-                  <div key={r.id} style={{ ...styles.activityRow, borderBottom: i < 1 ? '1px solid rgba(200,184,232,0.1)' : 'none' }}>
-                    <div style={{ ...styles.activityIcon, color: '#7b5ea7' }}>💬</div>
+                  <div key={r.id} style={{ ...styles.activityRow, borderBottom: i < 1 ? '1px solid rgba(196,181,244,0.1)' : 'none' }}>
+                    <div style={{ ...styles.activityIcon, color: '#7c5cbf' }}>💬</div>
                     <div style={{ flex: 1, fontSize: 13, color: 'rgba(255,255,255,0.75)' }}>
                       {r.message} {t('dash_sent_to')} {r.resident?.name || 'résident'}
                     </div>
@@ -690,7 +691,7 @@ export default function Dashboard() {
                 <div style={styles.modalBackdrop} onClick={() => setAddResidentOpen(false)}>
                   <div style={styles.modalBox} onClick={e => e.stopPropagation()}>
                     <button style={styles.modalClose} onClick={() => setAddResidentOpen(false)}>×</button>
-                    <div style={{ fontSize: 11, color: '#c8b8e8', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>{t('res_modal_label')}</div>
+                    <div style={{ fontSize: 11, color: '#c4b5f4', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>{t('res_modal_label')}</div>
                     <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 28, fontWeight: 300, color: 'white', marginBottom: 24 }}>{t('res_modal_title')}</div>
                     <div style={{ marginBottom: 16 }}>
                       <label style={styles.formLabel}>{t('res_full_name')}</label>
@@ -879,7 +880,7 @@ export default function Dashboard() {
                   <div style={styles.modalBackdrop} onClick={() => setAddExpenseOpen(false)}>
                     <div style={styles.modalBox} onClick={e => e.stopPropagation()}>
                       <button style={styles.modalClose} onClick={() => setAddExpenseOpen(false)}>×</button>
-                      <div style={{ fontSize: 11, color: '#c8b8e8', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>{t('exp_modal_label')}</div>
+                      <div style={{ fontSize: 11, color: '#c4b5f4', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>{t('exp_modal_label')}</div>
                       <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 28, fontWeight: 300, color: 'white', marginBottom: 24 }}>{t('exp_modal_title')}</div>
                       <div style={{ marginBottom: 16 }}>
                         <label style={styles.formLabel}>{t('exp_libelle')}</label>
@@ -934,7 +935,7 @@ export default function Dashboard() {
             <div>
               <div style={styles.kpiGrid}>
                 {[
-                  { label: t('rem_sent_month'), value: reminders.length.toString(), color: '#c8b8e8' },
+                  { label: t('rem_sent_month'), value: reminders.length.toString(), color: '#c4b5f4' },
                   { label: t('rem_delivered'), value: reminders.filter(r => r.status === 'DELIVERED').length.toString(), color: '#34d399' },
                   { label: t('rem_pending'), value: reminders.filter(r => r.status === 'SENT').length.toString(), color: '#fbbf24' },
                   { label: t('rem_failed'), value: reminders.filter(r => r.status === 'FAILED').length.toString(), color: '#f87171' },
@@ -971,7 +972,7 @@ export default function Dashboard() {
                 {reminders.map(r => (
                   <div key={r.id} style={styles.tableRow}>
                     <span style={{ flex: 2, display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <div style={{ ...styles.residentAv, background: '#7b5ea7', fontSize: 11 }}>
+                      <div style={{ ...styles.residentAv, background: '#7c5cbf', fontSize: 11 }}>
                         {(r.resident?.name || '?').split(' ').map((w: string) => w[0]).join('')}
                       </div>
                       <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)' }}>{r.resident?.name || '—'}</span>
@@ -994,7 +995,7 @@ export default function Dashboard() {
                 <div style={styles.modalBackdrop} onClick={() => setCustomReminderOpen(false)}>
                   <div style={styles.modalBox} onClick={e => e.stopPropagation()}>
                     <button style={styles.modalClose} onClick={() => setCustomReminderOpen(false)}>×</button>
-                    <div style={{ fontSize: 11, color: '#c8b8e8', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>{t('rem_modal_label')}</div>
+                    <div style={{ fontSize: 11, color: '#c4b5f4', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>{t('rem_modal_label')}</div>
                     <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 28, fontWeight: 300, color: 'white', marginBottom: 24 }}>{t('rem_modal_title')}</div>
                     <div style={{ marginBottom: 16 }}>
                       <label style={styles.formLabel}>{t('dash_resident_col')}</label>
@@ -1050,53 +1051,53 @@ function getReminderStatusStyle(status: string) {
 // ─── STYLES ───────────────────────────────────────────────────────────────────
 
 const styles: Record<string, React.CSSProperties> = {
-  shell: { display: 'flex', minHeight: '100vh', background: '#0f0b08', fontFamily: "'DM Sans', sans-serif" },
+  shell: { display: 'flex', minHeight: '100vh', background: '#16131f', fontFamily: "'DM Sans', sans-serif" },
 
   // SIDEBAR
-  sidebar: { width: 240, background: '#1a1410', borderRight: '1px solid rgba(200,184,232,0.08)', display: 'flex', flexDirection: 'column', position: 'sticky', top: 0, height: '100vh' },
-  sidebarBrand: { padding: '28px 24px 24px', borderBottom: '1px solid rgba(200,184,232,0.07)' },
+  sidebar: { width: 240, background: '#1d1a2e', borderRight: '1px solid rgba(196,181,244,0.08)', display: 'flex', flexDirection: 'column', position: 'sticky', top: 0, height: '100vh' },
+  sidebarBrand: { padding: '28px 24px 24px', borderBottom: '1px solid rgba(196,181,244,0.07)' },
   brandLogo: { fontFamily: "'DM Sans', sans-serif", fontSize: 22, fontWeight: 600, color: 'white', letterSpacing: 0.3 },
   brandSub: { fontSize: 9, color: 'rgba(255,255,255,0.3)', letterSpacing: 2, textTransform: 'uppercase', marginTop: 3 },
   sidebarNav: { padding: '16px 12px', display: 'flex', flexDirection: 'column', gap: 2 },
   navItem: { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 10, background: 'none', border: 'none', color: 'rgba(255,255,255,0.45)', fontSize: 13, cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.15s' },
-  navItemActive: { background: 'rgba(200,184,232,0.1)', color: 'rgba(255,255,255,0.95)' },
+  navItemActive: { background: 'rgba(196,181,244,0.1)', color: 'rgba(255,255,255,0.95)' },
   navIcon: { fontSize: 14, opacity: 0.7 },
-  sidebarFooter: { padding: '16px 16px 24px', borderTop: '1px solid rgba(200,184,232,0.07)', marginTop: 'auto' },
+  sidebarFooter: { padding: '16px 16px 24px', borderTop: '1px solid rgba(196,181,244,0.07)', marginTop: 'auto' },
   userBadge: { display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 },
   logoutBtn: { width: '100%', background: 'none', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, color: 'rgba(255,255,255,0.3)', fontSize: 11, padding: '7px 0', cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", letterSpacing: 0.5 },
-  userAvatar: { width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg,#7b5ea7,#9b6bc0)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'DM Sans', sans-serif", fontSize: 16, fontWeight: 600, color: 'white' },
+  userAvatar: { width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg,#7c5cbf,#9b70e0)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'DM Sans', sans-serif", fontSize: 16, fontWeight: 600, color: 'white' },
   userName: { fontSize: 13, color: 'rgba(255,255,255,0.8)', fontWeight: 500 },
   userRole: { fontSize: 10, color: 'rgba(255,255,255,0.35)', letterSpacing: 0.5, textTransform: 'uppercase' },
 
   // MAIN
   main: { flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 },
-  header: { padding: '28px 36px 24px', borderBottom: '1px solid rgba(200,184,232,0.07)', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', background: '#1a1410' },
-  headerEyebrow: { fontSize: 10, color: 'rgba(200,184,232,0.6)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 6 },
+  header: { padding: '28px 36px 24px', borderBottom: '1px solid rgba(196,181,244,0.07)', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', background: '#1d1a2e' },
+  headerEyebrow: { fontSize: 10, color: 'rgba(196,181,244,0.6)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 6 },
   headerTitle: { fontFamily: "'DM Sans', sans-serif", fontSize: 32, fontWeight: 300, color: 'white', margin: 0, lineHeight: 1 },
   headerRate: { textAlign: 'right' },
-  rateLabel: { fontSize: 10, color: 'rgba(200,184,232,0.5)', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 4 },
+  rateLabel: { fontSize: 10, color: 'rgba(196,181,244,0.5)', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 4 },
   rateValue: { fontFamily: "'DM Sans', sans-serif", fontSize: 42, fontWeight: 300, color: 'white', lineHeight: 1 },
   content: { padding: '28px 36px', flex: 1 },
 
   // KPI
   kpiGrid: { display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 24 },
-  kpiCard: { background: '#1a1410', border: '1px solid rgba(200,184,232,0.08)', borderRadius: 16, padding: '20px 22px' },
+  kpiCard: { background: '#1d1a2e', border: '1px solid rgba(196,181,244,0.08)', borderRadius: 16, padding: '20px 22px' },
   kpiLabel: { fontSize: 10, color: 'rgba(255,255,255,0.4)', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 10 },
   kpiValue: { fontFamily: "'DM Sans', sans-serif", fontSize: 32, fontWeight: 300, lineHeight: 1, marginBottom: 6 },
   kpiSub: { fontSize: 11, color: 'rgba(255,255,255,0.35)' },
 
   // CARDS
-  card: { background: '#1a1410', border: '1px solid rgba(200,184,232,0.08)', borderRadius: 16, padding: '20px 24px', marginBottom: 24 },
+  card: { background: '#1d1a2e', border: '1px solid rgba(196,181,244,0.08)', borderRadius: 16, padding: '20px 24px', marginBottom: 24 },
   cardTitle: { fontFamily: "'DM Sans', sans-serif", fontSize: 18, fontWeight: 400, color: 'rgba(255,255,255,0.7)', marginBottom: 16 },
   cardTitle2: { fontFamily: "'DM Sans', sans-serif", fontSize: 18, fontWeight: 400, color: 'rgba(255,255,255,0.7)', marginBottom: 14 },
 
   // COLLECTION BAR
   collectionBar: { height: 8, background: 'rgba(255,255,255,0.06)', borderRadius: 100, overflow: 'hidden' },
-  collectionFill: { height: '100%', background: 'linear-gradient(90deg,#7b5ea7,#c8b8e8)', borderRadius: 100, transition: 'width 1s ease' },
+  collectionFill: { height: '100%', background: 'linear-gradient(90deg,#7c5cbf,#c4b5f4)', borderRadius: 100, transition: 'width 1s ease' },
 
   // BUILDING ROWS (overview)
   buildingRows: { display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 28 },
-  buildingRow: { display: 'flex', alignItems: 'center', gap: 14, background: '#1a1410', border: '1px solid rgba(200,184,232,0.08)', borderRadius: 14, padding: '14px 18px', cursor: 'pointer', transition: 'border-color 0.2s' },
+  buildingRow: { display: 'flex', alignItems: 'center', gap: 14, background: '#1d1a2e', border: '1px solid rgba(196,181,244,0.08)', borderRadius: 14, padding: '14px 18px', cursor: 'pointer', transition: 'border-color 0.2s' },
   buildingDot: { width: 10, height: 10, borderRadius: '50%', flexShrink: 0 },
   buildingRowName: { fontSize: 13, color: 'rgba(255,255,255,0.85)', fontWeight: 500, marginBottom: 2 },
   buildingRowSub: { fontSize: 11, color: 'rgba(255,255,255,0.35)' },
@@ -1112,7 +1113,7 @@ const styles: Record<string, React.CSSProperties> = {
 
   // BUILDING CARDS (grid)
   buildingGrid: { display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 20 },
-  buildingCard: { background: '#1a1410', border: '1px solid rgba(200,184,232,0.08)', borderRadius: 20, padding: '0 0 24px', cursor: 'pointer', overflow: 'hidden', transition: 'transform 0.2s, border-color 0.2s', position: 'relative' },
+  buildingCard: { background: '#1d1a2e', border: '1px solid rgba(196,181,244,0.08)', borderRadius: 20, padding: '0 0 24px', cursor: 'pointer', overflow: 'hidden', transition: 'transform 0.2s, border-color 0.2s', position: 'relative' },
   buildingCardAccent: { height: 4 },
   buildingCardHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '18px 20px 10px' },
   buildingCardIcon: { width: 36, height: 36, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 },
@@ -1128,34 +1129,34 @@ const styles: Record<string, React.CSSProperties> = {
   buildingCardCta: { fontSize: 12, color: 'rgba(255,255,255,0.3)', padding: '0 20px', textAlign: 'right' },
 
   // BUILDING DETAIL
-  backBtn: { background: 'none', border: 'none', color: 'rgba(200,184,232,0.6)', fontSize: 13, cursor: 'pointer', marginBottom: 20, padding: 0 },
-  buildingDetailHeader: { display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24, background: '#1a1410', border: '1px solid rgba(200,184,232,0.08)', borderRadius: 16, padding: '20px 24px' },
+  backBtn: { background: 'none', border: 'none', color: 'rgba(196,181,244,0.6)', fontSize: 13, cursor: 'pointer', marginBottom: 20, padding: 0 },
+  buildingDetailHeader: { display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24, background: '#1d1a2e', border: '1px solid rgba(196,181,244,0.08)', borderRadius: 16, padding: '20px 24px' },
   buildingDetailDot: { width: 14, height: 14, borderRadius: '50%', flexShrink: 0 },
   buildingDetailName: { fontFamily: "'DM Sans', sans-serif", fontSize: 24, fontWeight: 600, color: 'white', marginBottom: 4 },
   buildingDetailAddress: { fontSize: 13, color: 'rgba(255,255,255,0.4)' },
   bigRate: { fontFamily: "'DM Sans', sans-serif", fontSize: 40, fontWeight: 300, lineHeight: 1 },
 
   // TABLE
-  residentTable: { background: '#1a1410', border: '1px solid rgba(200,184,232,0.08)', borderRadius: 16, overflow: 'hidden' },
-  tableHeader: { display: 'flex', padding: '12px 20px', background: 'rgba(200,184,232,0.04)', borderBottom: '1px solid rgba(200,184,232,0.08)', fontSize: 10, color: 'rgba(255,255,255,0.35)', letterSpacing: 1.5, textTransform: 'uppercase' },
-  tableRow: { display: 'flex', alignItems: 'center', padding: '14px 20px', borderBottom: '1px solid rgba(200,184,232,0.05)', transition: 'background 0.15s' },
+  residentTable: { background: '#1d1a2e', border: '1px solid rgba(196,181,244,0.08)', borderRadius: 16, overflow: 'hidden' },
+  tableHeader: { display: 'flex', padding: '12px 20px', background: 'rgba(196,181,244,0.04)', borderBottom: '1px solid rgba(196,181,244,0.08)', fontSize: 10, color: 'rgba(255,255,255,0.35)', letterSpacing: 1.5, textTransform: 'uppercase' },
+  tableRow: { display: 'flex', alignItems: 'center', padding: '14px 20px', borderBottom: '1px solid rgba(196,181,244,0.05)', transition: 'background 0.15s' },
   residentAv: { width: 28, height: 28, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: 'white', flexShrink: 0 },
   statusBadge: { fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 100, whiteSpace: 'nowrap' },
   catBadge: { fontSize: 11, fontWeight: 500, padding: '3px 10px', borderRadius: 100 },
-  reminderBtn: { background: 'rgba(123,94,167,0.2)', color: '#c8b8e8', border: '1px solid rgba(123,94,167,0.3)', borderRadius: 8, padding: '5px 10px', fontSize: 11, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" },
+  reminderBtn: { background: 'rgba(123,94,167,0.2)', color: '#c4b5f4', border: '1px solid rgba(123,94,167,0.3)', borderRadius: 8, padding: '5px 10px', fontSize: 11, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" },
 
   // MISC
   smallMuted: { fontSize: 12, color: 'rgba(255,255,255,0.35)' },
   filterRow: { display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' },
   filterBtn: { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.55)', borderRadius: 100, padding: '6px 14px', fontSize: 12, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" },
-  filterBtnActive: { background: 'rgba(123,94,167,0.2)', border: '1px solid rgba(123,94,167,0.5)', color: '#c8b8e8' },
-  addBtn: { background: 'rgba(123,94,167,0.25)', border: '1px solid rgba(123,94,167,0.4)', color: '#c8b8e8', borderRadius: 10, padding: '10px 20px', fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", whiteSpace: 'nowrap' },
+  filterBtnActive: { background: 'rgba(123,94,167,0.2)', border: '1px solid rgba(123,94,167,0.5)', color: '#c4b5f4' },
+  addBtn: { background: 'rgba(123,94,167,0.25)', border: '1px solid rgba(123,94,167,0.4)', color: '#c4b5f4', borderRadius: 10, padding: '10px 20px', fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", whiteSpace: 'nowrap' },
 
   // MODAL
   modalBackdrop: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center' },
-  modalBox: { background: '#1a1410', border: '1px solid rgba(200,184,232,0.12)', borderRadius: 24, padding: '40px', maxWidth: 480, width: '90%', position: 'relative', maxHeight: '90vh', overflowY: 'auto' },
+  modalBox: { background: '#1d1a2e', border: '1px solid rgba(196,181,244,0.12)', borderRadius: 24, padding: '40px', maxWidth: 480, width: '90%', position: 'relative', maxHeight: '90vh', overflowY: 'auto' },
   modalClose: { position: 'absolute', top: 16, right: 20, background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: 'rgba(255,255,255,0.4)', lineHeight: 1 },
   formLabel: { fontSize: 10, color: 'rgba(255,255,255,0.4)', letterSpacing: 1, textTransform: 'uppercase', display: 'block', marginBottom: 6 },
   formInput: { width: '100%', padding: '11px 14px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'white', fontSize: 14, fontFamily: "'DM Sans', sans-serif", outline: 'none', boxSizing: 'border-box' },
-  submitBtn: { width: '100%', padding: 14, background: 'linear-gradient(135deg,#7b5ea7,#9b6bc0)', border: 'none', borderRadius: 12, color: 'white', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" },
+  submitBtn: { width: '100%', padding: 14, background: 'linear-gradient(135deg,#7c5cbf,#9b70e0)', border: 'none', borderRadius: 12, color: 'white', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" },
 };

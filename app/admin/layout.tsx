@@ -3,6 +3,7 @@
 import './admin.css';
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import OrvaneLogo from '@/components/OrvaneLogo';
 
 const NAV = [
   { id: 'syndics',   icon: '◎', label: 'Syndics' },
@@ -32,7 +33,7 @@ function AdminSidebar() {
   return (
     <aside style={s.sidebar}>
       <div style={s.brand}>
-        <div style={s.logo}>Syndic<span style={{ color: '#c8b8e8' }}>Pro</span></div>
+        <OrvaneLogo size={96} variant="empty-bg" style={{ marginBottom: 6 }} />
         <div style={s.logoSub}>Admin Panel</div>
       </div>
 
@@ -80,20 +81,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 }
 
 const s: Record<string, React.CSSProperties> = {
-  shell:    { display: 'flex', minHeight: '100vh', background: '#0f0b08', fontFamily: "'DM Sans', sans-serif" },
-  sidebar:  { width: 240, background: '#1a1410', borderRight: '1px solid rgba(200,184,232,0.08)', display: 'flex', flexDirection: 'column', flexShrink: 0, height: '100vh', position: 'sticky', top: 0 },
-  brand:    { padding: '28px 24px 24px', borderBottom: '1px solid rgba(200,184,232,0.07)' },
-  logo:     { fontSize: 22, fontWeight: 600, color: 'white', letterSpacing: 0.3 },
-  logoSub:  { fontSize: 9, color: 'rgba(255,255,255,0.3)', letterSpacing: 2, textTransform: 'uppercase', marginTop: 3 },
+  shell:    { display: 'flex', minHeight: '100vh', background: '#16131f', fontFamily: "'DM Sans', sans-serif" },
+  sidebar:  { width: 240, background: '#1d1a2e', borderRight: '1px solid rgba(196,181,244,0.08)', display: 'flex', flexDirection: 'column', flexShrink: 0, height: '100vh', position: 'sticky', top: 0 },
+  brand:    { padding: '28px 24px 20px', borderBottom: '1px solid rgba(196,181,244,0.07)' },
+  logoSub:  { fontSize: 9, color: 'rgba(196,181,244,0.4)', letterSpacing: 2, textTransform: 'uppercase', marginTop: 2 },
   nav:      { padding: '16px 12px', display: 'flex', flexDirection: 'column', gap: 2, flex: 1 },
-  navItem:  { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 10, background: 'none', border: 'none', color: 'rgba(255,255,255,0.45)', fontSize: 13, cursor: 'pointer', textAlign: 'left', width: '100%', fontFamily: "'DM Sans', sans-serif", transition: 'all 0.15s' },
-  navActive:{ background: 'rgba(200,184,232,0.1)', color: 'rgba(255,255,255,0.95)' },
+  navItem:  { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 10, background: 'none', border: 'none', color: 'rgba(196,181,244,0.45)', fontSize: 13, cursor: 'pointer', textAlign: 'left', width: '100%', fontFamily: "'DM Sans', sans-serif", transition: 'all 0.15s' },
+  navActive:{ background: 'rgba(124,92,191,0.18)', color: '#e8e0ff' },
   navIcon:  { fontSize: 14, opacity: 0.7 },
-  footer:   { padding: '16px 16px 24px', borderTop: '1px solid rgba(200,184,232,0.07)' },
+  footer:   { padding: '16px 16px 24px', borderTop: '1px solid rgba(196,181,244,0.07)' },
   userBadge:{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 },
-  avatar:   { width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg,#7b5ea7,#9b6bc0)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 600, color: 'white', flexShrink: 0 },
-  userName: { fontSize: 13, color: 'rgba(255,255,255,0.8)', fontWeight: 500 },
-  userRole: { fontSize: 10, color: 'rgba(255,255,255,0.35)', letterSpacing: 0.5, textTransform: 'uppercase' },
-  logoutBtn:{ width: '100%', background: 'none', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, color: 'rgba(255,255,255,0.3)', fontSize: 11, padding: '7px 0', cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", letterSpacing: 0.5 },
+  avatar:   { width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg,#7c5cbf,#9b70e0)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 600, color: 'white', flexShrink: 0 },
+  userName: { fontSize: 13, color: '#e8e0ff', fontWeight: 500 },
+  userRole: { fontSize: 10, color: 'rgba(196,181,244,0.4)', letterSpacing: 0.5, textTransform: 'uppercase' },
+  logoutBtn:{ width: '100%', background: 'none', border: '1px solid rgba(196,181,244,0.1)', borderRadius: 8, color: 'rgba(196,181,244,0.3)', fontSize: 11, padding: '7px 0', cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", letterSpacing: 0.5 },
   main:     { flex: 1, minWidth: 0 },
 };

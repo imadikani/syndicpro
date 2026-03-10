@@ -19,7 +19,7 @@ export default function ForgotPasswordPage() {
     <div className="forgot-shell" style={s.shell}>
       <div style={s.card}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 2 }}>
-          <div style={s.logo}>Syndic<span style={{ color: '#c8b8e8' }}>Pro</span></div>
+          <div style={s.logo}>Orvane</div>
           <LangToggle style={{ marginTop: 4 }} />
         </div>
         <div style={s.logoSub}>by Mizane AI</div>
@@ -43,7 +43,7 @@ export default function ForgotPasswordPage() {
                   type="email"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  placeholder="vous@syndicpro.ma"
+                  placeholder="vous@orvane.com"
                   required
                   style={s.input}
                   autoComplete="email"
@@ -75,8 +75,8 @@ const s: Record<string, React.CSSProperties> = {
     padding: '24px',
   },
   card: {
-    background: '#1a1410',
-    border: '1px solid rgba(200,184,232,0.1)',
+    background: '#1d1a2e',
+    border: '1px solid rgba(196,181,244,0.12)',
     borderRadius: 24,
     padding: '48px 44px',
     width: '100%',
@@ -144,7 +144,7 @@ const s: Record<string, React.CSSProperties> = {
   btn: {
     width: '100%',
     padding: '14px',
-    background: 'linear-gradient(135deg,#7b5ea7,#9b6bc0)',
+    background: 'linear-gradient(135deg,#7c5cbf,#9b70e0)',
     border: 'none',
     borderRadius: 12,
     color: 'white',
