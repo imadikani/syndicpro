@@ -13,15 +13,18 @@ export async function POST(req: NextRequest) {
     }
 
     const user = await prisma.user.findUnique({ where: { email } });
+    console.log('[login] email:', email, '| user found:', !!user);
     if (!user) {
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
     }
 
     const valid = await bcrypt.compare(password, user.password);
+    console.log('[login] password match:', valid);
     if (!valid) {
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
     }
 
+    console.log('[login] JWT_SECRET present:', !!process.env.JWT_SECRET);
     const token = signToken({ userId: user.id, email: user.email, role: user.role });
     const { password: _, ...safeUser } = user;
 
