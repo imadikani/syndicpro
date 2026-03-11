@@ -431,13 +431,13 @@ export default function LandingPage() {
         <h2 className="section-title">{t('team_h2_1')}<br /><em>{t('team_h2_em')}</em></h2>
         <div className="team-grid">
           {[
-            { init: 'I', grad: 'linear-gradient(135deg,#7b5ea7,#9b6bc0)', name: 'Imad Ikani', role: t('m1_role'), desc: t('m1_desc') },
-            { init: 'A', grad: 'linear-gradient(135deg,#e8906a,#f0b090)', name: 'Asmaa Ikani', role: t('m2_role'), desc: t('m2_desc') },
-            { init: 'J', grad: 'linear-gradient(135deg,#34d399,#10b981)', name: 'Jihane Ouzane', role: t('m3_role'), desc: t('m3_desc') },
-            { init: 'S', grad: 'linear-gradient(135deg,#f87171,#e85555)', name: 'Sara Ikani', role: t('m4_role'), desc: t('m4_desc') },
+            { img: '/imad-ikani.jpeg', name: 'Imad Ikani', role: t('m1_role'), desc: t('m1_desc') },
+            { img: '/asmaa-ikani.jpeg', name: 'Asmaa Ikani', role: t('m2_role'), desc: t('m2_desc') },
+            { img: '/jihane-ouzane.jpeg', name: 'Jihane Ouzane', role: t('m3_role'), desc: t('m3_desc') },
+            { img: '/sara-ikani.jpeg', name: 'Sara Ikani', role: t('m4_role'), desc: t('m4_desc') },
           ].map((m) => (
             <div key={m.name} className="team-card">
-              <div className="team-avatar" style={{ background: m.grad }}>{m.init}</div>
+              <Image src={m.img} alt={m.name} width={64} height={64} className="team-avatar" />
               <div className="team-name">{m.name}</div>
               <div className="team-role">{m.role}</div>
               <p className="team-desc">{m.desc}</p>
