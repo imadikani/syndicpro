@@ -1,15 +1,16 @@
 'use client';
 
 import './login.css';
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useLanguage, LangToggle } from '@/lib/i18n';
 
 const API_BASE = process.env.NEXT_PUBLIC_APP_URL || '';
 
-export default function LoginPage() {
+function LoginPageInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { t } = useLanguage();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -17,6 +18,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [checking, setChecking] = useState(true);
+  const resetSuccess = searchParams.get('reset') === 'success';
 
   useEffect(() => {
     const token = localStorage.getItem('syndic_token') || sessionStorage.getItem('syndic_token');
@@ -77,6 +79,12 @@ export default function LoginPage() {
         <h1 style={s.heading}>{t('login_title')}</h1>
         <p style={s.sub}>{t('login_sub')}</p>
 
+        {resetSuccess && (
+          <div style={s.successBanner}>
+            ✓ Mot de passe réinitialisé avec succès. Vous pouvez vous connecter.
+          </div>
+        )}
+
         {/* Form */}
         <form onSubmit={handleSubmit} style={s.form}>
           <div style={s.field}>
@@ -131,6 +139,14 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginPageInner />
+    </Suspense>
   );
 }
 
@@ -234,6 +250,15 @@ const s: Record<string, React.CSSProperties> = {
     fontSize: 13,
     color: 'rgba(255,255,255,0.5)',
     fontWeight: 300,
+  },
+  successBanner: {
+    background: 'rgba(52,211,153,0.1)',
+    border: '1px solid rgba(52,211,153,0.25)',
+    color: '#34d399',
+    borderRadius: 10,
+    padding: '10px 14px',
+    fontSize: 13,
+    marginBottom: 16,
   },
   error: {
     background: 'rgba(248,113,113,0.12)',

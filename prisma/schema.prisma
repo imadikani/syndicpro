@@ -23,7 +23,8 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  buildings Building[] // buildings this user manages
+  buildings      Building[]      // buildings this user manages
+  passwordResets PasswordReset[]
 
   @@map("users")
 }
@@ -233,4 +234,20 @@ model CommunityPost {
   residentId String?
 
   @@map("community_posts")
+}
+
+// ─── PASSWORD RESET ───────────────────────────────────────────────────────────
+
+model PasswordReset {
+  id        String   @id @default(cuid())
+  userId    String
+  code      String   // 6-digit code
+  method    String   // EMAIL | WHATSAPP
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("password_resets")
 }
