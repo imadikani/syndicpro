@@ -104,7 +104,7 @@ h1 em { font-style: italic; color: var(--accent); }
 .pb-label { font-size: 11px; color: rgba(196,181,244,0.6); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 20px; }
 .pb-title { font-family: 'DM Sans', sans-serif; font-size: clamp(32px,3.5vw,48px); font-weight: 300; color: var(--text); line-height: 1.15; margin-bottom: 48px; max-width: 640px; }
 .pb-title em { font-style: italic; color: var(--accent); }
-.problems { display: grid; grid-template-columns: repeat(3,1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); }
+.problems { display: grid; grid-template-columns: repeat(4,1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); }
 .problem { background: var(--surface); padding: 32px; border-right: 1px solid var(--border); transition: background 0.3s; }
 .problem:last-child { border-right: none; }
 .problem:hover { background: var(--surface-alt); }
@@ -263,7 +263,7 @@ footer { border-top: 1px solid var(--border); padding: 36px 56px; display: flex;
   .hero { padding: 110px 20px 60px; }
   .mockups { flex-direction: column; align-items: center; }
   .problem-band { padding: 48px 24px; }
-  .problems { grid-template-columns: 1fr; }
+  .problems { grid-template-columns: 1fr 1fr; }
   .problem { border-right: none; border-bottom: 1px solid var(--border); }
   .stats { grid-template-columns: 1fr 1fr; }
   .features { padding: 60px 24px; } .features-grid { grid-template-columns: 1fr; }
@@ -276,6 +276,7 @@ footer { border-top: 1px solid var(--border); padding: 36px 56px; display: flex;
   footer { flex-direction: column; gap: 18px; text-align: center; padding: 32px 24px; }
 }
 @media (max-width: 600px) {
+  .problems { grid-template-columns: 1fr; }
   .stats { grid-template-columns: 1fr; }
   .pricing-cards { grid-template-columns: 1fr; }
   .team-grid { grid-template-columns: 1fr; }

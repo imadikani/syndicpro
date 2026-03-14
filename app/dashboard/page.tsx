@@ -98,6 +98,8 @@ export default function Dashboard() {
   const [customReminderMsg, setCustomReminderMsg] = useState('');
   const [customReminderLoading, setCustomReminderLoading] = useState(false);
   const [customReminderError, setCustomReminderError] = useState('');
+  const [reminderTarget, setReminderTarget] = useState<'everyone' | 'building' | 'resident' | 'pastdue'>('everyone');
+  const [reminderTargetBuilding, setReminderTargetBuilding] = useState('');
   const [newExpense, setNewExpense] = useState({ label: '', amount: '', date: '', dueDate: '', buildingId: '', category: 'ENTRETIEN', isPaid: true });
   const [addExpenseLoading, setAddExpenseLoading] = useState(false);
   const [addExpenseError, setAddExpenseError] = useState('');
@@ -223,25 +225,62 @@ export default function Dashboard() {
     }
   }
 
+  // Compute unique residents from payments
+  const allResidents = Array.from(
+    new Map(payments.filter(p => p.unit?.resident?.id).map(p => [p.unit.resident!.id, p])).values()
+  );
+  const pastDueResidents = allResidents.filter(p => p.status === 'PENDING' || p.status === 'LATE');
+
+  function getTargetCount(): number {
+    switch (reminderTarget) {
+      case 'everyone': return allResidents.length;
+      case 'building': return allResidents.filter(p => (p.unit?.building?.id || p.unit?.buildingId) === reminderTargetBuilding).length;
+      case 'resident': return customReminderResidentId ? 1 : 0;
+      case 'pastdue': return pastDueResidents.length;
+    }
+  }
+
+  function getTargetResidentIds(): string[] {
+    switch (reminderTarget) {
+      case 'everyone': return allResidents.map(p => p.unit.resident!.id);
+      case 'building': return allResidents.filter(p => (p.unit?.building?.id || p.unit?.buildingId) === reminderTargetBuilding).map(p => p.unit.resident!.id);
+      case 'resident': return customReminderResidentId ? [customReminderResidentId] : [];
+      case 'pastdue': return pastDueResidents.map(p => p.unit.resident!.id);
+    }
+  }
+
   async function handleCustomReminder() {
     setCustomReminderError('');
-    if (!customReminderResidentId || !customReminderMsg.trim()) {
+    if (!customReminderMsg.trim()) {
+      setCustomReminderError(t('dash_reminder_required'));
+      return;
+    }
+    const ids = getTargetResidentIds();
+    if (ids.length === 0) {
       setCustomReminderError(t('dash_reminder_required'));
       return;
     }
     setCustomReminderLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/reminders`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tokenRef.current}` },
-        body: JSON.stringify({ residentId: customReminderResidentId, customMessage: customReminderMsg }),
-      });
-      const data = await res.json();
-      if (!res.ok) { setCustomReminderError(data.error || t('dash_error_send')); return; }
-      if (data.reminder) setReminders(prev => [{ ...data.reminder, resident: payments.find(p => p.unit?.resident && p.unit.resident)?.unit?.resident }, ...prev]);
+      // Send to each resident
+      const results = await Promise.allSettled(
+        ids.map(id =>
+          fetch(`${API_BASE}/api/reminders`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tokenRef.current}` },
+            body: JSON.stringify({ residentId: id, customMessage: customReminderMsg }),
+          }).then(r => r.json())
+        )
+      );
+      const sent = results.filter(r => r.status === 'fulfilled').length;
+      const failed = results.filter(r => r.status === 'rejected').length;
+      showToast(`✓ ${sent} ${t(sent > 1 ? 'rem_residents_count' : 'rem_resident_count')}${failed ? ` (${failed} failed)` : ''}`, sent > 0);
+      await refreshReminders();
       setCustomReminderOpen(false);
       setCustomReminderResidentId('');
       setCustomReminderMsg('');
+      setReminderTarget('everyone');
+      setReminderTargetBuilding('');
     } catch {
       setCustomReminderError(t('dash_error_connection'));
     } finally {
@@ -950,16 +989,7 @@ export default function Dashboard() {
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '28px 0 16px' }}>
                 <div style={styles.cardTitle2}>{t('rem_history')}</div>
-                <div style={{ display: 'flex', gap: 10 }}>
-                  <button
-                    style={{ ...styles.addBtn, background: 'rgba(123,94,167,0.15)', opacity: sendAllLoading ? 0.6 : 1 }}
-                    disabled={sendAllLoading}
-                    onClick={handleSendAll}
-                  >
-                    {sendAllLoading ? '...' : '📲 Envoyer à tous'}
-                  </button>
-                  <button style={styles.addBtn} onClick={() => { setCustomReminderError(''); setCustomReminderOpen(true); }}>{t('rem_custom_btn')}</button>
-                </div>
+                <button style={styles.addBtn} onClick={() => { setCustomReminderError(''); setReminderTarget('everyone'); setReminderTargetBuilding(''); setCustomReminderResidentId(''); setCustomReminderOpen(true); }}>{t('rem_custom_btn')}</button>
               </div>
 
               <div style={styles.residentTable}>
@@ -998,17 +1028,79 @@ export default function Dashboard() {
                     <button style={styles.modalClose} onClick={() => setCustomReminderOpen(false)}>×</button>
                     <div style={{ fontSize: 11, color: '#c4b5f4', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>{t('rem_modal_label')}</div>
                     <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 28, fontWeight: 300, color: 'white', marginBottom: 24 }}>{t('rem_modal_title')}</div>
+                    {/* Target type selector */}
                     <div style={{ marginBottom: 16 }}>
-                      <label style={styles.formLabel}>{t('dash_resident_col')}</label>
-                      <select style={styles.formInput} value={customReminderResidentId} onChange={e => setCustomReminderResidentId(e.target.value)}>
-                        <option value="">{t('rem_choose_resident')}</option>
-                        {Array.from(new Map(payments.filter(p => p.unit?.resident?.id).map(p => [p.unit.resident!.id, p])).values()).map(p => (
-                          <option key={p.unit.resident!.id} value={p.unit.resident!.id}>
-                            {p.unit.resident!.name} — {p.unit?.building?.name?.split(' ').slice(-1)[0]} {p.unit.number}
-                          </option>
-                        ))}
-                      </select>
+                      <label style={styles.formLabel}>{t('rem_target_label')}</label>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                        {(['everyone', 'building', 'resident', 'pastdue'] as const).map(opt => {
+                          const labels: Record<string, string> = {
+                            everyone: t('rem_target_everyone'),
+                            building: t('rem_target_building'),
+                            resident: t('rem_target_resident'),
+                            pastdue: t('rem_target_pastdue'),
+                          };
+                          const counts: Record<string, number> = {
+                            everyone: allResidents.length,
+                            building: allResidents.filter(p => (p.unit?.building?.id || p.unit?.buildingId) === reminderTargetBuilding).length,
+                            pastdue: pastDueResidents.length,
+                          };
+                          const isActive = reminderTarget === opt;
+                          return (
+                            <button
+                              key={opt}
+                              onClick={() => setReminderTarget(opt)}
+                              style={{
+                                padding: '10px 12px',
+                                borderRadius: 8,
+                                border: isActive ? '2px solid #7c5cbf' : '1px solid rgba(255,255,255,0.1)',
+                                background: isActive ? 'rgba(124,92,191,0.15)' : 'rgba(255,255,255,0.03)',
+                                color: isActive ? '#c4b5f4' : 'rgba(255,255,255,0.6)',
+                                cursor: 'pointer',
+                                fontSize: 13,
+                                textAlign: 'left',
+                                transition: 'all 0.15s',
+                              }}
+                            >
+                              <div style={{ fontWeight: 600 }}>{labels[opt]}</div>
+                              {opt !== 'resident' && (
+                                <div style={{ fontSize: 11, opacity: 0.7, marginTop: 2 }}>
+                                  {opt === 'building' && !reminderTargetBuilding ? '—' : `${counts[opt] ?? 0} ${t(counts[opt] === 1 ? 'rem_resident_count' : 'rem_residents_count')}`}
+                                </div>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
+
+                    {/* Building selector (only for 'building' target) */}
+                    {reminderTarget === 'building' && (
+                      <div style={{ marginBottom: 16 }}>
+                        <label style={styles.formLabel}>{t('rem_choose_building')}</label>
+                        <select style={styles.formInput} value={reminderTargetBuilding} onChange={e => setReminderTargetBuilding(e.target.value)}>
+                          <option value="">{t('rem_choose_building')}</option>
+                          {buildings.map(b => (
+                            <option key={b.id} value={b.id}>{b.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
+                    {/* Resident selector (only for 'resident' target) */}
+                    {reminderTarget === 'resident' && (
+                      <div style={{ marginBottom: 16 }}>
+                        <label style={styles.formLabel}>{t('dash_resident_col')}</label>
+                        <select style={styles.formInput} value={customReminderResidentId} onChange={e => setCustomReminderResidentId(e.target.value)}>
+                          <option value="">{t('rem_choose_resident')}</option>
+                          {allResidents.map(p => (
+                            <option key={p.unit.resident!.id} value={p.unit.resident!.id}>
+                              {p.unit.resident!.name} — {p.unit?.building?.name?.split(' ').slice(-1)[0]} {p.unit.number}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
                     <div style={{ marginBottom: 24 }}>
                       <label style={styles.formLabel}>{t('rem_message')}</label>
                       <textarea
@@ -1020,8 +1112,11 @@ export default function Dashboard() {
                       />
                     </div>
                     {customReminderError && <div style={{ color: '#f87171', fontSize: 13, marginBottom: 12 }}>{customReminderError}</div>}
-                    <button style={styles.submitBtn} onClick={handleCustomReminder} disabled={customReminderLoading}>
-                      {customReminderLoading ? t('rem_sending') : t('rem_send_btn')}
+                    <button style={styles.submitBtn} onClick={handleCustomReminder} disabled={customReminderLoading || getTargetCount() === 0}>
+                      {customReminderLoading
+                        ? t('rem_sending')
+                        : `${t('rem_send_to')} ${getTargetCount()} ${t(getTargetCount() === 1 ? 'rem_resident_count' : 'rem_residents_count')}`
+                      }
                     </button>
                   </div>
                 </div>

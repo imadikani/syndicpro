@@ -253,6 +253,7 @@ export default function LandingPage() {
               { num: '01', title: t('p1_title'), desc: t('p1_desc') },
               { num: '02', title: t('p2_title'), desc: t('p2_desc') },
               { num: '03', title: t('p3_title'), desc: t('p3_desc') },
+              { num: '04', title: t('p4_title'), desc: t('p4_desc') },
             ].map((p) => (
               <div key={p.num} className="problem">
                 <div className="problem-num">{p.num}</div>
@@ -357,7 +358,7 @@ export default function LandingPage() {
               { label: t('roi_r3'), val: '~14 000 MAD', cls: '' },
               { label: t('roi_r4'), val: '+9 000 MAD/mois', cls: 'green' },
               { label: t('roi_r5'), val: '+1 600 MAD/mois', cls: 'green' },
-              { label: t('roi_r6'), val: '2 400 MAD/mois', cls: '' },
+              { label: t('roi_r6'), val: '-2 400 MAD', cls: '' },
             ].map((r) => (
               <div key={r.label} className="roi-row">
                 <span className="roi-row-label">{r.label}</span>
@@ -377,6 +378,7 @@ export default function LandingPage() {
       <section className="pricing" id="pricing">
         <div className="section-label">{t('pricing_label')}</div>
         <h2 className="section-title">{t('pricing_h2_1')} <em>{t('pricing_h2_em')}</em></h2>
+        <p style={{ fontSize: 14, color: 'var(--muted)', marginTop: -32, marginBottom: 52, textAlign: 'center' }}>{t('pricing_sub')}</p>
         <div className="pricing-cards">
           {/* Essentiel */}
           <div className="p-card">
@@ -389,10 +391,18 @@ export default function LandingPage() {
               <li>{t('tier1_f2')}</li>
               <li>{t('tier1_f3')}</li>
               <li>{t('tier1_f4')}</li>
+              <li>{t('tier1_f5')}</li>
+              <li>{t('tier1_f6')}</li>
+              <li>{t('tier1_f7')}</li>
+              <li>{t('tier1_f8')}</li>
+              <li>{t('tier1_f9')}</li>
               <li className="na">{t('tier1_na1')}</li>
+              <li className="na">{t('tier1_na2')}</li>
               <li className="na">{t('tier1_na3')}</li>
+              <li className="na">{t('tier1_na4')}</li>
+              <li className="na">{t('tier1_na5')}</li>
             </ul>
-            <div className="p-setup">{t('pricing_setup')} 5 000 MAD (unique)</div>
+            <div className="p-setup">{t('pricing_setup')} 3 000 MAD (unique)</div>
             <button className="p-btn" onClick={() => openModal(PLAN1)}>{t('btn_start')}</button>
           </div>
           {/* Professionnel */}
@@ -405,12 +415,19 @@ export default function LandingPage() {
             <ul className="p-features">
               <li>{t('tier2_f1')}</li>
               <li>{t('tier2_f2')}</li>
+              <li>{t('tier2_f3')}</li>
               <li>{t('tier2_f4')}</li>
               <li>{t('tier2_f5')}</li>
               <li>{t('tier2_f6')}</li>
               <li>{t('tier2_f7')}</li>
+              <li>{t('tier2_f8')}</li>
+              <li>{t('tier2_f9')}</li>
+              <li className="na">{t('tier2_na1')}</li>
+              <li className="na">{t('tier2_na2')}</li>
+              <li className="na">{t('tier2_na3')}</li>
+              <li className="na">{t('tier2_na4')}</li>
             </ul>
-            <div className="p-setup">{t('pricing_setup')} 10 000 MAD (unique)</div>
+            <div className="p-setup">{t('pricing_setup')} 8 000 MAD (unique)</div>
             <button className="p-btn" onClick={() => openModal(PLAN2)}>{t('btn_start')}</button>
           </div>
           {/* Cabinet */}
@@ -427,6 +444,14 @@ export default function LandingPage() {
               <li>{t('tier3_f5')}</li>
               <li>{t('tier3_f6')}</li>
               <li>{t('tier3_f7')}</li>
+              <li>{t('tier3_f8')}</li>
+              <li>{t('tier3_f9')}</li>
+              <li>{t('tier3_f10')}</li>
+              <li>{t('tier3_f11')}</li>
+              <li>{t('tier3_f12')}</li>
+              <li className="na">{t('tier3_na1')}</li>
+              <li className="na">{t('tier3_na2')}</li>
+              <li className="na">{t('tier3_na3')}</li>
             </ul>
             <div className="p-setup">{t('pricing_setup')} 20 000 MAD (unique)</div>
             <button className="p-btn" onClick={() => openModal(PLAN3)}>{t('btn_contact_team')}</button>
@@ -445,6 +470,8 @@ export default function LandingPage() {
               <li>{t('tier4_f5')}</li>
               <li>{t('tier4_f6')}</li>
               <li>{t('tier4_f7')}</li>
+              <li>{t('tier4_f8')}</li>
+              <li>{t('tier4_f9')}</li>
             </ul>
             <div className="p-setup" style={{ opacity: 0 }}>—</div>
             <button className="p-btn" onClick={() => openModal(PLAN4)}>{t('btn_contact_us')}</button>
@@ -456,7 +483,7 @@ export default function LandingPage() {
       {/* TEAM */}
       <section className="team" id="team">
         <div className="section-label">{t('team_label')}</div>
-        <h2 className="section-title">{t('team_h2_1')}<br /><em>{t('team_h2_em')}</em></h2>
+        <h2 className="section-title"><em>{t('team_h2_em')}</em></h2>
         <div className="team-grid">
           {[
             { img: '/imad-ikani.jpeg', name: 'Imad Ikani', role: t('m1_role'), desc: t('m1_desc') },
@@ -527,17 +554,17 @@ export default function LandingPage() {
             {modalSuccess ? (
               <div style={{ textAlign: 'center', padding: '20px 0' }}>
                 <div style={{ fontSize: 52, marginBottom: 16 }}>✓</div>
-                <h3 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 30, fontWeight: 300, color: '#1a1410', marginBottom: 10 }}>{t('modal_success_h3')}</h3>
-                <p style={{ fontSize: 14, color: '#8a7a6e', lineHeight: 1.7, fontWeight: 300 }}>{t('modal_success_p')}</p>
-                <button onClick={closeModal} style={{ marginTop: 24, padding: '12px 32px', background: '#1a1410', color: 'white', border: 'none', borderRadius: 100, fontSize: 14, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}>{t('close')}</button>
+                <h3 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 30, fontWeight: 300, color: 'var(--text)', marginBottom: 10 }}>{t('modal_success_h3')}</h3>
+                <p style={{ fontSize: 14, color: 'var(--muted)', lineHeight: 1.7, fontWeight: 300 }}>{t('modal_success_p')}</p>
+                <button onClick={closeModal} style={{ marginTop: 24, padding: '12px 32px', background: 'var(--primary)', color: 'white', border: 'none', borderRadius: 100, fontSize: 14, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}>{t('close')}</button>
               </div>
             ) : (
               <>
                 <p style={{ fontSize: 11, color: '#7b5ea7', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12, fontWeight: 500 }}>{t('modal_label')}</p>
-                <h3 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 32, fontWeight: 300, color: '#1a1410', marginBottom: 6, lineHeight: 1.1 }}>
+                <h3 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 32, fontWeight: 300, color: 'var(--text)', marginBottom: 6, lineHeight: 1.1 }}>
                   {modal.plan ? `${t('modal_plan_prefix')} ${planDisplayName(modal.plan)}` : t('modal_h3_start')}
                 </h3>
-                <p style={{ fontSize: 13, color: '#8a7a6e', marginBottom: 28, fontWeight: 300 }}>
+                <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 28, fontWeight: 300 }}>
                   {t('modal_sub')}
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -574,7 +601,7 @@ export default function LandingPage() {
                 <button className="modal-submit" onClick={submitModal} disabled={modalLoading}>
                   {modalLoading ? t('modal_submitting') : t('modal_submit')}
                 </button>
-                <p style={{ textAlign: 'center', fontSize: 11, color: '#8a7a6e', marginTop: 12 }}>{t('modal_no_commitment')}</p>
+                <p style={{ textAlign: 'center', fontSize: 11, color: 'var(--muted)', marginTop: 12 }}>{t('modal_no_commitment')}</p>
               </>
             )}
           </div>
