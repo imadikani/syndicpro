@@ -29,7 +29,7 @@ const fr = {
   hero_h1_1: "L'immeuble géré.",
   hero_h1_em: 'Entièrement.',
   hero_sub: "Charges automatisées, reçus vérifiés par IA, tickets de maintenance priorisés, rappels WhatsApp — tout tourne sans que vous leviez le doigt.",
-  hero_tagline: 'ميزان — Balance. Précision. Automatisation.',
+  hero_tagline: 'Balance. Précision. Automatisation.',
   hero_cta: 'Demander une démo',
   hero_explore: 'Explorer la plateforme',
 
@@ -534,7 +534,7 @@ const en: typeof fr = {
   hero_h1_1: 'Your Building.',
   hero_h1_em: 'Fully Managed.',
   hero_sub: 'Automated dues, AI-verified receipts, prioritized maintenance tickets, WhatsApp reminders — everything runs without you lifting a finger.',
-  hero_tagline: 'ميزان — Balance. Precision. Automation.',
+  hero_tagline: 'Balance. Precision. Automation.',
   hero_cta: 'Request a demo',
   hero_explore: 'Explore the platform',
 
