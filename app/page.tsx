@@ -168,6 +168,9 @@ export default function LandingPage() {
           <li><a href="#contact" className="nav-cta" onClick={(e) => { e.preventDefault(); openModal(null); }}>{t('nav_demo')}</a></li>
           <li><LangToggle /></li>
         </ul>
+        <div className="nav-mobile-actions">
+          <LangToggle />
+        </div>
       </nav>
 
       {/* HERO */}
