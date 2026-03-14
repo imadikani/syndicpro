@@ -156,7 +156,7 @@ export default function LandingPage() {
           <Image src="/logo_only.png" width={42} height={36} alt="Orvane" className="rounded-md" />
           <div className="nav-brand-text">
             <div className="nav-logo">orvane</div>
-            <div className="nav-sub">by Mizane AI</div>
+            <div className="nav-sub">by Orvane Labs</div>
           </div>
         </div>
         <ul className="nav-links">

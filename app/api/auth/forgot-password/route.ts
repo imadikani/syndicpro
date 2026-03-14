@@ -60,7 +60,7 @@ function buildEmailHtml(code: string): string {
         <tr>
           <td style="padding:36px 40px 28px;border-bottom:1px solid rgba(196,181,244,0.08);">
             <div style="font-size:22px;font-weight:600;color:#e8e0ff;letter-spacing:0.3px;">orvane</div>
-            <div style="font-size:9px;color:rgba(196,181,244,0.4);letter-spacing:2px;text-transform:uppercase;margin-top:3px;">by Mizane AI</div>
+            <div style="font-size:9px;color:rgba(196,181,244,0.4);letter-spacing:2px;text-transform:uppercase;margin-top:3px;">by Orvane Labs</div>
           </td>
         </tr>
         <!-- Body -->
@@ -85,7 +85,7 @@ function buildEmailHtml(code: string): string {
         <!-- Footer -->
         <tr>
           <td style="padding:20px 40px;border-top:1px solid rgba(196,181,244,0.08);text-align:center;">
-            <p style="margin:0;font-size:11px;color:rgba(255,255,255,0.2);">© 2026 Orvane by Mizane AI</p>
+            <p style="margin:0;font-size:11px;color:rgba(255,255,255,0.2);">© 2026 Orvane by Orvane Labs</p>
           </td>
         </tr>
       </table>

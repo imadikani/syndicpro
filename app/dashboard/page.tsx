@@ -421,7 +421,7 @@ export default function Dashboard() {
         <div style={styles.sidebarBrand}>
           <OrvaneLogo size={56} style={{ marginBottom: 8 }} />
           <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 20, fontWeight: 600, color: '#e8e0ff', letterSpacing: 0.3, marginBottom: 4, textAlign: 'center' }}>orvane</div>
-          <div style={styles.brandSub}>by Mizane AI</div>
+          <div style={styles.brandSub}>by Orvane Labs</div>
         </div>
 
         <nav style={styles.sidebarNav}>

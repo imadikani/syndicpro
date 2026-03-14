@@ -73,7 +73,7 @@ function LoginPageInner() {
           <div style={s.logo}>Orvane</div>
           <LangToggle style={{ marginTop: 4 }} />
         </div>
-        <div style={s.logoSub}>by Mizane AI</div>
+        <div style={s.logoSub}>by Orvane Labs</div>
 
         {/* Heading */}
         <h1 style={s.heading}>{t('login_title')}</h1>

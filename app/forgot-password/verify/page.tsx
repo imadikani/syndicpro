@@ -106,7 +106,7 @@ export default function VerifyResetPage() {
     <div style={s.shell}>
       <div style={s.card}>
         <div style={s.logo}>orvane</div>
-        <div style={s.logoSub}>by Mizane AI</div>
+        <div style={s.logoSub}>by Orvane Labs</div>
 
         <h1 style={s.heading}>Vérifier votre identité</h1>
         <p style={s.sub}>

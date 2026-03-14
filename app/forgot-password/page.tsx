@@ -38,7 +38,7 @@ export default function ForgotPasswordPage() {
     <div style={s.shell}>
       <div style={s.card}>
         <div style={s.logo}>orvane</div>
-        <div style={s.logoSub}>by Mizane AI</div>
+        <div style={s.logoSub}>by Orvane Labs</div>
 
         <h1 style={s.heading}>Réinitialiser le mot de passe</h1>
         <p style={s.sub}>Entrez votre email pour recevoir un code de vérification.</p>
