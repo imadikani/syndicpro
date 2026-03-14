@@ -21,6 +21,12 @@ const nextConfig = {
     return [
       {
         source: '/:path*',
+        has: [{ type: 'host', value: 'www.orvane.ma' }],
+        destination: 'https://orvane.ma/:path*',
+        permanent: true,
+      },
+      {
+        source: '/:path*',
         has: [{ type: 'header', key: 'x-forwarded-proto', value: 'http' }],
         destination: 'https://orvane.ma/:path*',
         permanent: true,
