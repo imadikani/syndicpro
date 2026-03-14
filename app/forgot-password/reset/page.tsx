@@ -2,22 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useLanguage } from '@/lib/i18n';
 
 const API_BASE = process.env.NEXT_PUBLIC_APP_URL || '';
 
-function getStrength(pw: string): { score: number; label: string; color: string } {
-  let score = 0;
-  if (pw.length >= 8) score++;
-  if (pw.length >= 12) score++;
-  if (/[A-Z]/.test(pw)) score++;
-  if (/[0-9]/.test(pw)) score++;
-  if (/[^A-Za-z0-9]/.test(pw)) score++;
-  if (score <= 1) return { score, label: 'Faible', color: '#f87171' };
-  if (score <= 3) return { score, label: 'Moyen', color: '#fbbf24' };
-  return { score, label: 'Fort', color: '#34d399' };
-}
-
 export default function ResetPasswordPage() {
+  const { t } = useLanguage();
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
@@ -36,12 +26,24 @@ export default function ResetPasswordPage() {
     setCode(c);
   }, []);
 
+  function getStrength(pw: string): { score: number; label: string; color: string } {
+    let score = 0;
+    if (pw.length >= 8) score++;
+    if (pw.length >= 12) score++;
+    if (/[A-Z]/.test(pw)) score++;
+    if (/[0-9]/.test(pw)) score++;
+    if (/[^A-Za-z0-9]/.test(pw)) score++;
+    if (score <= 1) return { score, label: t('fp_reset_strength_weak'), color: '#f87171' };
+    if (score <= 3) return { score, label: t('fp_reset_strength_medium'), color: '#fbbf24' };
+    return { score, label: t('fp_reset_strength_strong'), color: '#34d399' };
+  }
+
   const strength = getStrength(newPassword);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (newPassword !== confirmPassword) { setError('Les mots de passe ne correspondent pas.'); return; }
-    if (newPassword.length < 8) { setError('Au moins 8 caractères requis.'); return; }
+    if (newPassword !== confirmPassword) { setError(t('fp_reset_mismatch')); return; }
+    if (newPassword.length < 8) { setError(t('fp_reset_min_chars')); return; }
     setError('');
     setLoading(true);
     try {
@@ -51,13 +53,13 @@ export default function ResetPasswordPage() {
         body: JSON.stringify({ email, code, newPassword, confirmPassword }),
       });
       const data = await res.json();
-      if (!res.ok) { setError(data.error || 'Erreur serveur.'); return; }
+      if (!res.ok) { setError(data.error || t('fp_reset_error_server')); return; }
       sessionStorage.removeItem('reset_email');
       sessionStorage.removeItem('reset_method');
       sessionStorage.removeItem('reset_code');
       router.push('/login?reset=success');
     } catch {
-      setError('Erreur réseau. Veuillez réessayer.');
+      setError(t('fp_reset_error_network'));
     } finally {
       setLoading(false);
     }
@@ -69,12 +71,12 @@ export default function ResetPasswordPage() {
         <div style={s.logo}>orvane</div>
         <div style={s.logoSub}>by Orvane Labs</div>
 
-        <h1 style={s.heading}>Nouveau mot de passe</h1>
-        <p style={s.sub}>Choisissez un mot de passe sécurisé d'au moins 8 caractères.</p>
+        <h1 style={s.heading}>{t('fp_reset_title')}</h1>
+        <p style={s.sub}>{t('fp_reset_sub')}</p>
 
         <form onSubmit={handleSubmit} style={s.form}>
           <div style={s.field}>
-            <label style={s.label}>Nouveau mot de passe</label>
+            <label style={s.label}>{t('fp_reset_new_pw')}</label>
             <div style={s.inputWrap}>
               <input
                 type={showNew ? 'text' : 'password'}
@@ -108,7 +110,7 @@ export default function ResetPasswordPage() {
           </div>
 
           <div style={s.field}>
-            <label style={s.label}>Confirmer le mot de passe</label>
+            <label style={s.label}>{t('fp_reset_confirm_pw')}</label>
             <div style={s.inputWrap}>
               <input
                 type={showConfirm ? 'text' : 'password'}
@@ -135,7 +137,7 @@ export default function ResetPasswordPage() {
           {error && <div style={s.error}>{error}</div>}
 
           <button type="submit" disabled={loading} style={{ ...s.btn, ...(loading ? s.btnLoading : {}) }}>
-            {loading ? 'Réinitialisation...' : 'Réinitialiser le mot de passe'}
+            {loading ? t('fp_reset_submitting') : t('fp_reset_submit')}
           </button>
         </form>
       </div>

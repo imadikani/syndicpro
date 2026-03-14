@@ -3,11 +3,13 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useLanguage } from '@/lib/i18n';
 
 const API_BASE = process.env.NEXT_PUBLIC_APP_URL || '';
 const CODE_LENGTH = 6;
 
 export default function VerifyResetPage() {
+  const { t } = useLanguage();
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [method, setMethod] = useState('');
@@ -47,12 +49,12 @@ export default function VerifyResetPage() {
         sessionStorage.setItem('reset_code', code);
         router.push('/forgot-password/reset');
       } else {
-        setError(data.error || 'Code invalide ou expiré.');
+        setError(data.error || t('fp_verify_invalid_code'));
         setDigits(Array(CODE_LENGTH).fill(''));
         inputRefs.current[0]?.focus();
       }
     } catch {
-      setError('Erreur réseau. Veuillez réessayer.');
+      setError(t('fp_verify_network_error'));
     } finally {
       setLoading(false);
     }
@@ -96,7 +98,7 @@ export default function VerifyResetPage() {
       setError('');
       inputRefs.current[0]?.focus();
     } catch {
-      setError('Erreur lors du renvoi.');
+      setError(t('fp_verify_resend_error'));
     } finally {
       setResending(false);
     }
@@ -108,9 +110,9 @@ export default function VerifyResetPage() {
         <div style={s.logo}>orvane</div>
         <div style={s.logoSub}>by Orvane Labs</div>
 
-        <h1 style={s.heading}>Vérifier votre identité</h1>
+        <h1 style={s.heading}>{t('fp_verify_title')}</h1>
         <p style={s.sub}>
-          Entrez le code à 6 chiffres envoyé{method === 'WHATSAPP' ? ' sur WhatsApp' : ' à'}{' '}
+          {method === 'WHATSAPP' ? t('fp_verify_sub_whatsapp') : t('fp_verify_sub_email')}{' '}
           <span style={{ color: '#c4b5f4' }}>{email}</span>
         </p>
 
@@ -137,20 +139,20 @@ export default function VerifyResetPage() {
 
         {error && <div style={s.error}>{error}</div>}
 
-        {loading && <div style={s.checking}>Vérification...</div>}
+        {loading && <div style={s.checking}>{t('fp_verify_checking')}</div>}
 
         <div style={s.resendRow}>
           {resendCooldown > 0 ? (
-            <span style={s.resendCooldown}>Renvoyer dans {resendCooldown}s</span>
+            <span style={s.resendCooldown}>{t('fp_verify_resend_in')} {resendCooldown}s</span>
           ) : (
             <button onClick={resend} disabled={resending} style={s.resendBtn}>
-              {resending ? 'Envoi...' : 'Renvoyer le code'}
+              {resending ? t('forgot_sending') : t('fp_verify_resend_btn')}
             </button>
           )}
         </div>
 
         <div style={s.footer}>
-          <Link href="/forgot-password" style={s.footerLink}>← Retour</Link>
+          <Link href="/forgot-password" style={s.footerLink}>{t('fp_verify_back')}</Link>
         </div>
       </div>
     </div>

@@ -4,17 +4,19 @@ import './forgot.css';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useLanguage } from '@/lib/i18n';
 
 const API_BASE = process.env.NEXT_PUBLIC_APP_URL || '';
 
 export default function ForgotPasswordPage() {
+  const { t } = useLanguage();
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState<'EMAIL' | 'WHATSAPP' | null>(null);
   const [error, setError] = useState('');
 
   async function send(method: 'EMAIL' | 'WHATSAPP') {
-    if (!email) { setError('Veuillez entrer votre email.'); return; }
+    if (!email) { setError(t('forgot_email_required')); return; }
     setError('');
     setLoading(method);
     try {
@@ -23,12 +25,11 @@ export default function ForgotPasswordPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, method }),
       });
-      // Always navigate — don't reveal if email exists
       sessionStorage.setItem('reset_email', email);
       sessionStorage.setItem('reset_method', method);
       router.push('/forgot-password/verify');
     } catch {
-      setError('Une erreur est survenue. Veuillez réessayer.');
+      setError(t('forgot_error_generic'));
     } finally {
       setLoading(null);
     }
@@ -40,11 +41,11 @@ export default function ForgotPasswordPage() {
         <div style={s.logo}>orvane</div>
         <div style={s.logoSub}>by Orvane Labs</div>
 
-        <h1 style={s.heading}>Réinitialiser le mot de passe</h1>
-        <p style={s.sub}>Entrez votre email pour recevoir un code de vérification.</p>
+        <h1 style={s.heading}>{t('forgot_title')}</h1>
+        <p style={s.sub}>{t('forgot_sub')}</p>
 
         <div style={s.field}>
-          <label style={s.label}>Email</label>
+          <label style={s.label}>{t('forgot_email')}</label>
           <input
             type="email"
             value={email}
@@ -64,19 +65,19 @@ export default function ForgotPasswordPage() {
             disabled={!!loading}
             style={{ ...s.btn, ...(loading === 'EMAIL' ? s.btnLoading : {}) }}
           >
-            {loading === 'EMAIL' ? 'Envoi...' : '📧 Par Email'}
+            {loading === 'EMAIL' ? t('forgot_sending') : t('forgot_btn_email')}
           </button>
           <button
             onClick={() => send('WHATSAPP')}
             disabled={!!loading}
             style={{ ...s.btn, ...s.btnSecondary, ...(loading === 'WHATSAPP' ? s.btnLoading : {}) }}
           >
-            {loading === 'WHATSAPP' ? 'Envoi...' : '💬 Par WhatsApp'}
+            {loading === 'WHATSAPP' ? t('forgot_sending') : t('forgot_btn_whatsapp')}
           </button>
         </div>
 
         <div style={s.footer}>
-          <Link href="/login" style={s.footerLink}>← Retour à la connexion</Link>
+          <Link href="/login" style={s.footerLink}>{t('forgot_back')}</Link>
         </div>
       </div>
     </div>
