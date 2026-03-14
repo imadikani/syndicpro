@@ -33,6 +33,14 @@ export default function LandingPage() {
   const [ctaSuccess, setCtaSuccess] = useState(false);
   const [ctaError, setCtaError] = useState('');
 
+  const [contactOpen, setContactOpen] = useState(false);
+  const [contactName, setContactName] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
+  const [contactMsg, setContactMsg] = useState('');
+  const [contactLoading, setContactLoading] = useState(false);
+  const [contactSuccess, setContactSuccess] = useState(false);
+  const [contactError, setContactError] = useState('');
+
   const modalNameRef = useRef<HTMLInputElement>(null);
 
   // Map internal plan ID → translated display name
@@ -56,17 +64,37 @@ export default function LandingPage() {
     setModal({ open: false, plan: null });
   }
 
+  function openContact() {
+    setContactOpen(true);
+    setContactName(''); setContactEmail(''); setContactMsg('');
+    setContactSuccess(false); setContactError('');
+  }
+
+  async function submitContact() {
+    if (!contactEmail || !contactMsg) { setContactError('Email et message requis.'); return; }
+    setContactError(''); setContactLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/contact`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: contactName, email: contactEmail, message: contactMsg }),
+      });
+      if (!res.ok) throw new Error();
+      setContactSuccess(true);
+    } catch { setContactError('Erreur lors de l\'envoi. Veuillez réessayer.'); }
+    finally { setContactLoading(false); }
+  }
+
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') closeModal();
+      if (e.key === 'Escape') { closeModal(); setContactOpen(false); }
     }
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, []);
 
   useEffect(() => {
-    document.body.style.overflow = modal.open ? 'hidden' : '';
-  }, [modal.open]);
+    document.body.style.overflow = (modal.open || contactOpen) ? 'hidden' : '';
+  }, [modal.open, contactOpen]);
 
   async function submitModal() {
     if (!modalEmail || !modalEmail.includes('@')) {
@@ -487,7 +515,7 @@ export default function LandingPage() {
         <div className="footer-links">
           <a href="#">{t('footer_privacy')}</a>
           <a href="#">{t('footer_terms')}</a>
-          <a href="#">{t('footer_contact')}</a>
+          <a href="#" onClick={(e) => { e.preventDefault(); openContact(); }}>{t('footer_contact')}</a>
         </div>
       </footer>
 
@@ -547,6 +575,55 @@ export default function LandingPage() {
                   {modalLoading ? t('modal_submitting') : t('modal_submit')}
                 </button>
                 <p style={{ textAlign: 'center', fontSize: 11, color: '#8a7a6e', marginTop: 12 }}>{t('modal_no_commitment')}</p>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* CONTACT MODAL */}
+      {contactOpen && (
+        <div className="modal-backdrop" onClick={(e) => { if (e.target === e.currentTarget) setContactOpen(false); }}>
+          <div className="modal-box">
+            <button className="modal-close" onClick={() => setContactOpen(false)}>×</button>
+            {contactSuccess ? (
+              <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                <div style={{ fontSize: 52, marginBottom: 16 }}>✓</div>
+                <h3 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 28, fontWeight: 300, color: 'var(--text)', marginBottom: 10 }}>Message envoyé</h3>
+                <p style={{ fontSize: 14, color: 'var(--muted)', lineHeight: 1.7, fontWeight: 300 }}>Merci pour votre message. Nous vous répondrons dans les plus brefs délais.</p>
+                <button onClick={() => setContactOpen(false)} style={{ marginTop: 24, padding: '12px 32px', background: 'var(--primary)', color: 'white', border: 'none', borderRadius: 100, fontSize: 14, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}>Fermer</button>
+              </div>
+            ) : (
+              <>
+                <p style={{ fontSize: 11, color: 'var(--accent)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12, fontWeight: 500 }}>Contact</p>
+                <h3 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 28, fontWeight: 300, color: 'var(--text)', marginBottom: 6, lineHeight: 1.1 }}>
+                  Envoyez-nous un message
+                </h3>
+                <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 28, fontWeight: 300 }}>
+                  Une question, une suggestion ? Écrivez-nous et nous reviendrons vers vous rapidement.
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <div>
+                    <label className="modal-label">Nom</label>
+                    <input type="text" placeholder="Votre nom" value={contactName} onChange={e => setContactName(e.target.value)} className="modal-input" />
+                  </div>
+                  <div>
+                    <label className="modal-label">Email</label>
+                    <input type="email" placeholder="vous@exemple.ma" value={contactEmail} onChange={e => setContactEmail(e.target.value)} className="modal-input" />
+                  </div>
+                  <div>
+                    <label className="modal-label">Message</label>
+                    <textarea placeholder="Votre message..." value={contactMsg} onChange={e => setContactMsg(e.target.value)} className="modal-input" rows={4} style={{ resize: 'vertical' }} />
+                  </div>
+                </div>
+                {contactError && <p style={{ color: '#f87171', fontSize: 13, marginTop: 12 }}>{contactError}</p>}
+                <button className="modal-submit" onClick={submitContact} disabled={contactLoading}>
+                  {contactLoading ? 'Envoi en cours...' : 'Envoyer le message'}
+                </button>
+                <p style={{ textAlign: 'center', fontSize: 12, color: 'var(--muted)', marginTop: 16, lineHeight: 1.6 }}>
+                  Un problème technique ? Écrivez directement à{' '}
+                  <a href="mailto:support@orvane.ma" style={{ color: 'var(--accent)', textDecoration: 'none' }}>support@orvane.ma</a>
+                </p>
               </>
             )}
           </div>
