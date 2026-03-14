@@ -360,8 +360,9 @@ export default function LandingPage() {
               { label: t('roi_r2'), val: '72%', cls: 'amber' },
               { label: t('roi_r3'), val: '~14 000 MAD', cls: '' },
               { label: t('roi_r4'), val: '+9 000 MAD/mois', cls: 'green' },
-              { label: t('roi_r5'), val: '+1 600 MAD/mois', cls: 'green' },
-              { label: t('roi_r6'), val: '-2 400 MAD', cls: '' },
+              { label: t('roi_r5'), val: '+3 200 MAD/mois', cls: 'green' },
+              { label: t('roi_r6'), val: '+1 500 MAD/mois', cls: 'green' },
+              { label: t('roi_r7'), val: '-2 400 MAD', cls: '' },
             ].map((r) => (
               <div key={r.label} className="roi-row">
                 <span className="roi-row-label">{r.label}</span>
@@ -370,7 +371,7 @@ export default function LandingPage() {
             ))}
             <div className="roi-total">
               <div className="roi-total-label">{t('roi_total_label')}</div>
-              <div className="roi-total-num">+8 200 MAD</div>
+              <div className="roi-total-num">+11 300 MAD</div>
               <div className="roi-total-sub">{t('roi_total_sub')}</div>
             </div>
           </div>
