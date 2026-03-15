@@ -11,10 +11,10 @@ type Resident = {
   id: string; name: string; phone: string; isOwner: boolean;
   unit: string; buildingId: string;
   building: { id: string; name: string; address: string; city: string; color: string };
-  currentPayment: { id: string; month: number; year: number; chargeMonth: number | null; billingPeriod: string; periodLabel: string | null; amount: number; status: string; paidAt: string | null } | null;
+  currentPayment: { id: string; month: number; year: number; chargeMonth: number | null; billingPeriod: string; periodLabel: string | null; amount: number; status: string; paidAt: string | null; receiptStatus: string | null; receiptAiData: { notes?: string } | null } | null;
 };
 
-type Payment = { id: string; month: number; year: number; periodLabel: string | null; amount: number; status: string; paidAt: string | null };
+type Payment = { id: string; month: number; year: number; periodLabel: string | null; amount: number; status: string; paidAt: string | null; receiptStatus: string | null; receiptAiData: { notes?: string } | null };
 type Post = { id: string; content: string; authorName: string; isPinned: boolean; createdAt: string };
 
 export default function PortalHome() {
@@ -28,6 +28,11 @@ export default function PortalHome() {
   const [postLoading, setPostLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [uploadModal, setUploadModal] = useState(false);
+  const [uploadPaymentId, setUploadPaymentId] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+  const [pollingStatus, setPollingStatus] = useState<string | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem('portal_token');
@@ -83,6 +88,59 @@ export default function PortalHome() {
     }
   }
 
+  function openUpload(paymentId: string) {
+    setUploadPaymentId(paymentId);
+    setUploadModal(true);
+    setUploadError('');
+    setPollingStatus(null);
+  }
+
+  async function handleUpload(file: File) {
+    if (!uploadPaymentId) return;
+    const token = localStorage.getItem('portal_token');
+    if (!token) return;
+
+    setUploading(true);
+    setUploadError('');
+    try {
+      const formData = new FormData();
+      formData.append('receipt', file);
+      const res = await fetch(`/api/portal/payments/${uploadPaymentId}/upload-receipt`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) { setUploadError(data.error || 'Erreur'); setUploading(false); return; }
+
+      // Start polling
+      setPollingStatus('PENDING_APPROVAL');
+      const poll = setInterval(async () => {
+        try {
+          const pRes = await fetch('/api/portal/me', { headers: { Authorization: `Bearer ${token}` } });
+          const pData = await pRes.json();
+          const cp = pData.currentPayment;
+          if (cp && cp.receiptStatus && cp.receiptStatus !== 'PENDING_APPROVAL') {
+            clearInterval(poll);
+            setPollingStatus(cp.receiptStatus);
+            setResident(pData);
+            // Also refresh payments
+            const paymentsRes = await fetch('/api/portal/payments', { headers: { Authorization: `Bearer ${token}` } });
+            const paymentsData = await paymentsRes.json();
+            setPayments(Array.isArray(paymentsData) ? paymentsData : []);
+          }
+        } catch { /* continue polling */ }
+      }, 3000);
+
+      // Stop polling after 2 minutes max
+      setTimeout(() => clearInterval(poll), 120000);
+    } catch {
+      setUploadError('Erreur réseau');
+    } finally {
+      setUploading(false);
+    }
+  }
+
   function logout() {
     localStorage.removeItem('portal_token');
     localStorage.removeItem('portal_resident');
@@ -94,12 +152,21 @@ export default function PortalHome() {
     return new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
   }
 
-  function statusColor(status: string) {
+  function statusColor(status: string, receiptStatus?: string | null) {
+    if (receiptStatus === 'PENDING_APPROVAL') return '#fbbf24';
+    if (receiptStatus === 'APPROVED_PENDING_RECEIPT') return '#60a5fa';
+    if (receiptStatus === 'REJECTED') return '#f87171';
+    if (receiptStatus === 'DISPUTE') return '#fb923c';
     if (status === 'PAID') return '#16a34a';
     if (status === 'LATE') return '#dc2626';
+    if (status === 'WAIVED') return '#a855f7';
     return '#d97706';
   }
-  function statusLabel(status: string) {
+  function statusLabel(status: string, receiptStatus?: string | null) {
+    if (receiptStatus === 'PENDING_APPROVAL') return 'Analyse en cours...';
+    if (receiptStatus === 'APPROVED_PENDING_RECEIPT') return 'En attente de réception';
+    if (receiptStatus === 'REJECTED') return 'Reçu rejeté';
+    if (receiptStatus === 'DISPUTE') return 'En vérification';
     if (status === 'PAID') return t('portal_status_paid');
     if (status === 'LATE') return t('portal_status_late');
     if (status === 'WAIVED') return t('portal_status_waived');
@@ -141,17 +208,31 @@ export default function PortalHome() {
       {cp && (
         <div style={s.payCard}>
           <div style={s.payLabel}>{t('portal_charge')} — {cp.periodLabel || (cp.month > 0 ? `${MONTHS[cp.month - 1]} ${cp.year}` : String(cp.year))}</div>
-          <div style={{ ...s.payAmount, color: statusColor(cp.status) }}>
+          <div style={{ ...s.payAmount, color: statusColor(cp.status, cp.receiptStatus) }}>
             {cp.amount.toLocaleString()} MAD
           </div>
-          <div style={{ ...s.payStatus, color: statusColor(cp.status), background: statusColor(cp.status) + '14' }}>
-            {statusLabel(cp.status)}
+          <div style={{ ...s.payStatus, color: statusColor(cp.status, cp.receiptStatus), background: statusColor(cp.status, cp.receiptStatus) + '14' }}>
+            {statusLabel(cp.status, cp.receiptStatus)}
           </div>
-          {cp.status !== 'PAID' && (
+          {cp.receiptStatus === 'APPROVED_PENDING_RECEIPT' && (
+            <div style={s.receiptMsg}>✅ Reçu vérifié — en attente de réception par votre syndic</div>
+          )}
+          {cp.receiptStatus === 'REJECTED' && (
+            <div style={s.receiptMsgError}>
+              ❌ Reçu rejeté{cp.receiptAiData?.notes ? `: ${cp.receiptAiData.notes}` : ''}
+            </div>
+          )}
+          {cp.status !== 'PAID' && !cp.receiptStatus && (
             <div style={s.payNote}>{t('portal_pay_note')}</div>
           )}
           {cp.paidAt && (
             <div style={s.payDate}>{t('portal_paid_on')} {fmtDate(cp.paidAt)}</div>
+          )}
+          {/* Upload receipt button — show when unpaid and no pending/approved receipt */}
+          {cp.status !== 'PAID' && cp.status !== 'WAIVED' && (!cp.receiptStatus || cp.receiptStatus === 'REJECTED') && (
+            <button style={s.uploadBtn} onClick={() => openUpload(cp.id)}>
+              📎 Envoyer mon reçu
+            </button>
           )}
         </div>
       )}
@@ -227,7 +308,7 @@ export default function PortalHome() {
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <div style={s.historyAmount}>{p.amount.toLocaleString()} MAD</div>
-                  <div style={{ ...s.historyStatus, color: statusColor(p.status) }}>{statusLabel(p.status)}</div>
+                  <div style={{ ...s.historyStatus, color: statusColor(p.status, p.receiptStatus) }}>{statusLabel(p.status, p.receiptStatus)}</div>
                 </div>
               </div>
             ))}
@@ -297,6 +378,74 @@ export default function PortalHome() {
         )}
 
       </div>
+
+      {/* UPLOAD MODAL */}
+      {uploadModal && (
+        <div style={s.modalBg} onClick={() => { if (!uploading && !pollingStatus) setUploadModal(false); }}>
+          <div style={s.modal} onClick={e => e.stopPropagation()}>
+            {pollingStatus === 'PENDING_APPROVAL' ? (
+              <div style={{ textAlign: 'center', padding: '32px 0' }}>
+                <div style={s.spinner} />
+                <div style={{ fontSize: 14, color: '#4a3f35', marginTop: 16 }}>Analyse en cours...</div>
+                <div style={{ fontSize: 12, color: '#8a7a6e', marginTop: 6 }}>Votre reçu est en cours de vérification par IA</div>
+              </div>
+            ) : pollingStatus === 'APPROVED_PENDING_RECEIPT' ? (
+              <div style={{ textAlign: 'center', padding: '32px 0' }}>
+                <div style={{ fontSize: 32, marginBottom: 12 }}>✅</div>
+                <div style={{ fontSize: 15, color: '#16a34a', fontWeight: 500, marginBottom: 8 }}>Reçu vérifié</div>
+                <div style={{ fontSize: 13, color: '#8a7a6e', lineHeight: 1.6 }}>En attente de réception par votre syndic</div>
+                <button style={{ ...s.uploadBtn, marginTop: 20 }} onClick={() => setUploadModal(false)}>Fermer</button>
+              </div>
+            ) : pollingStatus === 'REJECTED' ? (
+              <div style={{ textAlign: 'center', padding: '32px 0' }}>
+                <div style={{ fontSize: 32, marginBottom: 12 }}>❌</div>
+                <div style={{ fontSize: 15, color: '#dc2626', fontWeight: 500, marginBottom: 8 }}>Reçu rejeté</div>
+                <div style={{ fontSize: 13, color: '#8a7a6e', lineHeight: 1.6, marginBottom: 16 }}>
+                  {resident?.currentPayment?.receiptAiData?.notes || 'Veuillez soumettre un nouveau reçu'}
+                </div>
+                <button style={s.uploadBtn} onClick={() => { setPollingStatus(null); setUploadError(''); }}>
+                  Soumettre un nouveau reçu
+                </button>
+              </div>
+            ) : (
+              <>
+                <div style={{ fontSize: 16, fontWeight: 500, color: '#1a1410', marginBottom: 6 }}>Envoyer mon reçu</div>
+                <div style={{ fontSize: 12, color: '#8a7a6e', marginBottom: 20, lineHeight: 1.5 }}>
+                  Prenez en photo ou sélectionnez votre ordre de virement bancaire
+                </div>
+                {uploadError && (
+                  <div style={{ background: 'rgba(220,38,38,0.08)', border: '1px solid rgba(220,38,38,0.2)', color: '#dc2626', borderRadius: 10, padding: '8px 12px', fontSize: 12, marginBottom: 12 }}>
+                    {uploadError}
+                  </div>
+                )}
+                <label style={s.dropZone}>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    capture="environment"
+                    style={{ display: 'none' }}
+                    onChange={e => {
+                      const f = e.target.files?.[0];
+                      if (f) handleUpload(f);
+                    }}
+                    disabled={uploading}
+                  />
+                  {uploading ? (
+                    <div style={{ color: '#8a7a6e', fontSize: 13 }}>Envoi en cours...</div>
+                  ) : (
+                    <>
+                      <div style={{ fontSize: 28, marginBottom: 8 }}>📷</div>
+                      <div style={{ fontSize: 13, color: '#4a3f35', fontWeight: 500 }}>Prendre une photo ou choisir un fichier</div>
+                      <div style={{ fontSize: 11, color: '#8a7a6e', marginTop: 4 }}>JPEG, PNG — max 10 MB</div>
+                    </>
+                  )}
+                </label>
+                <button style={{ ...s.cancelBtn, marginTop: 12 }} onClick={() => setUploadModal(false)}>Annuler</button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -351,4 +500,13 @@ const s: Record<string, React.CSSProperties> = {
   whatsappBtn: { display: 'block', width: '100%', textAlign: 'center', background: '#25D366', color: 'white', padding: '13px', borderRadius: 12, fontSize: 14, fontWeight: 500, textDecoration: 'none', boxSizing: 'border-box' },
 
   empty: { textAlign: 'center', color: '#8a7a6e', fontSize: 13, padding: '32px 0' },
+
+  uploadBtn: { width: '100%', padding: '12px', background: '#7c5cbf', color: 'white', border: 'none', borderRadius: 12, fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", marginTop: 14 },
+  receiptMsg: { fontSize: 12, color: '#60a5fa', lineHeight: 1.5, marginTop: 6, background: 'rgba(96,165,250,0.08)', padding: '8px 12px', borderRadius: 10 },
+  receiptMsgError: { fontSize: 12, color: '#dc2626', lineHeight: 1.5, marginTop: 6, background: 'rgba(220,38,38,0.08)', padding: '8px 12px', borderRadius: 10 },
+  modalBg: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 100 },
+  modal: { background: 'white', borderRadius: '20px 20px 0 0', padding: '28px 24px', width: '100%', maxWidth: 480, maxHeight: '80vh', overflowY: 'auto' },
+  dropZone: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 20px', border: '2px dashed rgba(0,0,0,0.12)', borderRadius: 14, cursor: 'pointer', textAlign: 'center' },
+  cancelBtn: { width: '100%', padding: '10px', background: 'transparent', border: '1px solid rgba(0,0,0,0.1)', color: '#8a7a6e', borderRadius: 10, fontSize: 13, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" },
+  spinner: { width: 32, height: 32, border: '3px solid rgba(0,0,0,0.08)', borderTop: '3px solid #7c5cbf', borderRadius: '50%', margin: '0 auto', animation: 'spin 0.8s linear infinite' },
 };

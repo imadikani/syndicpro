@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLanguage, LangToggle } from '@/lib/i18n';
 import OrvaneLogo from '@/components/OrvaneLogo';
+import PaymentStatusBadge from '@/components/PaymentStatusBadge';
 
 
 
@@ -29,6 +30,8 @@ type Payment = {
   amount: number;
   status: 'PAID' | 'PENDING' | 'LATE' | 'WAIVED';
   paidAt: string | null;
+  receiptStatus?: string | null;
+  receiptAiData?: { confidence?: number; notes?: string; amountMatch?: boolean; hasStamp?: boolean } | null;
   unit: {
     number: string;
     buildingId: string;
@@ -114,6 +117,10 @@ export default function Dashboard() {
   const [reminderLoading, setReminderLoading] = useState<string | null>(null);
   const [sendAllLoading, setSendAllLoading] = useState(false);
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
+  const [markPaidDialog, setMarkPaidDialog] = useState<{ payment: Payment; hasReceipt: boolean; missingReceipt: boolean } | null>(null);
+  const [markPaidLoading, setMarkPaidLoading] = useState(false);
+  const [waiveDialog, setWaiveDialog] = useState<Payment | null>(null);
+  const [waiveReason, setWaiveReason] = useState('');
 
   const [buildings, setBuildings] = useState<Building[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -300,6 +307,68 @@ export default function Dashboard() {
     if (res.ok) setReminders(await res.json());
   }
 
+  async function handleMarkPaid(payment: Payment) {
+    if (!tokenRef.current) return;
+    setMarkPaidLoading(true);
+    try {
+      const hasReceipt = payment.receiptStatus === 'APPROVED_PENDING_RECEIPT';
+      const res = await fetch(`/api/payments/${payment.id}/mark-paid`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tokenRef.current}` },
+        body: JSON.stringify({ forceNoReceipt: false }),
+      });
+      const data = await res.json();
+      if (data.requiresConfirmation && data.missingReceipt) {
+        setMarkPaidDialog({ payment, hasReceipt: false, missingReceipt: true });
+      } else if (data.success || hasReceipt) {
+        // Already confirmed or receipt exists
+        setPayments(prev => prev.map(p => p.id === payment.id ? { ...p, status: 'PAID', paidAt: new Date().toISOString(), receiptStatus: 'CONFIRMED' } : p));
+        setMarkPaidDialog(null);
+        showToast('Paiement confirmé ✅', true);
+      }
+    } catch { showToast('Erreur', false); }
+    finally { setMarkPaidLoading(false); }
+  }
+
+  async function handleForceMarkPaid(paymentId: string) {
+    if (!tokenRef.current) return;
+    setMarkPaidLoading(true);
+    try {
+      const res = await fetch(`/api/payments/${paymentId}/mark-paid`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tokenRef.current}` },
+        body: JSON.stringify({ forceNoReceipt: true }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setPayments(prev => prev.map(p => p.id === paymentId ? { ...p, status: 'PAID', paidAt: new Date().toISOString() } : p));
+        setMarkPaidDialog(null);
+        showToast('Paiement confirmé ✅', true);
+      }
+    } catch { showToast('Erreur', false); }
+    finally { setMarkPaidLoading(false); }
+  }
+
+  async function handleWaivePayment(payment: Payment) {
+    if (!tokenRef.current) return;
+    setMarkPaidLoading(true);
+    try {
+      const res = await fetch(`/api/payments/${payment.id}/update-status`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tokenRef.current}` },
+        body: JSON.stringify({ status: 'WAIVED', reason: waiveReason || undefined }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setPayments(prev => prev.map(p => p.id === payment.id ? { ...p, status: 'WAIVED' } : p));
+        setWaiveDialog(null);
+        setWaiveReason('');
+        showToast('Paiement dispensé', true);
+      }
+    } catch { showToast('Erreur', false); }
+    finally { setMarkPaidLoading(false); }
+  }
+
   async function handleSendReminder(residentId: string, paymentId: string) {
     setReminderLoading(paymentId);
     try {
@@ -442,6 +511,17 @@ export default function Dashboard() {
             </button>
           ))}
         </nav>
+
+        {(() => {
+          const pendingReceipts = payments.filter(p => p.receiptStatus === 'APPROVED_PENDING_RECEIPT').length;
+          return pendingReceipts > 0 ? (
+            <a href="/dashboard/receipts" style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '4px 12px', padding: '10px 14px', borderRadius: 10, background: 'rgba(96,165,250,0.1)', border: '1px solid rgba(96,165,250,0.2)', color: '#60a5fa', fontSize: 12, textDecoration: 'none', fontFamily: "'DM Sans', sans-serif" }}>
+              <span style={{ fontSize: 14 }}>◎</span>
+              <span>Virements en attente</span>
+              <span style={{ marginLeft: 'auto', background: 'rgba(96,165,250,0.2)', padding: '2px 8px', borderRadius: 100, fontSize: 11, fontWeight: 600 }}>{pendingReceipts}</span>
+            </a>
+          ) : null;
+        })()}
 
         <div style={styles.sidebarFooter}>
           <div style={styles.userBadge}>
@@ -642,9 +722,7 @@ export default function Dashboard() {
                         {p.periodLabel && <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>{p.periodLabel}</div>}
                       </span>
                       <span style={{ flex: 1 }}>
-                        <span style={{ ...styles.statusBadge, ...getStatusStyle(p.status) }}>
-                          {p.status === 'PAID' ? t('dash_paid') : p.status === 'LATE' ? t('dash_late') : t('dash_pending')}
-                        </span>
+                        <PaymentStatusBadge status={p.status} receiptStatus={p.receiptStatus} />
                       </span>
                       <span style={{ flex: 1, fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{fmtDate(p.paidAt)}</span>
                     </div>
@@ -708,12 +786,26 @@ export default function Dashboard() {
                     <span style={{ flex: 1, fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{p.unit?.resident?.phone || '—'}</span>
                     <span style={{ flex: 1, fontSize: 13, color: 'rgba(255,255,255,0.8)', fontWeight: 500 }}>{p.amount} MAD</span>
                     <span style={{ flex: 1 }}>
-                      <span style={{ ...styles.statusBadge, ...getStatusStyle(p.status) }}>
-                        {p.status === 'PAID' ? t('dash_paid') : p.status === 'LATE' ? t('dash_late') : t('dash_pending')}
-                      </span>
+                      <PaymentStatusBadge status={p.status} receiptStatus={p.receiptStatus} />
                     </span>
-                    <span style={{ flex: 1 }}>
-                      {p.status !== 'PAID' && p.unit?.resident?.id && (
+                    <span style={{ flex: 1, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                      {p.status !== 'PAID' && p.status !== 'WAIVED' && (
+                        <button
+                          style={styles.markPaidBtn}
+                          onClick={() => handleMarkPaid(p)}
+                        >
+                          Marquer payé
+                        </button>
+                      )}
+                      {p.status !== 'PAID' && p.status !== 'WAIVED' && (
+                        <button
+                          style={styles.waiveBtn}
+                          onClick={() => { setWaiveReason(''); setWaiveDialog(p); }}
+                        >
+                          Dispenser
+                        </button>
+                      )}
+                      {p.status !== 'PAID' && p.status !== 'WAIVED' && p.unit?.resident?.id && (
                         <button
                           style={{ ...styles.reminderBtn, opacity: reminderSent.includes(p.id) ? 0.5 : 1 }}
                           disabled={reminderLoading === p.id || reminderSent.includes(p.id)}
@@ -726,6 +818,92 @@ export default function Dashboard() {
                   </div>
                 ))}
               </div>
+
+              {/* Mark Paid Dialog */}
+              {markPaidDialog && (
+                <div style={styles.modalBackdrop} onClick={() => setMarkPaidDialog(null)}>
+                  <div style={styles.modalBox} onClick={e => e.stopPropagation()}>
+                    <button style={styles.modalClose} onClick={() => setMarkPaidDialog(null)}>×</button>
+                    <div style={{ fontSize: 11, color: '#c4b5f4', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>CONFIRMATION</div>
+                    <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 24, fontWeight: 300, color: 'white', marginBottom: 20 }}>Confirmer le paiement</div>
+
+                    <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 12, padding: '16px 20px', marginBottom: 20 }}>
+                      <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)', marginBottom: 6 }}>
+                        {markPaidDialog.payment.unit?.resident?.name || 'Résident'} — {markPaidDialog.payment.unit?.building?.name || ''} {markPaidDialog.payment.unit?.number || ''}
+                      </div>
+                      <div style={{ fontSize: 22, fontWeight: 300, color: '#34d399' }}>{markPaidDialog.payment.amount} MAD</div>
+                      {markPaidDialog.payment.periodLabel && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 4 }}>{markPaidDialog.payment.periodLabel}</div>}
+                    </div>
+
+                    {markPaidDialog.missingReceipt && (
+                      <div style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.3)', borderRadius: 12, padding: '14px 18px', marginBottom: 20, fontSize: 13, color: '#fbbf24', lineHeight: 1.6 }}>
+                        Aucun reçu de virement n'a été soumis pour ce paiement. Voulez-vous quand même marquer comme payé ?
+                      </div>
+                    )}
+
+                    {!markPaidDialog.missingReceipt && markPaidDialog.payment.receiptStatus === 'APPROVED_PENDING_RECEIPT' && (
+                      <div style={{ background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.3)', borderRadius: 12, padding: '14px 18px', marginBottom: 20, fontSize: 13, color: '#34d399', lineHeight: 1.6 }}>
+                        Reçu vérifié par IA
+                        {markPaidDialog.payment.receiptAiData?.confidence != null && ` (confiance: ${Math.round(markPaidDialog.payment.receiptAiData.confidence * 100)}%)`}
+                        {markPaidDialog.payment.receiptAiData?.amountMatch && ' · Montant correspond'}
+                      </div>
+                    )}
+
+                    <div style={{ display: 'flex', gap: 12 }}>
+                      <button style={{ ...styles.submitBtn, background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.6)' }} onClick={() => setMarkPaidDialog(null)}>
+                        Annuler
+                      </button>
+                      <button style={styles.submitBtn} disabled={markPaidLoading} onClick={() => {
+                        if (markPaidDialog.missingReceipt) {
+                          handleForceMarkPaid(markPaidDialog.payment.id);
+                        } else {
+                          handleMarkPaid(markPaidDialog.payment);
+                        }
+                      }}>
+                        {markPaidLoading ? '...' : 'Confirmer le paiement'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Waive Dialog */}
+              {waiveDialog && (
+                <div style={styles.modalBackdrop} onClick={() => setWaiveDialog(null)}>
+                  <div style={styles.modalBox} onClick={e => e.stopPropagation()}>
+                    <button style={styles.modalClose} onClick={() => setWaiveDialog(null)}>×</button>
+                    <div style={{ fontSize: 11, color: '#a855f7', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>DISPENSE</div>
+                    <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 24, fontWeight: 300, color: 'white', marginBottom: 20 }}>Dispenser du paiement</div>
+
+                    <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 12, padding: '16px 20px', marginBottom: 20 }}>
+                      <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)', marginBottom: 6 }}>
+                        {waiveDialog.unit?.resident?.name || 'Résident'} — {waiveDialog.unit?.building?.name || ''} {waiveDialog.unit?.number || ''}
+                      </div>
+                      <div style={{ fontSize: 22, fontWeight: 300, color: '#a855f7' }}>{waiveDialog.amount} MAD</div>
+                    </div>
+
+                    <div style={{ marginBottom: 20 }}>
+                      <label style={styles.formLabel}>Raison (optionnel)</label>
+                      <textarea
+                        rows={3}
+                        placeholder="Ex. Accord spécial, résident absent..."
+                        style={{ ...styles.formInput, resize: 'vertical', lineHeight: 1.6 }}
+                        value={waiveReason}
+                        onChange={e => setWaiveReason(e.target.value)}
+                      />
+                    </div>
+
+                    <div style={{ display: 'flex', gap: 12 }}>
+                      <button style={{ ...styles.submitBtn, background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.6)' }} onClick={() => setWaiveDialog(null)}>
+                        Annuler
+                      </button>
+                      <button style={{ ...styles.submitBtn, background: 'linear-gradient(135deg,#7c3aed,#a855f7)' }} disabled={markPaidLoading} onClick={() => handleWaivePayment(waiveDialog)}>
+                        {markPaidLoading ? '...' : 'Confirmer la dispense'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {addResidentOpen && (
                 <div style={styles.modalBackdrop} onClick={() => setAddResidentOpen(false)}>
@@ -1240,6 +1418,8 @@ const styles: Record<string, React.CSSProperties> = {
   statusBadge: { fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 100, whiteSpace: 'nowrap' },
   catBadge: { fontSize: 11, fontWeight: 500, padding: '3px 10px', borderRadius: 100 },
   reminderBtn: { background: 'rgba(123,94,167,0.2)', color: '#c4b5f4', border: '1px solid rgba(123,94,167,0.3)', borderRadius: 8, padding: '5px 10px', fontSize: 11, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" },
+  markPaidBtn: { background: 'rgba(52,211,153,0.12)', color: '#34d399', border: '1px solid rgba(52,211,153,0.25)', borderRadius: 8, padding: '5px 10px', fontSize: 11, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", fontWeight: 500 },
+  waiveBtn: { background: 'rgba(168,85,247,0.12)', color: '#a855f7', border: '1px solid rgba(168,85,247,0.25)', borderRadius: 8, padding: '5px 10px', fontSize: 11, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", fontWeight: 500 },
 
   // MISC
   smallMuted: { fontSize: 12, color: 'rgba(255,255,255,0.35)' },

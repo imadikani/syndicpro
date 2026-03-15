@@ -16,3 +16,7 @@ body:has(.portal-shell) nav {
   min-height: 100vh;
   font-family: 'DM Sans', sans-serif;
 }
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

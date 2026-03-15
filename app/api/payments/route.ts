@@ -14,11 +14,13 @@ export async function GET(req: NextRequest) {
     const buildingId = searchParams.get("buildingId");
     const month = searchParams.get("month");
     const year = searchParams.get("year");
+    const receiptStatus = searchParams.get("receiptStatus");
 
     const payments = await prisma.payment.findMany({
       where: {
         ...(month && { month: parseInt(month) }),
         ...(year && { year: parseInt(year) }),
+        ...(receiptStatus && { receiptStatus }),
         unit: {
           ...(buildingId && { buildingId }),
           building: { userId: user.id }, // only their buildings

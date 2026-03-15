@@ -43,6 +43,8 @@ export async function GET(req: NextRequest) {
             amount:        currentPayment.amount,
             status:        currentPayment.status,
             paidAt:        currentPayment.paidAt,
+            receiptStatus: currentPayment.receiptStatus,
+            receiptAiData: currentPayment.receiptAiData,
           }
         : null,
     });
