@@ -10,7 +10,7 @@ type PendingPayment = {
   amount: number;
   approvedAt: string;
   receiptStatus: string;
-  receiptAiData: { confidence: number; notes: string; amountMatch: boolean; accountMatch: boolean; hasStamp: boolean } | null;
+  receiptAiData: { confidence: number; notes: string; amountMatch: boolean; hasStamp: boolean } | null;
   confirmToken: string | null;
   disputeToken: string | null;
   unit: {

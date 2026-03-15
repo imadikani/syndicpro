@@ -17,6 +17,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing paymentId" }, { status: 400 });
     }
 
+    console.log('[receipt:start] paymentId:', paymentId);
+
     const payment = await prisma.payment.findUnique({
       where: { id: paymentId },
       include: {
@@ -36,16 +38,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const expectedAmount = payment.amount;
-    // Building doesn't have bankAccount yet - use empty string for now
-    const syndicAccount = "";
+    console.log('[receipt:payment] amount:', payment.amount, 'resident:', payment.unit.resident?.name);
+    console.log('[receipt:image] base64 length:', payment.receiptUrl?.length ?? 'NULL - image missing!');
 
     // Extract base64 and media type from data URI
     const dataUriMatch = payment.receiptUrl.match(
       /^data:(image\/(?:jpeg|png|webp|gif));base64,(.+)$/
     );
     if (!dataUriMatch) {
-      console.error("[process-receipt] Invalid data URI format");
+      console.error("[receipt:error] Invalid data URI format");
       await prisma.payment.update({
         where: { id: paymentId },
         data: {
@@ -53,7 +54,6 @@ export async function POST(req: NextRequest) {
           receiptUrl: null,
           receiptAiData: {
             amountMatch: false,
-            accountMatch: false,
             confidence: 0,
             notes: "Format d'image invalide",
           },
@@ -74,25 +74,25 @@ export async function POST(req: NextRequest) {
       apiKey: process.env.ANTHROPIC_API_KEY,
     });
 
-    const prompt = `You are analyzing a Moroccan bank transfer receipt (ordre de virement).
-Extract the following fields and return ONLY valid JSON, no other text, no markdown:
+    const prompt = `You are analyzing a Moroccan bank transfer receipt (ordre de virement confirmé).
+Extract the following fields and return ONLY valid JSON with no other text, no markdown, no code fences:
 {
   "amount": number | null,
   "date": "DD/MM/YY" | null,
-  "beneficiaryAccount": string | null,
   "beneficiaryName": string | null,
   "referenceNumber": string | null,
   "bank": string | null,
   "hasStamp": boolean,
   "isConfirmed": boolean,
-  "confidence": number between 0 and 1,
+  "confidence": number,
   "amountMatch": boolean,
-  "accountMatch": boolean,
   "notes": string
 }
-For amountMatch: compare extracted amount to expected amount ${expectedAmount} MAD with ±1 MAD tolerance.
-For accountMatch: compare beneficiaryAccount to ${syndicAccount || "UNKNOWN"}, ignoring spaces, dots, and dashes.
-confidence reflects image readability (1.0 = perfectly clear, 0.0 = unreadable).`;
+For amountMatch: compare extracted amount to expected amount ${payment.amount} MAD with ±1 MAD tolerance.
+confidence reflects image readability: 1.0 = perfectly clear and readable, 0.0 = completely unreadable.
+Do NOT extract, include, or return any bank account numbers under any circumstances.`;
+
+    console.log('[receipt:claude:calling] expected amount:', payment.amount);
 
     const response = await anthropic.messages.create({
       model: "claude-sonnet-4-20250514",
@@ -124,6 +124,8 @@ confidence reflects image readability (1.0 = perfectly clear, 0.0 = unreadable).
       throw new Error("No text response from Claude");
     }
 
+    console.log('[receipt:claude:raw]', JSON.stringify(response.content));
+
     // Parse JSON - strip any markdown fences
     let jsonStr = textBlock.text.trim();
     jsonStr = jsonStr.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "");
@@ -132,32 +134,35 @@ confidence reflects image readability (1.0 = perfectly clear, 0.0 = unreadable).
     try {
       aiResult = JSON.parse(jsonStr);
     } catch {
-      console.error("[process-receipt] Failed to parse Claude response:", jsonStr);
+      console.error("[receipt:error] Failed to parse Claude response:", jsonStr);
       aiResult = {
         confidence: 0,
         amountMatch: false,
-        accountMatch: false,
         notes: "Impossible de lire le reçu",
       };
     }
 
-    // Match logic
-    const isApproved =
+    console.log('[receipt:parsed]', JSON.stringify(aiResult));
+
+    // Match logic — amount only, no account matching
+    const isMatch =
       aiResult.confidence >= 0.7 &&
-      aiResult.amountMatch === true &&
-      (aiResult.accountMatch === true || !syndicAccount); // Skip account match if no syndic account configured
+      aiResult.amountMatch === true;
+
+    console.log('[receipt:match] confidence:', aiResult.confidence, 'amountMatch:', aiResult.amountMatch, '→', isMatch ? 'APPROVED' : 'REJECTED');
 
     // Store ONLY safe metadata (no account numbers, no banking data)
     const safeMetadata = {
       amountMatch: !!aiResult.amountMatch,
-      accountMatch: !!aiResult.accountMatch,
       confidence: typeof aiResult.confidence === "number" ? aiResult.confidence : 0,
       extractedDate: aiResult.date || null,
-      notes: aiResult.notes || "",
+      bank: aiResult.bank || null,
       hasStamp: !!aiResult.hasStamp,
+      isConfirmed: !!aiResult.isConfirmed,
+      notes: aiResult.notes || "",
     };
 
-    if (isApproved) {
+    if (isMatch) {
       await prisma.payment.update({
         where: { id: paymentId },
         data: {
@@ -180,11 +185,13 @@ confidence reflects image readability (1.0 = perfectly clear, 0.0 = unreadable).
       });
     }
 
+    console.log('[receipt:done] new status:', isMatch ? 'APPROVED_PENDING_RECEIPT' : 'REJECTED');
+
     // Send WhatsApp notification to resident
     if (payment.unit.resident?.phone) {
       const phone = payment.unit.resident.phone;
       try {
-        if (isApproved) {
+        if (isMatch) {
           await sendWhatsApp(
             phone,
             "✅ Votre reçu a été vérifié. Le virement est en cours de traitement. Vous serez notifié dès confirmation de réception par votre syndic.\n\n— Orvane"
@@ -197,15 +204,15 @@ confidence reflects image readability (1.0 = perfectly clear, 0.0 = unreadable).
           );
         }
       } catch (err) {
-        console.error("[process-receipt] WhatsApp notification failed:", err);
+        console.error("[receipt:whatsapp] notification failed:", err);
       }
     }
 
     return NextResponse.json({
-      status: isApproved ? "APPROVED_PENDING_RECEIPT" : "REJECTED",
+      status: isMatch ? "APPROVED_PENDING_RECEIPT" : "REJECTED",
     });
   } catch (error) {
-    console.error("[process-receipt] Error:", error);
+    console.error("[receipt:error]", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
