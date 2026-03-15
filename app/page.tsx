@@ -164,6 +164,7 @@ export default function LandingPage() {
           <li><a href="#managed">{t('nav_approach')}</a></li>
           <li><a href="#pricing">{t('nav_pricing')}</a></li>
           <li><a href="#team">{t('nav_team')}</a></li>
+          <li><a href="/promoteurs">{t('nav_promoteurs')}</a></li>
           <li><a href="/login" className="nav-ghost">{t('nav_login')}</a></li>
           <li><a href="#contact" className="nav-cta" onClick={(e) => { e.preventDefault(); openModal(null); }}>{t('nav_demo')}</a></li>
           <li><LangToggle /></li>
