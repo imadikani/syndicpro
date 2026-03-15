@@ -575,7 +575,7 @@ const fr = {
   promo_pain4_desc: "Une fois les clés remises, aucune donnée structurée n'est transmise au syndic. Résultat : tout recommence de zéro.",
 
   promo_metrics_label: 'Résultats concrets',
-  promo_metrics_h2: 'Ce que nos promoteurs constatent',
+  promo_metrics_h2: 'Ce que nos promoteurs vont constater',
   promo_metric1_value: '2x',
   promo_metric1_label: 'Plus rapide à livrer',
   promo_metric2_value: '60h',
@@ -1226,7 +1226,7 @@ const en: typeof fr = {
   promo_pain4_desc: "Once keys are handed over, no structured data goes to the syndic. Result: everything starts from scratch.",
 
   promo_metrics_label: 'Real results',
-  promo_metrics_h2: 'What our developers see',
+  promo_metrics_h2: 'What our developers will see',
   promo_metric1_value: '2x',
   promo_metric1_label: 'Faster delivery',
   promo_metric2_value: '60h',
