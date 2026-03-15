@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useLanguage, LangToggle } from '@/lib/i18n';
 
-const API_BASE = process.env.NEXT_PUBLIC_APP_URL || '';
+
 
 function LoginPageInner() {
   const router = useRouter();
@@ -36,7 +36,7 @@ function LoginPageInner() {
     setError('');
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/auth/login`, {
+      const res = await fetch(`/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),

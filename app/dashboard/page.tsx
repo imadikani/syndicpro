@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useLanguage, LangToggle } from '@/lib/i18n';
 import OrvaneLogo from '@/components/OrvaneLogo';
 
-const API_BASE = process.env.NEXT_PUBLIC_APP_URL || '';
+
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 
@@ -140,10 +140,10 @@ export default function Dashboard() {
         const headers = { Authorization: `Bearer ${token}` };
 
         const [buildingsRes, paymentsRes, expensesRes, remindersRes] = await Promise.all([
-          fetch(`${API_BASE}/api/buildings`, { headers }),
-          fetch(`${API_BASE}/api/payments?month=3&year=2026`, { headers }),
-          fetch(`${API_BASE}/api/expenses`, { headers }),
-          fetch(`${API_BASE}/api/reminders`, { headers }),
+          fetch(`/api/buildings`, { headers }),
+          fetch(`/api/payments?month=3&year=2026`, { headers }),
+          fetch(`/api/expenses`, { headers }),
+          fetch(`/api/reminders`, { headers }),
         ]);
 
         const [buildingsData, paymentsData, expensesData, remindersData] = await Promise.all([
@@ -180,7 +180,7 @@ export default function Dashboard() {
 
   async function handleMarkExpensePaid(id: string, isPaid: boolean) {
     try {
-      const res = await fetch(`${API_BASE}/api/expenses/${id}`, {
+      const res = await fetch(`/api/expenses/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tokenRef.current}` },
         body: JSON.stringify({ isPaid }),
@@ -192,7 +192,7 @@ export default function Dashboard() {
   async function handleDeleteExpense(id: string) {
     if (!confirm(t('dash_delete_expense_confirm'))) return;
     try {
-      const res = await fetch(`${API_BASE}/api/expenses/${id}`, {
+      const res = await fetch(`/api/expenses/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${tokenRef.current}` },
       });
@@ -208,7 +208,7 @@ export default function Dashboard() {
     }
     setAddExpenseLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/expenses`, {
+      const res = await fetch(`/api/expenses`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tokenRef.current}` },
         body: JSON.stringify({ ...newExpense, amount: parseFloat(newExpense.amount) }),
@@ -265,7 +265,7 @@ export default function Dashboard() {
       // Send to each resident
       const results = await Promise.allSettled(
         ids.map(id =>
-          fetch(`${API_BASE}/api/reminders`, {
+          fetch(`/api/reminders`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tokenRef.current}` },
             body: JSON.stringify({ residentId: id, customMessage: customReminderMsg }),
@@ -294,7 +294,7 @@ export default function Dashboard() {
   }
 
   async function refreshReminders() {
-    const res = await fetch(`${API_BASE}/api/reminders`, {
+    const res = await fetch(`/api/reminders`, {
       headers: { Authorization: `Bearer ${tokenRef.current}` },
     });
     if (res.ok) setReminders(await res.json());
@@ -303,7 +303,7 @@ export default function Dashboard() {
   async function handleSendReminder(residentId: string, paymentId: string) {
     setReminderLoading(paymentId);
     try {
-      const res = await fetch(`${API_BASE}/api/reminders/send`, {
+      const res = await fetch(`/api/reminders/send`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tokenRef.current}` },
         body: JSON.stringify({ residentId }),
@@ -323,7 +323,7 @@ export default function Dashboard() {
   async function handleSendAll() {
     setSendAllLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/reminders/send`, {
+      const res = await fetch(`/api/reminders/send`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tokenRef.current}` },
         body: JSON.stringify({ all: true }),
@@ -347,7 +347,7 @@ export default function Dashboard() {
     }
     setAddResidentLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/residents`, {
+      const res = await fetch(`/api/residents`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tokenRef.current}` },
         body: JSON.stringify(newResident),
@@ -358,7 +358,7 @@ export default function Dashboard() {
         return;
       }
       // Refresh payments to show new resident
-      const paymentsRes = await fetch(`${API_BASE}/api/payments?month=3&year=2026`, {
+      const paymentsRes = await fetch(`/api/payments?month=3&year=2026`, {
         headers: { Authorization: `Bearer ${tokenRef.current}` },
       });
       if (paymentsRes.ok) setPayments(await paymentsRes.json());

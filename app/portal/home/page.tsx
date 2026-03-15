@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLanguage, LangToggle } from '@/lib/i18n';
 
-const API_BASE = process.env.NEXT_PUBLIC_APP_URL || '';
+
 
 type Resident = {
   id: string; name: string; phone: string; isOwner: boolean;
@@ -38,8 +38,8 @@ export default function PortalHome() {
     async function load() {
       try {
         const [meRes, paymentsRes] = await Promise.all([
-          fetch(`${API_BASE}/api/portal/me`, { headers }),
-          fetch(`${API_BASE}/api/portal/payments`, { headers }),
+          fetch(`/api/portal/me`, { headers }),
+          fetch(`/api/portal/payments`, { headers }),
         ]);
         if (meRes.status === 401) { router.push('/portal'); return; }
         const [meData, paymentsData] = await Promise.all([meRes.json(), paymentsRes.json()]);
@@ -58,7 +58,7 @@ export default function PortalHome() {
     if (tab !== 'community') return;
     const token = localStorage.getItem('portal_token');
     if (!token) return;
-    fetch(`${API_BASE}/api/portal/community`, { headers: { Authorization: `Bearer ${token}` } })
+    fetch(`/api/portal/community`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.json()).then(d => setPosts(Array.isArray(d) ? d : [])).catch(() => {});
   }, [tab]);
 
@@ -68,7 +68,7 @@ export default function PortalHome() {
     if (!token) return;
     setPostLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/portal/community`, {
+      const res = await fetch(`/api/portal/community`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ content: newPost }),

@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 
-const API_BASE = process.env.NEXT_PUBLIC_APP_URL || '';
+
 
 type Syndic = {
   id: string;
@@ -79,9 +79,9 @@ function AdminPageInner() {
     if (!token) return;
     const h = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
     Promise.all([
-      fetch(`${API_BASE}/api/admin/syndics`, { headers: h }).then(r => r.json()),
-      fetch(`${API_BASE}/api/admin/buildings`, { headers: h }).then(r => r.json()),
-      fetch(`${API_BASE}/api/admin/demo-requests`, { headers: h }).then(r => r.json()),
+      fetch(`/api/admin/syndics`, { headers: h }).then(r => r.json()),
+      fetch(`/api/admin/buildings`, { headers: h }).then(r => r.json()),
+      fetch(`/api/admin/demo-requests`, { headers: h }).then(r => r.json()),
     ]).then(([s, b, d]) => {
       if (Array.isArray(s)) setSyndics(s);
       if (Array.isArray(b)) setBuildings(b);
@@ -97,7 +97,7 @@ function AdminPageInner() {
     setSyndicLoading(true);
     setSyndicError('');
     try {
-      const res = await fetch(`${API_BASE}/api/admin/syndics`, {
+      const res = await fetch(`/api/admin/syndics`, {
         method: 'POST', headers: headers(),
         body: JSON.stringify(newSyndic),
       });
@@ -118,7 +118,7 @@ function AdminPageInner() {
     setBuildingLoading(true);
     setBuildingError('');
     try {
-      const res = await fetch(`${API_BASE}/api/admin/buildings`, {
+      const res = await fetch(`/api/admin/buildings`, {
         method: 'POST', headers: headers(),
         body: JSON.stringify(newBuilding),
       });
@@ -137,8 +137,8 @@ function AdminPageInner() {
     setDeleteLoading(true);
     try {
       const url = deleteConfirm.type === 'syndic'
-        ? `${API_BASE}/api/admin/syndics/${deleteConfirm.id}`
-        : `${API_BASE}/api/admin/buildings/${deleteConfirm.id}`;
+        ? `/api/admin/syndics/${deleteConfirm.id}`
+        : `/api/admin/buildings/${deleteConfirm.id}`;
       await fetch(url, { method: 'DELETE', headers: headers() });
       if (deleteConfirm.type === 'syndic') setSyndics(prev => prev.filter(s => s.id !== deleteConfirm.id));
       else setBuildings(prev => prev.filter(b => b.id !== deleteConfirm.id));
@@ -148,7 +148,7 @@ function AdminPageInner() {
   }
 
   async function toggleContacted(id: string, current: boolean) {
-    const res = await fetch(`${API_BASE}/api/admin/demo-requests`, {
+    const res = await fetch(`/api/admin/demo-requests`, {
       method: 'PATCH', headers: headers(),
       body: JSON.stringify({ id, contacted: !current }),
     });

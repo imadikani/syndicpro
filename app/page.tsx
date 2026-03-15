@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { useLanguage, LangToggle } from '@/lib/i18n';
 
-const API_BASE = process.env.NEXT_PUBLIC_APP_URL || '';
+
 
 // Internal plan IDs — never translated (used for logic)
 const PLAN1 = 'Essentiel';
@@ -74,7 +74,7 @@ export default function LandingPage() {
     if (!contactEmail || !contactMsg) { setContactError('Email et message requis.'); return; }
     setContactError(''); setContactLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/contact`, {
+      const res = await fetch(`/api/contact`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: contactName, email: contactEmail, message: contactMsg }),
       });
@@ -104,7 +104,7 @@ export default function LandingPage() {
     setModalError('');
     setModalLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/demo`, {
+      const res = await fetch(`/api/demo`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: modalName, email: modalEmail, phone: modalPhone, buildings: modalBuildings || null, plan: modal.plan }),
@@ -130,7 +130,7 @@ export default function LandingPage() {
     setCtaError('');
     setCtaLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/demo`, {
+      const res = await fetch(`/api/demo`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: ctaEmail }),

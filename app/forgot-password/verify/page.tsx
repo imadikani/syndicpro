@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useLanguage } from '@/lib/i18n';
 
-const API_BASE = process.env.NEXT_PUBLIC_APP_URL || '';
+
 const CODE_LENGTH = 6;
 
 export default function VerifyResetPage() {
@@ -39,7 +39,7 @@ export default function VerifyResetPage() {
     setError('');
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/auth/verify-reset-code`, {
+      const res = await fetch(`/api/auth/verify-reset-code`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, code }),
@@ -88,7 +88,7 @@ export default function VerifyResetPage() {
   async function resend() {
     setResending(true);
     try {
-      await fetch(`${API_BASE}/api/auth/forgot-password`, {
+      await fetch(`/api/auth/forgot-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, method }),

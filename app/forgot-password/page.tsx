@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useLanguage } from '@/lib/i18n';
 
-const API_BASE = process.env.NEXT_PUBLIC_APP_URL || '';
+
 
 export default function ForgotPasswordPage() {
   const { t } = useLanguage();
@@ -20,7 +20,7 @@ export default function ForgotPasswordPage() {
     setError('');
     setLoading(method);
     try {
-      await fetch(`${API_BASE}/api/auth/forgot-password`, {
+      await fetch(`/api/auth/forgot-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, method }),

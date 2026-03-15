@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/lib/i18n';
 
-const API_BASE = process.env.NEXT_PUBLIC_APP_URL || '';
+
 
 export default function ResetPasswordPage() {
   const { t } = useLanguage();
@@ -47,7 +47,7 @@ export default function ResetPasswordPage() {
     setError('');
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/auth/reset-password`, {
+      const res = await fetch(`/api/auth/reset-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, code, newPassword, confirmPassword }),

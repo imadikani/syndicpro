@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLanguage, LangToggle } from '@/lib/i18n';
 
-const API_BASE = process.env.NEXT_PUBLIC_APP_URL || '';
+// Use relative URLs — avoids stale build-time NEXT_PUBLIC_APP_URL issues
 
 export default function PortalPage() {
   const router = useRouter();
@@ -20,7 +20,7 @@ export default function PortalPage() {
     setError('');
     setLoading(true);
     try {
-      await fetch(`${API_BASE}/api/portal/auth/request`, {
+      await fetch('/api/portal/auth/request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone, channel }),

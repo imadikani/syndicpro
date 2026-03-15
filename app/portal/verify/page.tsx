@@ -5,7 +5,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/lib/i18n';
 
-const API_BASE = process.env.NEXT_PUBLIC_APP_URL || '';
+
 
 export default function PortalVerifyPage() {
   const router = useRouter();
@@ -44,7 +44,7 @@ export default function PortalVerifyPage() {
     setError('');
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/portal/auth/verify`, {
+      const res = await fetch(`/api/portal/auth/verify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone, pin }),
@@ -69,7 +69,7 @@ export default function PortalVerifyPage() {
   async function resendCode() {
     setResending(true);
     try {
-      await fetch(`${API_BASE}/api/portal/auth/request`, {
+      await fetch(`/api/portal/auth/request`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone, channel }),

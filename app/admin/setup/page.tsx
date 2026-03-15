@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-const API_BASE = process.env.NEXT_PUBLIC_APP_URL || '';
+
 
 export default function AdminSetupPage() {
   const router = useRouter();
@@ -16,7 +16,7 @@ export default function AdminSetupPage() {
 
   // If an admin already exists, this page should not be accessible
   useEffect(() => {
-    fetch(`${API_BASE}/api/admin/bootstrap/check`)
+    fetch(`/api/admin/bootstrap/check`)
       .then(r => r.json())
       .then(d => {
         if (d.adminExists) router.push('/login');
@@ -30,7 +30,7 @@ export default function AdminSetupPage() {
     setError('');
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/admin/bootstrap`, {
+      const res = await fetch(`/api/admin/bootstrap`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password }),
